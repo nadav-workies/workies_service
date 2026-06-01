@@ -31,11 +31,28 @@ export default function KPICards({ tickets }) {
   const breached = open.filter(t => t.sla_deadline && new Date(t.sla_deadline) < now);
   const critical = open.filter(t => t.priority === 'קריטית');
 
-  const closedTickets = tickets.filter(t => t.status === 'נסגרה' && t.closed_at);
-  let avgHours = 0;
-  if (closedTickets.length > 0) {
-    const totalMs = closedTickets.reduce((s, t) => s + (new Date(t.closed_at) - new Date(t.created_date)), 0);
-    avgHours = Math.round(totalMs / closedTickets.length / 3600000);
+  const closedTickets = tickets.filter(t => ["טופלה", "נסגרה"].includes(t.status));
+  const validForAvg = closedTickets.filter(t => {
+    const start = t.created_date;
+    const end = t.closed_at || t.resolved_at;
+    return start && end && new Date(end) > new Date(start);
+  });
+  let avgLabel = "אין נתונים";
+  if (validForAvg.length > 0) {
+    const totalMs = validForAvg.reduce((s, t) => {
+      const start = new Date(t.created_date).getTime();
+      const end = new Date(t.closed_at || t.resolved_at).getTime();
+      return s + (end - start);
+    }, 0);
+    const avgMs = totalMs / validForAvg.length;
+    const totalMinutes = Math.round(avgMs / 60000);
+    if (totalMinutes < 1) avgLabel = "פחות מדקה";
+    else if (totalMinutes < 60) avgLabel = `${totalMinutes} דק׳`;
+    else {
+      const h = Math.floor(totalMinutes / 60);
+      const m = totalMinutes % 60;
+      avgLabel = m === 0 ? `${h} שע׳` : `${h} שע׳ ${m} דק׳`;
+    }
   }
 
   const closedOnTime = closedTickets.filter(t => !t.sla_breached).length;
@@ -49,7 +66,7 @@ export default function KPICards({ tickets }) {
       <KPICard title="בטיפול" value={inProgress.length} icon={Clock} color="text-blue-600" onClick={() => go({ kpi: 'inProgress' })} />
       <KPICard title="חריגות SLA" value={breached.length} icon={AlertTriangle} color="text-red-600" onClick={() => go({ kpi: 'breached' })} />
       <KPICard title="קריטיות" value={critical.length} icon={AlertCircle} color="text-amber-600" onClick={() => go({ kpi: 'critical' })} />
-      <KPICard title="ממוצע טיפול" value={`${avgHours}ש׳`} icon={Timer} color="text-indigo-600" onClick={() => go({ kpi: 'closed' })} />
+      <KPICard title="ממוצע טיפול" value={avgLabel} icon={Timer} color="text-indigo-600" onClick={() => go({ kpi: 'closed' })} />
       <KPICard title="עמידה SLA" value={`${slaRate}%`} icon={TrendingUp} color={slaRate >= 80 ? "text-green-600" : "text-red-600"} onClick={() => go({ kpi: 'slaRate' })} />
     </div>
   );
