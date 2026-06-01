@@ -1,0 +1,70 @@
+{
+  "name": "SurveyTemplate",
+  "type": "object",
+  "properties": {
+    "key": {
+      "type": "string",
+      "description": "\u05de\u05e4\u05ea\u05d7 \u05d9\u05d9\u05d7\u05d5\u05d3\u05d9 \u05e9\u05dc \u05d4\u05e1\u05e7\u05e8"
+    },
+    "name": {
+      "type": "string",
+      "description": "\u05e9\u05dd \u05d4\u05e1\u05e7\u05e8"
+    },
+    "description": {
+      "type": "string",
+      "description": "\u05ea\u05d9\u05d0\u05d5\u05e8 \u05e7\u05e6\u05e8 \u05e9\u05dc \u05d4\u05e1\u05e7\u05e8"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "\u05d4\u05d0\u05dd \u05d4\u05e1\u05e7\u05e8 \u05e4\u05e2\u05d9\u05dc"
+    },
+    "trigger_event": {
+      "type": "string",
+      "enum": [
+        "ticket_closed",
+        "manual_send"
+      ],
+      "description": "\u05de\u05ea\u05d9 \u05d4\u05e1\u05e7\u05e8 \u05e0\u05e9\u05dc\u05d7"
+    },
+    "questions": {
+      "type": "array",
+      "description": "\u05e9\u05d0\u05dc\u05d5\u05ea \u05d4\u05e1\u05e7\u05e8",
+      "items": {
+        "type": "object",
+        "properties": {
+          "question_id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "rating_1_10",
+              "text",
+              "yes_no"
+            ]
+          },
+          "required": {
+            "type": "boolean",
+            "default": false
+          },
+          "order": {
+            "type": "number"
+          },
+          "help_text": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "key",
+    "name",
+    "is_active",
+    "trigger_event"
+  ]
+}
