@@ -34,7 +34,7 @@ const AREA_GROUPS = [
 
 const ROOM_MAP = Object.fromEntries(WORKIES_ROOMS.map(r => [r.room_number, r]));
 
-export default function ServiceMap({ tickets, onRoomSelect, selectedRoom }) {
+export default function ServiceMap({ tickets, busyRooms = {}, onRoomSelect, selectedRoom }) {
   const statusMap = useMemo(() => {
     const map = {};
     WORKIES_ROOMS.forEach(r => {
@@ -50,6 +50,7 @@ export default function ServiceMap({ tickets, onRoomSelect, selectedRoom }) {
           key={group.key}
           group={group}
           statusMap={statusMap}
+          busyRooms={busyRooms}
           selectedRoom={selectedRoom}
           onRoomSelect={onRoomSelect}
         />
@@ -58,7 +59,7 @@ export default function ServiceMap({ tickets, onRoomSelect, selectedRoom }) {
   );
 }
 
-function AreaSection({ group, statusMap, selectedRoom, onRoomSelect }) {
+function AreaSection({ group, statusMap, busyRooms, selectedRoom, onRoomSelect }) {
   const { label, rooms, cols } = group;
 
   return (
@@ -72,11 +73,13 @@ function AreaSection({ group, statusMap, selectedRoom, onRoomSelect }) {
           const room = ROOM_MAP[rn];
           if (!room) return null;
           const roomStatus = statusMap[rn] || { status: 'clear', openCount: 0, urgentCount: 0, breachedCount: 0, tickets: [] };
+          const weeklyCount = busyRooms[rn] || 0;
           return (
             <div key={rn} style={{ height: 56 }}>
               <RoomCell
                 room={room}
                 roomStatus={roomStatus}
+                weeklyCount={weeklyCount}
                 isSelected={selectedRoom?.room_number === rn}
                 onClick={() => onRoomSelect(room, roomStatus)}
               />

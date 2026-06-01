@@ -10,7 +10,11 @@ import RoomSidePanel from '@/components/servicemap/RoomSidePanel';
 import { Loader2, MapPin, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-const OPEN_STATUSES = ['פתוחה', 'שויכה לטיפול', 'בטיפול', 'ממתינה'];
+const SEVEN_DAYS_AGO = () => {
+  const d = new Date();
+  d.setDate(d.getDate() - 7);
+  return d.toISOString();
+};
 
 export default function ServiceMapPage() {
   const [user, setUser] = useState(null);
@@ -22,11 +26,36 @@ export default function ServiceMapPage() {
     base44.auth.me().then(u => { setUser(u); setAuthLoading(false); }).catch(() => setAuthLoading(false));
   }, []);
 
-  const { data: tickets = [], isLoading, refetch, isFetching } = useQuery({
-    queryKey: ['service-map-tickets'],
-    queryFn: () => base44.entities.ServiceTicket.filter({ status__in: OPEN_STATUSES }),
+  // כל הקריאות הפתוחות (לא נסגרו)
+  const { data: openTickets = [], isLoading: loadingOpen, refetch, isFetching } = useQuery({
+    queryKey: ['service-map-open'],
+    queryFn: () => base44.entities.ServiceTicket.list(),
     enabled: !authLoading && isManagerOrAdmin(user),
-    refetchInterval: 60000, // auto-refresh every minute
+    refetchInterval: 60000,
+    select: (data) => data.filter(t => t.status !== 'נסגרה'),
+  });
+
+  // כל קריאות 7 הימים האחרונים לחיווי "עמוס"
+  const { data: recentTickets = [], isLoading: loadingRecent } = useQuery({
+    queryKey: ['service-map-recent'],
+    queryFn: () => base44.entities.ServiceTicket.list('-created_date', 500),
+    enabled: !authLoading && isManagerOrAdmin(user),
+    refetchInterval: 300000,
+    select: (data) => {
+      const cutoff = SEVEN_DAYS_AGO();
+      return data.filter(t => t.created_date >= cutoff);
+    },
+  });
+
+  const tickets = openTickets;
+  const isLoading = loadingOpen || loadingRecent;
+
+  // חדרים עמוסים: 3+ קריאות ב-7 ימים אחרונים
+  const busyRooms = {};
+  recentTickets.forEach(t => {
+    if (t.room_number) {
+      busyRooms[t.room_number] = (busyRooms[t.room_number] || 0) + 1;
+    }
   });
 
   const handleRoomSelect = (room, roomStatus) => {
@@ -106,6 +135,7 @@ export default function ServiceMapPage() {
         <div className="flex-1 min-w-0 bg-card border rounded-xl p-4 overflow-x-auto">
           <ServiceMap
             tickets={tickets}
+            busyRooms={busyRooms}
             onRoomSelect={handleRoomSelect}
             selectedRoom={selectedRoom}
           />
