@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { StatusBadge, PriorityBadge, SlaBadge } from "./TicketStatusBadge";
+import { StatusBadge, PriorityBadge } from "./TicketStatusBadge";
+import LiveSlaBadge from "./LiveSlaBadge";
 import { format } from "date-fns";
 import { ChevronLeft } from "lucide-react";
 
@@ -28,7 +29,7 @@ export default function TicketTable({ tickets }) {
               <TableHead className="text-right">סוג / תקלה</TableHead>
               <TableHead className="text-right w-[90px]">דחיפות</TableHead>
               <TableHead className="text-right w-[120px]">סטטוס</TableHead>
-              <TableHead className="text-right w-[110px]">SLA</TableHead>
+              <TableHead className="text-right w-[130px]">SLA</TableHead>
               <TableHead className="text-right w-[90px]">אחראי</TableHead>
               <TableHead className="w-[30px]"></TableHead>
             </TableRow>
@@ -49,7 +50,7 @@ export default function TicketTable({ tickets }) {
                 </TableCell>
                 <TableCell><PriorityBadge priority={ticket.priority} /></TableCell>
                 <TableCell><StatusBadge status={ticket.status} /></TableCell>
-                <TableCell><SlaBadge slaDeadline={ticket.sla_deadline} status={ticket.status} /></TableCell>
+                <TableCell><LiveSlaBadge ticket={ticket} /></TableCell>
                 <TableCell className="text-xs text-muted-foreground">{ticket.assigned_to || '—'}</TableCell>
                 <TableCell><ChevronLeft className="w-4 h-4 text-muted-foreground" /></TableCell>
               </TableRow>

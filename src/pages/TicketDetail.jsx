@@ -14,7 +14,8 @@ import { Switch } from "@/components/ui/switch";
 import { StatusBadge, PriorityBadge, SlaBadge } from "@/components/tickets/TicketStatusBadge";
 import { getTimeRemainingLabel, isManagerOrAdmin } from "@/lib/slaUtils";
 import { format } from "date-fns";
-import { ArrowRight, User, Phone, MapPin, Clock, Shield, MessageSquare, Loader2, CheckCircle, AlertTriangle } from "lucide-react";
+import { ArrowRight, User, Phone, MapPin, Clock, Shield, MessageSquare, Loader2, CheckCircle, AlertTriangle, Star, ExternalLink } from "lucide-react";
+import FeedbackModal from "@/components/tickets/FeedbackModal";
 
 const STATUSES = ["פתוחה","שויכה לטיפול","בטיפול","ממתינה","טופלה","נסגרה"];
 const BREACH_REASONS = ["ממתין לספק","חוסר בחלקים","לא אותר הלקוח","טיפול נדחה","תקלה מורכבת","עומס תפעולי","אחר"];
@@ -28,6 +29,9 @@ export default function TicketDetail() {
   const [assignName, setAssignName] = useState("");
   const [closeDialog, setCloseDialog] = useState(false);
   const [closeForm, setCloseForm] = useState({ resolution_summary: "", customer_response_sent: false, sla_breach_reason: "" });
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [googleSending, setGoogleSending] = useState(false);
+  const [googleSent, setGoogleSent] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -101,7 +105,23 @@ export default function TicketDetail() {
       historyEntry: addHistory("קריאה נסגרה", closeForm.resolution_summary)
     });
     base44.functions.invoke('ticketNotifications', { action: 'status_changed', ticket: closedTicket, newStatus: 'נסגרה', oldStatus: ticket.status }).catch(() => {});
+    // Send feedback request email
+    base44.functions.invoke('ticketNotifications', { action: 'feedback_request', ticket: closedTicket }).catch(() => {});
     setCloseDialog(false);
+  };
+
+  const handleSendGoogleReview = async () => {
+    if (!ticket.created_by) return;
+    setGoogleSending(true);
+    await base44.functions.invoke('ticketNotifications', { action: 'google_review_request', ticket });
+    await base44.entities.ServiceTicket.update(ticket.id, {
+      google_review_request_sent: true,
+      google_review_request_sent_at: new Date().toISOString(),
+      google_review_request_manually_sent: true,
+    });
+    queryClient.invalidateQueries({ queryKey: ['ticket', id] });
+    setGoogleSending(false);
+    setGoogleSent(true);
   };
 
   if (isLoading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
@@ -267,18 +287,63 @@ export default function TicketDetail() {
 
           {/* Customer response */}
           <Card>
-            <CardContent className="pt-4">
+            <CardContent className="pt-4 space-y-2">
               <div className="flex items-center gap-2">
                 <div className={`w-2.5 h-2.5 rounded-full ${ticket.customer_response_sent ? 'bg-green-500' : 'bg-slate-300'}`} />
                 <span className="text-sm">{ticket.customer_response_sent ? "הלקוח עודכן" : "הלקוח טרם עודכן"}</span>
               </div>
               {ticket.assigned_to && (
-                <p className="text-xs text-muted-foreground mt-2">אחראי: {ticket.assigned_to}</p>
+                <p className="text-xs text-muted-foreground">אחראי: {ticket.assigned_to}</p>
               )}
             </CardContent>
           </Card>
+
+          {/* Feedback */}
+          {isClosed && (
+            <Card>
+              <CardHeader className="pb-2"><CardTitle className="text-sm">משוב שירות</CardTitle></CardHeader>
+              <CardContent className="space-y-2">
+                {ticket.feedback_rating ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-bold text-primary">{ticket.feedback_rating}/10</span>
+                    <span className="text-xs text-muted-foreground">{ticket.feedback_comment || 'ללא הערה'}</span>
+                  </div>
+                ) : (isOwner || isMgr) && !ticket.feedback_rating ? (
+                  <Button variant="outline" size="sm" className="w-full gap-2" onClick={() => setFeedbackOpen(true)}>
+                    <Star className="w-3.5 h-3.5" />דרג את השירות
+                  </Button>
+                ) : null}
+
+                {/* Google review — manager only */}
+                {isMgr && ticket.created_by && (
+                  <div className="pt-1 border-t">
+                    {ticket.google_review_request_sent ? (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <CheckCircle className="w-3.5 h-3.5 text-green-500" />
+                        בקשת דירוג Google נשלחה
+                      </p>
+                    ) : (
+                      <Button variant="outline" size="sm" className="w-full gap-2 text-xs" onClick={handleSendGoogleReview} disabled={googleSending || googleSent}>
+                        {googleSending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}
+                        {googleSent ? 'נשלח!' : 'שלח בקשת דירוג Google'}
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
+
+      {/* Feedback modal */}
+      <FeedbackModal
+        ticket={ticket}
+        user={user}
+        open={feedbackOpen}
+        onClose={() => setFeedbackOpen(false)}
+        onSubmitted={() => queryClient.invalidateQueries({ queryKey: ['ticket', id] })}
+      />
 
       {/* Close dialog */}
       <Dialog open={closeDialog} onOpenChange={setCloseDialog}>

@@ -71,6 +71,7 @@ function buildHtml(body) {
 // ─── Main handler ─────────────────────────────────────────────────
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
+  const now = new Date();
 
   const { action, ticket, oldStatus, newStatus } = await req.json();
 
@@ -137,6 +138,57 @@ Deno.serve(async (req) => {
         results.user_status_email = sent;
       }
     }
+  }
+
+  // ── Feedback request after close ─────────────────────────────
+  if (action === 'feedback_request') {
+    const setting = await getSetting(base44, 'user_service_feedback_request');
+    if (setting?.enabled && ticket.created_by) {
+      const subject = renderTemplate(setting.subject_template, ticket);
+      const body = renderTemplate(setting.body_template, ticket);
+      const sent = await sendAndLog(base44, { key: 'user_service_feedback_request', toEmail: ticket.created_by, subject, bodyHtml: buildHtml(body), ticket, recipientType: 'user' });
+      if (sent) {
+        await base44.asServiceRole.entities.ServiceTicket.update(ticket.id, { feedback_request_sent: true, feedback_request_sent_at: new Date().toISOString() });
+      }
+      results.feedback_request = sent;
+    }
+  }
+
+  // ── Google review request (manual or scheduled) ───────────────
+  if (action === 'google_review_request') {
+    const setting = await getSetting(base44, 'user_google_review_request');
+    if (setting?.enabled && ticket.created_by) {
+      const subject = renderTemplate(setting.subject_template, ticket);
+      const body = renderTemplate(setting.body_template, ticket);
+      const sent = await sendAndLog(base44, { key: 'user_google_review_request', toEmail: ticket.created_by, subject, bodyHtml: buildHtml(body), ticket, recipientType: 'user' });
+      if (sent) {
+        await base44.asServiceRole.entities.ServiceTicket.update(ticket.id, { google_review_request_sent: true, google_review_request_sent_at: new Date().toISOString() });
+      }
+      results.google_review = sent;
+    }
+  }
+
+  // ── Post-closure check (Google review after 3 days) ───────────
+  if (action === 'check_post_closure') {
+    const closedTickets = await base44.asServiceRole.entities.ServiceTicket.filter({ status: 'נסגרה' });
+    const nowMs = now.getTime();
+    const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
+    let googleSent = 0;
+    for (const t of closedTickets) {
+      if (!t.closed_at || t.google_review_request_sent || !t.created_by) continue;
+      const closedMs = new Date(t.closed_at).getTime();
+      if (nowMs - closedMs < THREE_DAYS) continue;
+      const setting = await getSetting(base44, 'user_google_review_request');
+      if (!setting?.enabled) continue;
+      const subject = renderTemplate(setting.subject_template, t);
+      const body = renderTemplate(setting.body_template, t);
+      const sent = await sendAndLog(base44, { key: 'user_google_review_request', toEmail: t.created_by, subject, bodyHtml: buildHtml(body), ticket: t, recipientType: 'user' });
+      if (sent) {
+        await base44.asServiceRole.entities.ServiceTicket.update(t.id, { google_review_request_sent: true, google_review_request_sent_at: new Date().toISOString() });
+        googleSent++;
+      }
+    }
+    results.google_reviews_sent = googleSent;
   }
 
   // ── SLA reminder/breach check ─────────────────────────────────
