@@ -168,6 +168,24 @@
       ],
       "description": "\u05e1\u05d9\u05d1\u05ea \u05d7\u05e8\u05d9\u05d2\u05d4"
     },
+    "sla_excluded": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05d4\u05d0\u05dd \u05d4\u05e7\u05e8\u05d9\u05d0\u05d4 \u05d4\u05d5\u05d7\u05e8\u05d2\u05d4 \u05de\u05de\u05d3\u05d9\u05d3\u05ea SLA (Admin \u05d1\u05dc\u05d1\u05d3)"
+    },
+    "sla_exclusion_reason": {
+      "type": "string",
+      "description": "\u05e1\u05d9\u05d1\u05ea \u05d4\u05d7\u05e8\u05d2\u05ea SLA"
+    },
+    "sla_excluded_by": {
+      "type": "string",
+      "description": "\u05de\u05d9 \u05d4\u05d7\u05e8\u05d9\u05d2 \u05d0\u05ea \u05d4\u05e7\u05e8\u05d9\u05d0\u05d4 (\u05e9\u05dd / \u05de\u05d9\u05d9\u05dc)"
+    },
+    "sla_excluded_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u05de\u05d5\u05e2\u05d3 \u05d4\u05d7\u05e8\u05d2\u05ea \u05d4\u05e7\u05e8\u05d9\u05d0\u05d4"
+    },
     "sla_warning_sent": {
       "type": "boolean",
       "default": false

@@ -12,10 +12,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { StatusBadge, PriorityBadge, SlaBadge } from "@/components/tickets/TicketStatusBadge";
-import { getTimeRemainingLabel, getDeadlineMs, getOpenedAtMs, isTicketBreached, isManagerOrAdmin } from "@/lib/slaUtils";
+import { isManagerOrAdmin } from "@/lib/slaUtils";
+import { getTimeRemainingLabel, getDeadlineMs, getOpenedAtMs, isTicketSlaBreached as isTicketBreached } from "@/lib/slaAgent.js";
 import { format } from "date-fns";
 import { ArrowRight, User, Phone, MapPin, Clock, Shield, MessageSquare, Loader2, CheckCircle, AlertTriangle, Star, ExternalLink } from "lucide-react";
 import FeedbackModal from "@/components/tickets/FeedbackModal";
+import SlaExclusionDialog from "@/components/tickets/SlaExclusionDialog";
 
 const STATUSES = ["פתוחה","שויכה לטיפול","בטיפול","ממתינה","טופלה","נסגרה"];
 const BREACH_REASONS = ["ממתין לספק","חוסר בחלקים","לא אותר הלקוח","טיפול נדחה","תקלה מורכבת","עומס תפעולי","אחר"];
@@ -32,6 +34,7 @@ export default function TicketDetail() {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [googleSending, setGoogleSending] = useState(false);
   const [googleSent, setGoogleSent] = useState(false);
+  const [slaExclusionOpen, setSlaExclusionOpen] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -200,7 +203,7 @@ export default function TicketDetail() {
                     </p>
                   </div>
                 </div>
-                <SlaBadge slaDeadline={ticket.sla_deadline} status={ticket.status} />
+                <SlaBadge ticket={ticket} status={ticket.status} />
               </div>
             </CardContent>
           </Card>
@@ -288,6 +291,25 @@ export default function TicketDetail() {
             </Card>
           )}
 
+          {/* SLA Exclusion — admin only */}
+          {user?.role === 'admin' && (
+            <Card>
+              <CardContent className="pt-4">
+                {ticket.sla_excluded ? (
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground">קריאה מוחרגת ממדידת SLA</p>
+                    <p className="text-xs">{ticket.sla_exclusion_reason}</p>
+                    <p className="text-xs text-muted-foreground">על ידי: {ticket.sla_excluded_by}</p>
+                  </div>
+                ) : (
+                  <Button variant="outline" size="sm" className="w-full text-xs text-muted-foreground" onClick={() => setSlaExclusionOpen(true)}>
+                    החרג ממדידת SLA
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Customer response */}
           <Card>
             <CardContent className="pt-4 space-y-2">
@@ -338,6 +360,17 @@ export default function TicketDetail() {
           )}
         </div>
       </div>
+
+      {/* SLA Exclusion dialog — admin only */}
+      {user?.role === 'admin' && (
+        <SlaExclusionDialog
+          ticket={ticket}
+          user={user}
+          open={slaExclusionOpen}
+          onClose={() => setSlaExclusionOpen(false)}
+          onSaved={() => queryClient.invalidateQueries({ queryKey: ['ticket', id] })}
+        />
+      )}
 
       {/* Feedback modal */}
       <FeedbackModal

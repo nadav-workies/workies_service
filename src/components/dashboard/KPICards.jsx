@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Ticket, Clock, AlertTriangle, AlertCircle, Timer, TrendingUp } from "lucide-react";
+import { formatDuration } from "@/lib/slaAgent.js";
 
 function KPICard({ title, value, icon: Icon, color, onClick }) {
   const iconBg = color?.includes("red") ? "bg-red-50" : color?.includes("amber") ? "bg-amber-50" : color?.includes("green") ? "bg-emerald-50" : color?.includes("blue") ? "bg-blue-50" : "bg-primary/5";
@@ -23,43 +24,32 @@ function KPICard({ title, value, icon: Icon, color, onClick }) {
   );
 }
 
-export default function KPICards({ tickets }) {
+/**
+ * KPICards — מקבל tickets ו-slaMetrics מבחוץ.
+ * אינו מחשב SLA בעצמו — כל הנתונים מגיעים מ-calculateMonthlySlaMetrics (slaAgent).
+ */
+export default function KPICards({ tickets, slaMetrics }) {
   const navigate = useNavigate();
-  const nowMs = Date.now();
   const open = tickets.filter(t => t.status !== 'נסגרה');
   const inProgress = tickets.filter(t => ['בטיפול', 'שויכה לטיפול'].includes(t.status));
-  const breached = open.filter(t => {
-    const dlMs = t.sla_deadline_ms ? Number(t.sla_deadline_ms) : (t.sla_deadline ? new Date(t.sla_deadline).getTime() : null);
-    return dlMs && dlMs < nowMs;
-  });
   const critical = open.filter(t => t.priority === 'קריטית');
 
-  const closedTickets = tickets.filter(t => ["טופלה", "נסגרה"].includes(t.status));
-  const validForAvg = closedTickets.filter(t => {
-    const startMs = t.opened_at_ms ? Number(t.opened_at_ms) : (t.opened_at ? new Date(t.opened_at).getTime() : (t.created_date ? new Date(t.created_date).getTime() : null));
-    const end = t.closed_at || t.resolved_at;
-    return startMs && end && new Date(end).getTime() > startMs;
-  });
-  let avgLabel = "אין נתונים";
-  if (validForAvg.length > 0) {
-    const totalMs = validForAvg.reduce((s, t) => {
-      const startMs = t.opened_at_ms ? Number(t.opened_at_ms) : (t.opened_at ? new Date(t.opened_at).getTime() : new Date(t.created_date).getTime());
-      const end = new Date(t.closed_at || t.resolved_at).getTime();
-      return s + (end - startMs);
-    }, 0);
-    const avgMs = totalMs / validForAvg.length;
-    const totalMinutes = Math.round(avgMs / 60000);
-    if (totalMinutes < 1) avgLabel = "פחות מדקה";
-    else if (totalMinutes < 60) avgLabel = `${totalMinutes} דק׳`;
-    else {
-      const h = Math.floor(totalMinutes / 60);
-      const m = totalMinutes % 60;
-      avgLabel = m === 0 ? `${h} שע׳` : `${h} שע׳ ${m} דק׳`;
-    }
-  }
+  const breachedCount = slaMetrics?.totalBreached ?? open.filter(t => {
+    const dlMs = t.sla_deadline_ms ? Number(t.sla_deadline_ms) : (t.sla_deadline ? new Date(t.sla_deadline).getTime() : null);
+    return dlMs && dlMs < Date.now();
+  }).length;
 
-  const closedOnTime = closedTickets.filter(t => !t.sla_breached).length;
-  const slaRate = closedTickets.length > 0 ? Math.round((closedOnTime / closedTickets.length) * 100) : 100;
+  const avgLabel = slaMetrics?.averageHandlingTimeMs != null
+    ? formatDuration(slaMetrics.averageHandlingTimeMs)
+    : 'אין נתונים';
+
+  const slaRate = slaMetrics?.slaCompliance != null
+    ? `${slaMetrics.slaCompliance}%`
+    : 'אין נתונים';
+
+  const slaColor = slaMetrics?.slaCompliance != null
+    ? (slaMetrics.slaCompliance >= 80 ? 'text-green-600' : 'text-red-600')
+    : 'text-muted-foreground';
 
   const go = (params) => navigate(`/tickets?${new URLSearchParams(params).toString()}`);
 
@@ -67,10 +57,10 @@ export default function KPICards({ tickets }) {
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
       <KPICard title="פתוחות" value={open.length} icon={Ticket} onClick={() => go({ kpi: 'open' })} />
       <KPICard title="בטיפול" value={inProgress.length} icon={Clock} color="text-blue-600" onClick={() => go({ kpi: 'inProgress' })} />
-      <KPICard title="חריגות SLA" value={breached.length} icon={AlertTriangle} color="text-red-600" onClick={() => go({ kpi: 'breached' })} />
+      <KPICard title="חריגות SLA" value={breachedCount} icon={AlertTriangle} color="text-red-600" onClick={() => go({ kpi: 'breached' })} />
       <KPICard title="קריטיות" value={critical.length} icon={AlertCircle} color="text-amber-600" onClick={() => go({ kpi: 'critical' })} />
       <KPICard title="ממוצע טיפול" value={avgLabel} icon={Timer} color="text-indigo-600" onClick={() => go({ kpi: 'closed' })} />
-      <KPICard title="עמידה SLA" value={`${slaRate}%`} icon={TrendingUp} color={slaRate >= 80 ? "text-green-600" : "text-red-600"} onClick={() => go({ kpi: 'slaRate' })} />
+      <KPICard title="עמידה SLA" value={slaRate} icon={TrendingUp} color={slaColor} onClick={() => go({ kpi: 'slaRate' })} />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
-import { STATUS_COLORS, PRIORITY_COLORS, getTimeRemainingLabel } from "@/lib/slaUtils";
+import { STATUS_COLORS, PRIORITY_COLORS } from "@/lib/slaUtils";
+import { getTimeRemainingLabel, getDeadlineMs } from "@/lib/slaAgent.js";
 
 export function StatusBadge({ status }) {
   const cls = STATUS_COLORS[status] || 'bg-slate-100 text-slate-700';
@@ -19,14 +20,17 @@ export function PriorityBadge({ priority }) {
   );
 }
 
-export function SlaBadge({ slaDeadline, status }) {
-  if (status === 'נסגרה') return <span className="text-xs text-muted-foreground">נסגרה</span>;
-  if (!slaDeadline) return <span className="text-xs text-muted-foreground">—</span>;
+// SlaBadge מקבל ticket מלא — לא slaDeadline בלבד
+export function SlaBadge({ ticket, status }) {
+  const resolvedStatus = status || ticket?.status;
+  if (resolvedStatus === 'נסגרה') return <span className="text-xs text-muted-foreground">נסגרה</span>;
+  if (!ticket) return <span className="text-xs text-muted-foreground">—</span>;
 
-  const { text, breached } = getTimeRemainingLabel(slaDeadline);
-  const now = new Date();
-  const deadline = new Date(slaDeadline);
-  const diffMin = (deadline - now) / 60000;
+  const deadlineMs = getDeadlineMs(ticket);
+  if (!deadlineMs) return <span className="text-xs text-muted-foreground">—</span>;
+
+  const { text, breached } = getTimeRemainingLabel(ticket);
+  const diffMin = (deadlineMs - Date.now()) / 60000;
 
   if (breached) {
     return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">⚠ {text}</span>;
