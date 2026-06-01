@@ -16,6 +16,7 @@ import Tickets from '@/pages/Tickets';
 import NewTicket from '@/pages/NewTicket';
 import TicketDetail from '@/pages/TicketDetail';
 import SLAReport from '@/pages/SLAReport';
+import SLASettings from '@/pages/SLASettings';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -29,12 +30,8 @@ const AuthenticatedApp = () => {
   }
 
   if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      navigateToLogin();
-      return null;
-    }
+    if (authError.type === 'user_not_registered') return <UserNotRegisteredError />;
+    if (authError.type === 'auth_required') { navigateToLogin(); return null; }
   }
 
   return (
@@ -50,6 +47,7 @@ const AuthenticatedApp = () => {
           <Route path="/tickets/new" element={<NewTicket />} />
           <Route path="/tickets/:id" element={<TicketDetail />} />
           <Route path="/sla-report" element={<SLAReport />} />
+          <Route path="/sla-settings" element={<SLASettings />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
@@ -67,7 +65,7 @@ function App() {
         <Toaster />
       </QueryClientProvider>
     </AuthProvider>
-  )
+  );
 }
 
-export default App
+export default App;

@@ -1,58 +1,38 @@
 import { cn } from "@/lib/utils";
-import { STATUS_COLORS, URGENCY_COLORS } from "@/lib/slaUtils";
+import { STATUS_COLORS, PRIORITY_COLORS, getTimeRemainingLabel } from "@/lib/slaUtils";
 
 export function StatusBadge({ status }) {
-  const colors = STATUS_COLORS[status] || STATUS_COLORS['פתוחה'];
+  const cls = STATUS_COLORS[status] || 'bg-slate-100 text-slate-700';
   return (
-    <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium", colors.bg)}>
-      <span className={cn("w-1.5 h-1.5 rounded-full", colors.dot)} />
+    <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium", cls)}>
       {status}
     </span>
   );
 }
 
-export function UrgencyBadge({ urgency }) {
-  const colors = URGENCY_COLORS[urgency] || URGENCY_COLORS['רגילה'];
+export function PriorityBadge({ priority }) {
+  const cls = PRIORITY_COLORS[priority] || 'bg-slate-100 text-slate-700';
   return (
-    <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium", colors.bg)}>
-      <span className={cn("w-1.5 h-1.5 rounded-full", colors.dot)} />
-      {urgency}
+    <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium", cls)}>
+      {priority}
     </span>
   );
 }
 
-export function SlaBadge({ slaTarget, status }) {
-  if (status === 'נסגרה') {
-    return <span className="text-xs text-muted-foreground">נסגרה</span>;
-  }
-  
+export function SlaBadge({ slaDeadline, status }) {
+  if (status === 'נסגרה') return <span className="text-xs text-muted-foreground">נסגרה</span>;
+  if (!slaDeadline) return <span className="text-xs text-muted-foreground">—</span>;
+
+  const { text, breached } = getTimeRemainingLabel(slaDeadline);
   const now = new Date();
-  const target = new Date(slaTarget);
-  const diffMs = target - now;
-  
-  if (diffMs <= 0) {
-    const overHours = Math.floor(Math.abs(diffMs) / (1000 * 60 * 60));
-    return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
-        ⚠ חריגה {overHours} שע׳
-      </span>
-    );
+  const deadline = new Date(slaDeadline);
+  const diffMin = (deadline - now) / 60000;
+
+  if (breached) {
+    return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">⚠ {text}</span>;
   }
-  
-  const hours = Math.floor(diffMs / (1000 * 60 * 60));
-  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-  
-  if (hours < 2) {
-    return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
-        {hours} שע׳ {minutes} דק׳
-      </span>
-    );
+  if (diffMin <= 30) {
+    return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700">{text}</span>;
   }
-  
-  return (
-    <span className="text-xs text-muted-foreground">
-      {hours > 24 ? `${Math.floor(hours / 24)} ימים` : `${hours} שע׳ ${minutes} דק׳`}
-    </span>
-  );
+  return <span className="text-xs text-muted-foreground">{text}</span>;
 }
