@@ -118,11 +118,11 @@
     "opened_at": {
       "type": "string",
       "format": "date-time",
-      "description": "\u05de\u05d5\u05e2\u05d3 \u05e4\u05ea\u05d9\u05d7\u05ea \u05d4\u05e7\u05e8\u05d9\u05d0\u05d4 \u05d1\u05e4\u05d5\u05e2\u05dc \u2014 \u05de\u05e7\u05d5\u05e8 \u05d6\u05de\u05df \u05d9\u05e6\u05d9\u05d1 \u05dc\u05d7\u05d9\u05e9\u05d5\u05d1 SLA"
+      "description": "\u05de\u05d5\u05e2\u05d3 \u05e4\u05ea\u05d9\u05d7\u05ea \u05d4\u05e7\u05e8\u05d9\u05d0\u05d4 \u05d1\u05e4\u05d5\u05e2\u05dc"
     },
     "opened_at_ms": {
       "type": "number",
-      "description": "\u05de\u05d5\u05e2\u05d3 \u05e4\u05ea\u05d9\u05d7\u05ea \u05d4\u05e7\u05e8\u05d9\u05d0\u05d4 \u05d1\u05de\u05d9\u05dc\u05d9\u05e9\u05e0\u05d9\u05d5\u05ea Unix \u2014 \u05d1\u05e1\u05d9\u05e1 \u05d7\u05d9\u05e9\u05d5\u05d1 SLA"
+      "description": "\u05de\u05d5\u05e2\u05d3 \u05e4\u05ea\u05d9\u05d7\u05ea \u05d4\u05e7\u05e8\u05d9\u05d0\u05d4 \u05d1\u05de\u05d9\u05dc\u05d9\u05e9\u05e0\u05d9\u05d5\u05ea Unix"
     },
     "sla_minutes": {
       "type": "number",
@@ -135,20 +135,20 @@
     "sla_deadline": {
       "type": "string",
       "format": "date-time",
-      "description": "\u05de\u05d5\u05e2\u05d3 \u05e4\u05e7\u05d9\u05e2\u05ea SLA (ISO string \u2014 \u05dc\u05ea\u05e6\u05d5\u05d2\u05d4)"
+      "description": "\u05de\u05d5\u05e2\u05d3 \u05e4\u05e7\u05d9\u05e2\u05ea SLA"
     },
     "sla_deadline_ms": {
       "type": "number",
-      "description": "\u05de\u05d5\u05e2\u05d3 \u05e4\u05e7\u05d9\u05e2\u05ea SLA \u05d1\u05de\u05d9\u05dc\u05d9\u05e9\u05e0\u05d9\u05d5\u05ea Unix \u2014 \u05dc\u05d7\u05d9\u05e9\u05d5\u05d1\u05d9\u05dd"
+      "description": "\u05de\u05d5\u05e2\u05d3 \u05e4\u05e7\u05d9\u05e2\u05ea SLA \u05d1\u05de\u05d9\u05dc\u05d9\u05e9\u05e0\u05d9\u05d5\u05ea Unix"
     },
     "sla_warning_at": {
       "type": "string",
       "format": "date-time",
-      "description": "\u05de\u05d5\u05e2\u05d3 \u05ea\u05d6\u05db\u05d5\u05e8\u05ea \u05dc\u05e4\u05e0\u05d9 \u05e4\u05e7\u05d9\u05e2\u05ea SLA (ISO string \u2014 \u05dc\u05ea\u05e6\u05d5\u05d2\u05d4)"
+      "description": "\u05de\u05d5\u05e2\u05d3 \u05ea\u05d6\u05db\u05d5\u05e8\u05ea SLA"
     },
     "sla_warning_at_ms": {
       "type": "number",
-      "description": "\u05de\u05d5\u05e2\u05d3 \u05ea\u05d6\u05db\u05d5\u05e8\u05ea SLA \u05d1\u05de\u05d9\u05dc\u05d9\u05e9\u05e0\u05d9\u05d5\u05ea Unix \u2014 \u05dc\u05d7\u05d9\u05e9\u05d5\u05d1\u05d9\u05dd"
+      "description": "\u05de\u05d5\u05e2\u05d3 \u05ea\u05d6\u05db\u05d5\u05e8\u05ea SLA \u05d1\u05de\u05d9\u05dc\u05d9\u05e9\u05e0\u05d9\u05d5\u05ea Unix"
     },
     "sla_breached": {
       "type": "boolean",
@@ -206,6 +206,66 @@
       "format": "date-time",
       "description": "\u05ea\u05d0\u05e8\u05d9\u05da \u05e1\u05d2\u05d9\u05e8\u05d4"
     },
+    "feedback_token": {
+      "type": "string",
+      "description": "\u05d8\u05d5\u05e7\u05df \u05d9\u05d9\u05d7\u05d5\u05d3\u05d9 \u05dc\u05e4\u05ea\u05d9\u05d7\u05ea \u05e1\u05e7\u05e8"
+    },
+    "feedback_link": {
+      "type": "string",
+      "description": "\u05e7\u05d9\u05e9\u05d5\u05e8 \u05dc\u05e1\u05e7\u05e8"
+    },
+    "feedback_request_sent": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05d4\u05d0\u05dd \u05e0\u05e9\u05dc\u05d7\u05d4 \u05d1\u05e7\u05e9\u05ea \u05de\u05e9\u05d5\u05d1"
+    },
+    "feedback_request_sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u05de\u05d5\u05e2\u05d3 \u05e9\u05dc\u05d9\u05d7\u05ea \u05d1\u05e7\u05e9\u05ea \u05de\u05e9\u05d5\u05d1"
+    },
+    "feedback_submitted": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05d4\u05d0\u05dd \u05d4\u05ea\u05e7\u05d1\u05dc \u05de\u05e9\u05d5\u05d1"
+    },
+    "feedback_rating": {
+      "type": "number",
+      "description": "\u05d3\u05d9\u05e8\u05d5\u05d2 \u05e9\u05d9\u05e8\u05d5\u05ea \u05de\u05e1\u05db\u05dd \u05de\u05ea\u05d5\u05da \u05d4\u05e1\u05e7\u05e8"
+    },
+    "feedback_comment": {
+      "type": "string",
+      "description": "\u05d4\u05e2\u05e8\u05ea \u05dc\u05e7\u05d5\u05d7 \u05de\u05e1\u05db\u05de\u05ea"
+    },
+    "feedback_submitted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u05de\u05d5\u05e2\u05d3 \u05e7\u05d1\u05dc\u05ea \u05d4\u05de\u05e9\u05d5\u05d1"
+    },
+    "requires_manager_followup": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05d4\u05d0\u05dd \u05e0\u05d3\u05e8\u05e9 \u05d8\u05d9\u05e4\u05d5\u05dc \u05de\u05e0\u05d4\u05dc \u05d1\u05e2\u05e7\u05d1\u05d5\u05ea \u05d3\u05d9\u05e8\u05d5\u05d2 \u05e0\u05de\u05d5\u05da"
+    },
+    "google_review_request_sent": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05d4\u05d0\u05dd \u05e0\u05e9\u05dc\u05d7\u05d4 \u05d1\u05e7\u05e9\u05ea \u05d3\u05d9\u05e8\u05d5\u05d2 Google"
+    },
+    "google_review_request_sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u05de\u05d5\u05e2\u05d3 \u05e9\u05dc\u05d9\u05d7\u05ea \u05d1\u05e7\u05e9\u05ea \u05d3\u05d9\u05e8\u05d5\u05d2 Google"
+    },
+    "google_review_request_manually_sent": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05d4\u05d0\u05dd \u05de\u05e0\u05d4\u05dc \u05e9\u05dc\u05d7 \u05d1\u05e7\u05e9\u05ea \u05d3\u05d9\u05e8\u05d5\u05d2 Google \u05d9\u05d3\u05e0\u05d9\u05ea"
+    },
+    "google_review_blocked_reason": {
+      "type": "string",
+      "description": "\u05e1\u05d9\u05d1\u05d4 \u05dc\u05d7\u05e1\u05d9\u05de\u05ea \u05e9\u05dc\u05d9\u05d7\u05ea Google Review"
+    },
     "created_by": {
       "type": "string",
       "description": "\u05de\u05d9\u05d9\u05dc \u05d4\u05de\u05e9\u05ea\u05de\u05e9 \u05e9\u05e4\u05ea\u05d7"
@@ -246,44 +306,6 @@
           }
         }
       }
-    },
-    "feedback_request_sent": {
-      "type": "boolean",
-      "default": false,
-      "description": "\u05d4\u05d0\u05dd \u05e0\u05e9\u05dc\u05d7\u05d4 \u05d1\u05e7\u05e9\u05ea \u05de\u05e9\u05d5\u05d1 \u05dc\u05d0\u05d7\u05e8 \u05e1\u05d2\u05d9\u05e8\u05d4"
-    },
-    "feedback_request_sent_at": {
-      "type": "string",
-      "format": "date-time",
-      "description": "\u05de\u05d5\u05e2\u05d3 \u05e9\u05dc\u05d9\u05d7\u05ea \u05d1\u05e7\u05e9\u05ea \u05de\u05e9\u05d5\u05d1"
-    },
-    "feedback_rating": {
-      "type": "number",
-      "description": "\u05d3\u05d9\u05e8\u05d5\u05d2 \u05d7\u05d5\u05d5\u05d9\u05d9\u05ea \u05d4\u05e9\u05d9\u05e8\u05d5\u05ea 1-10"
-    },
-    "feedback_comment": {
-      "type": "string",
-      "description": "\u05d4\u05e2\u05e8\u05ea \u05de\u05e9\u05d5\u05d1 \u05de\u05d4\u05dc\u05e7\u05d5\u05d7"
-    },
-    "feedback_submitted_at": {
-      "type": "string",
-      "format": "date-time",
-      "description": "\u05de\u05d5\u05e2\u05d3 \u05de\u05d9\u05dc\u05d5\u05d9 \u05d4\u05de\u05e9\u05d5\u05d1"
-    },
-    "google_review_request_sent": {
-      "type": "boolean",
-      "default": false,
-      "description": "\u05d4\u05d0\u05dd \u05e0\u05e9\u05dc\u05d7\u05d4 \u05d1\u05e7\u05e9\u05ea \u05d3\u05d9\u05e8\u05d5\u05d2 Google"
-    },
-    "google_review_request_sent_at": {
-      "type": "string",
-      "format": "date-time",
-      "description": "\u05de\u05d5\u05e2\u05d3 \u05e9\u05dc\u05d9\u05d7\u05ea \u05d1\u05e7\u05e9\u05ea \u05d3\u05d9\u05e8\u05d5\u05d2 Google"
-    },
-    "google_review_request_manually_sent": {
-      "type": "boolean",
-      "default": false,
-      "description": "\u05d4\u05d0\u05dd \u05de\u05e0\u05d4\u05dc \u05e9\u05dc\u05d7 \u05d1\u05e7\u05e9\u05ea \u05d3\u05d9\u05e8\u05d5\u05d2 Google \u05d9\u05d3\u05e0\u05d9\u05ea"
     }
   },
   "required": [
@@ -291,61 +313,5 @@
     "issue_description",
     "area",
     "priority"
-  ],
-  "rls": {
-    "create": {
-      "created_by_id": "{{user.id}}"
-    },
-    "read": {
-      "$or": [
-        {
-          "created_by_id": "{{user.id}}"
-        },
-        {
-          "data.assigned_to_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "manager"
-          }
-        }
-      ]
-    },
-    "update": {
-      "$or": [
-        {
-          "created_by_id": "{{user.id}}",
-          "data.status": {
-            "$ne": "\u05e0\u05e1\u05d2\u05e8\u05d4"
-          }
-        },
-        {
-          "data.assigned_to_id": "{{user.id}}",
-          "data.status": {
-            "$ne": "\u05e0\u05e1\u05d2\u05e8\u05d4"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "manager"
-          }
-        }
-      ]
-    },
-    "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
-    }
-  }
+  ]
 }

@@ -19,6 +19,8 @@ import SLAReport from '@/pages/SLAReport';
 import SLASettings from '@/pages/SLASettings';
 import NotificationSettings from '@/pages/NotificationSettings';
 import ServiceMapPage from '@/pages/ServiceMapPage';
+import FeedbackSurvey from '@/pages/FeedbackSurvey';
+import SurveyResponses from '@/pages/SurveyResponses';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -52,8 +54,10 @@ const AuthenticatedApp = () => {
           <Route path="/sla-settings" element={<SLASettings />} />
           <Route path="/notification-settings" element={<NotificationSettings />} />
           <Route path="/service-map" element={<ServiceMapPage />} />
+          <Route path="/survey-responses" element={<SurveyResponses />} />
         </Route>
       </Route>
+      <Route path="/feedback/:token" element={<FeedbackSurvey />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

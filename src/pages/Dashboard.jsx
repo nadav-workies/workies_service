@@ -5,6 +5,7 @@ import { Loader2, Plus, Ticket, AlertTriangle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import KPICards from "@/components/dashboard/KPICards";
+import ServiceMetricsCards from "@/components/dashboard/ServiceMetricsCards";
 import TicketTable from "@/components/tickets/TicketTable";
 import TicketCard from "@/components/tickets/TicketCard";
 import RoomPickerModal from "@/components/user/RoomPickerModal";
@@ -93,6 +94,10 @@ function ManagerDashboard({ user }) {
     queryKey: ['tickets'],
     queryFn: () => base44.entities.ServiceTicket.list('-created_date', 300),
   });
+  const { data: surveyResponses = [] } = useQuery({
+    queryKey: ['survey-responses-dash'],
+    queryFn: () => base44.entities.SurveyResponse.list('-submitted_at', 200),
+  });
 
   if (isLoading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
 
@@ -120,6 +125,8 @@ function ManagerDashboard({ user }) {
       </div>
 
       <KPICards tickets={tickets} />
+
+      <ServiceMetricsCards tickets={tickets} surveyResponses={surveyResponses} />
 
       {breached.length > 0 && (
         <section>
