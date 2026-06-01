@@ -20,13 +20,13 @@ export default function AppLayout() {
   const isMgrOrAdmin = isManagerOrAdmin(user);
 
   const navItems = [
-    { label: "דשבורד", path: "/", icon: LayoutDashboard },
-    { label: "כל הקריאות", path: "/tickets", icon: Ticket, managerOnly: true },
-    { label: "פתיחת קריאה", path: "/tickets/new", icon: Plus },
-    { label: "חורגות SLA", path: "/sla-report", icon: AlertTriangle, managerOnly: true },
-    { label: "הגדרות SLA", path: "/sla-settings", icon: Settings, managerOnly: true },
-    { label: "ניהול משתמשים", path: "/users", icon: Users, adminOnly: true },
-  ].filter(item => {
+  { label: "דשבורד", path: "/", icon: LayoutDashboard },
+  { label: "כל הקריאות", path: "/tickets", icon: Ticket, managerOnly: true },
+  { label: "פתיחת קריאה", path: "/tickets/new", icon: Plus },
+  { label: "חורגות SLA", path: "/sla-report", icon: AlertTriangle, managerOnly: true },
+  { label: "הגדרות SLA", path: "/sla-settings", icon: Settings, managerOnly: true },
+  { label: "ניהול משתמשים", path: "/users", icon: Users, adminOnly: true }].
+  filter((item) => {
     if (item.adminOnly && !isAdmin) return false;
     if (item.managerOnly && !isMgrOrAdmin) return false;
     return true;
@@ -38,9 +38,9 @@ export default function AppLayout() {
   return (
     <div className="min-h-screen bg-background flex" dir="rtl">
       {/* Mobile overlay */}
-      {mobileOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={closeMobile} />
-      )}
+      {mobileOpen &&
+      <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={closeMobile} />
+      }
 
       {/* Sidebar */}
       <aside className={cn(
@@ -54,7 +54,7 @@ export default function AppLayout() {
               <span className="text-primary-foreground font-bold text-xs">W</span>
             </div>
             <div>
-              <p className="font-bold text-sm leading-tight">Workies AIO</p>
+              <p className="font-bold text-sm leading-tight">Workies שירות ותמיכה</p>
               <p className="text-[10px] text-sidebar-foreground/50">קריאות שירות</p>
             </div>
           </div>
@@ -66,9 +66,9 @@ export default function AppLayout() {
         {/* New ticket CTA */}
         <div className="p-3">
           <Button
-            onClick={() => { navigate("/tickets/new"); closeMobile(); }}
-            className="w-full gap-2 text-sm"
-          >
+            onClick={() => {navigate("/tickets/new");closeMobile();}}
+            className="w-full gap-2 text-sm">
+            
             <Plus className="w-4 h-4" />
             קריאה חדשה
           </Button>
@@ -76,7 +76,7 @@ export default function AppLayout() {
 
         {/* Nav */}
         <nav className="flex-1 px-2 space-y-0.5 overflow-y-auto">
-          {navItems.map(item => {
+          {navItems.map((item) => {
             const active = item.path === "/" ? location.pathname === "/" : location.pathname.startsWith(item.path);
             return (
               <Link
@@ -85,21 +85,21 @@ export default function AppLayout() {
                 onClick={closeMobile}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors",
-                  active
-                    ? "bg-sidebar-accent text-primary font-semibold"
-                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
-                )}
-              >
+                  active ?
+                  "bg-sidebar-accent text-primary font-semibold" :
+                  "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+                )}>
+                
                 <item.icon className="w-4 h-4 shrink-0" />
                 {item.label}
-              </Link>
-            );
+              </Link>);
+
           })}
         </nav>
 
         {/* User */}
-        {user && (
-          <div className="p-3 border-t border-sidebar-border">
+        {user &&
+        <div className="p-3 border-t border-sidebar-border">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-sidebar-accent flex items-center justify-center text-xs font-bold shrink-0">
                 {user.full_name?.[0] || "U"}
@@ -113,7 +113,7 @@ export default function AppLayout() {
               </button>
             </div>
           </div>
-        )}
+        }
       </aside>
 
       {/* Main content */}
@@ -140,6 +140,6 @@ export default function AppLayout() {
           <Outlet />
         </main>
       </div>
-    </div>
-  );
+    </div>);
+
 }
