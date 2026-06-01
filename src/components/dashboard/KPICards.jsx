@@ -25,24 +25,27 @@ function KPICard({ title, value, icon: Icon, color, onClick }) {
 
 export default function KPICards({ tickets }) {
   const navigate = useNavigate();
-  const now = new Date();
+  const nowMs = Date.now();
   const open = tickets.filter(t => t.status !== 'נסגרה');
   const inProgress = tickets.filter(t => ['בטיפול', 'שויכה לטיפול'].includes(t.status));
-  const breached = open.filter(t => t.sla_deadline && new Date(t.sla_deadline) < now);
+  const breached = open.filter(t => {
+    const dlMs = t.sla_deadline_ms ? Number(t.sla_deadline_ms) : (t.sla_deadline ? new Date(t.sla_deadline).getTime() : null);
+    return dlMs && dlMs < nowMs;
+  });
   const critical = open.filter(t => t.priority === 'קריטית');
 
   const closedTickets = tickets.filter(t => ["טופלה", "נסגרה"].includes(t.status));
   const validForAvg = closedTickets.filter(t => {
-    const start = t.created_date;
+    const startMs = t.opened_at_ms ? Number(t.opened_at_ms) : (t.opened_at ? new Date(t.opened_at).getTime() : (t.created_date ? new Date(t.created_date).getTime() : null));
     const end = t.closed_at || t.resolved_at;
-    return start && end && new Date(end) > new Date(start);
+    return startMs && end && new Date(end).getTime() > startMs;
   });
   let avgLabel = "אין נתונים";
   if (validForAvg.length > 0) {
     const totalMs = validForAvg.reduce((s, t) => {
-      const start = new Date(t.created_date).getTime();
+      const startMs = t.opened_at_ms ? Number(t.opened_at_ms) : (t.opened_at ? new Date(t.opened_at).getTime() : new Date(t.created_date).getTime());
       const end = new Date(t.closed_at || t.resolved_at).getTime();
-      return s + (end - start);
+      return s + (end - startMs);
     }, 0);
     const avgMs = totalMs / validForAvg.length;
     const totalMinutes = Math.round(avgMs / 60000);

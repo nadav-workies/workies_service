@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { StatusBadge, PriorityBadge, SlaBadge } from "@/components/tickets/TicketStatusBadge";
-import { getTimeRemainingLabel, isManagerOrAdmin } from "@/lib/slaUtils";
+import { getTimeRemainingLabel, getDeadlineMs, getOpenedAtMs, isTicketBreached, isManagerOrAdmin } from "@/lib/slaUtils";
 import { format } from "date-fns";
 import { ArrowRight, User, Phone, MapPin, Clock, Shield, MessageSquare, Loader2, CheckCircle, AlertTriangle, Star, ExternalLink } from "lucide-react";
 import FeedbackModal from "@/components/tickets/FeedbackModal";
@@ -89,8 +89,9 @@ export default function TicketDetail() {
   const handleClose = () => {
     if (!closeForm.resolution_summary || !closeForm.customer_response_sent) return;
     const now = new Date();
-    const isBreach = ticket.sla_deadline && new Date(ticket.sla_deadline) < now;
-    if (isBreach && !closeForm.sla_breach_reason) return;
+    const currentBreach = isTicketBreached(ticket);
+    if (currentBreach && !closeForm.sla_breach_reason) return;
+    const isBreach = currentBreach;
     const closedTicket = {
       ...ticket,
       status: "נסגרה",
@@ -128,8 +129,10 @@ export default function TicketDetail() {
   if (!ticket || !canView) return <div className="text-center py-20 text-muted-foreground">הקריאה לא נמצאה או שאין לך הרשאה לצפות בה</div>;
 
   const isClosed = ticket.status === "נסגרה";
-  const isBreach = !isClosed && ticket.sla_deadline && new Date(ticket.sla_deadline) < new Date();
-  const sla = getTimeRemainingLabel(ticket.sla_deadline);
+  const isBreach = isTicketBreached(ticket);
+  const sla = getTimeRemainingLabel(ticket);
+  const slaDeadlineMs = getDeadlineMs(ticket);
+  const openedAtMs = getOpenedAtMs(ticket);
 
   return (
     <div className="max-w-4xl mx-auto" dir="rtl">
@@ -166,9 +169,9 @@ export default function TicketDetail() {
                 <InfoRow icon={MapPin} label="חדר" value={ticket.room_number} />
                 <InfoRow icon={Phone} label="טלפון" value={ticket.phone} dir="ltr" />
                 <InfoRow icon={MapPin} label="אזור" value={ticket.area} />
-                <InfoRow icon={Clock} label="נפתחה" value={format(new Date(ticket.created_date), "dd/MM/yyyy HH:mm")} />
-                {ticket.sla_deadline && (
-                  <InfoRow icon={Shield} label="יעד SLA" value={format(new Date(ticket.sla_deadline), "dd/MM/yyyy HH:mm")} />
+                <InfoRow icon={Clock} label="נפתחה" value={openedAtMs ? format(new Date(openedAtMs), "dd/MM/yyyy HH:mm") : "—"} />
+                {slaDeadlineMs && (
+                  <InfoRow icon={Shield} label="יעד SLA" value={format(new Date(slaDeadlineMs), "dd/MM/yyyy HH:mm")} />
                 )}
               </div>
               <div className="mt-3 pt-3 border-t">

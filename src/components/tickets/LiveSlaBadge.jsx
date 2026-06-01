@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
+import { getDeadlineMs } from '@/lib/slaUtils';
 
-export function getLiveSlaDisplay(ticket, now = new Date()) {
+export function getLiveSlaDisplay(ticket, nowMs = Date.now()) {
   if (ticket.status === 'נסגרה') return { label: 'נסגרה', status: 'closed', pulse: false };
-  if (!ticket.sla_deadline || !ticket.sla_minutes) return { label: 'ללא SLA', status: 'none', pulse: false };
 
-  const deadline = new Date(ticket.sla_deadline);
-  const diffMs = deadline.getTime() - now.getTime();
+  const deadlineMs = getDeadlineMs(ticket);
+  const slaMinutes = Number(ticket.sla_minutes || 0);
+
+  if (!deadlineMs || !slaMinutes) return { label: 'ללא SLA', status: 'none', pulse: false };
+
+  const diffMs = deadlineMs - nowMs;
   const diffMinutes = Math.ceil(diffMs / 60000);
 
   if (diffMs <= 0) {
@@ -17,10 +21,10 @@ export function getLiveSlaDisplay(ticket, now = new Date()) {
   }
 
   let criticalThreshold;
-  if (ticket.sla_minutes <= 5) criticalThreshold = ticket.sla_minutes;
-  else if (ticket.sla_minutes === 10) criticalThreshold = 5;
-  else if (ticket.sla_minutes === 20) criticalThreshold = 10;
-  else if (ticket.sla_minutes === 30) criticalThreshold = 15;
+  if (slaMinutes <= 5) criticalThreshold = slaMinutes;
+  else if (slaMinutes === 10) criticalThreshold = 5;
+  else if (slaMinutes === 20) criticalThreshold = 10;
+  else if (slaMinutes === 30) criticalThreshold = 15;
   else criticalThreshold = 30;
 
   const hours = Math.floor(diffMinutes / 60);
@@ -42,15 +46,15 @@ const STATUS_CLASSES = {
 };
 
 export default function LiveSlaBadge({ ticket }) {
-  const [now, setNow] = useState(new Date());
+  const [nowMs, setNowMs] = useState(Date.now());
 
   useEffect(() => {
     if (ticket.status === 'נסגרה') return;
-    const interval = setInterval(() => setNow(new Date()), 10000);
+    const interval = setInterval(() => setNowMs(Date.now()), 10000);
     return () => clearInterval(interval);
   }, [ticket.status]);
 
-  const { label, status, pulse } = getLiveSlaDisplay(ticket, now);
+  const { label, status, pulse } = getLiveSlaDisplay(ticket, nowMs);
   const cls = STATUS_CLASSES[status] || STATUS_CLASSES.none;
 
   return (

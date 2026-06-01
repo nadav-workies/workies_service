@@ -202,7 +202,14 @@ Deno.serve(async (req) => {
 
     for (const t of openTickets) {
       // SLA reminder
-      if (t.sla_warning_at && !t.sla_reminder_sent && new Date(t.sla_warning_at) <= now) {
+      const warningAtMs = t.sla_warning_at_ms
+        ? Number(t.sla_warning_at_ms)
+        : (t.sla_warning_at ? new Date(t.sla_warning_at).getTime() : null);
+      const deadlineMs = t.sla_deadline_ms
+        ? Number(t.sla_deadline_ms)
+        : (t.sla_deadline ? new Date(t.sla_deadline).getTime() : null);
+
+      if (warningAtMs && !t.sla_reminder_sent && warningAtMs <= now.getTime()) {
         const setting = await getSetting(base44, 'manager_sla_reminder');
         if (setting?.enabled) {
           let sent = false;
@@ -221,7 +228,7 @@ Deno.serve(async (req) => {
       }
 
       // SLA breach
-      if (t.sla_deadline && !t.sla_breach_alert_sent && new Date(t.sla_deadline) < now) {
+      if (deadlineMs && !t.sla_breach_alert_sent && deadlineMs < now.getTime()) {
         const setting = await getSetting(base44, 'manager_sla_breached');
         if (setting?.enabled) {
           let sent = false;

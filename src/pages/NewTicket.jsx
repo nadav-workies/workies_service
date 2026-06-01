@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowRight, Loader2, Send, Search } from "lucide-react";
-import { generateTicketNumber, getSlaDeadline, getSlaWarningAt, PRIORITY_SLA_MINUTES, isManagerOrAdmin } from "@/lib/slaUtils";
+import { generateTicketNumber, calculateSlaDeadlineMs, calculateSlaWarningAtMs, PRIORITY_SLA_MINUTES, isManagerOrAdmin } from "@/lib/slaUtils";
 import { QUICK_TICKET_LIST } from "@/lib/quickTickets";
 import { WORKIES_ROOMS, WORKIES_PUBLIC_AREAS } from "@/lib/workiesRooms";
 import QuickTicketSelector from "@/components/tickets/QuickTicketSelector";
@@ -152,11 +152,18 @@ export default function NewTicket() {
 
   const mutation = useMutation({
     mutationFn: async (data) => {
-      const now = new Date().toISOString();
+      const openedAtDate = new Date();
+      const openedAtMs = openedAtDate.getTime();
       const ticketNumber = generateTicketNumber();
-      const slaMin = data.sla_minutes || PRIORITY_SLA_MINUTES[data.priority];
-      const slaDeadline = getSlaDeadline(now, slaMin);
-      const slaWarningAt = getSlaWarningAt(now, slaMin);
+      const slaMin = Number(data.sla_minutes || PRIORITY_SLA_MINUTES[data.priority] || 0) || null;
+
+      const slaDeadlineMs = slaMin ? calculateSlaDeadlineMs(openedAtMs, slaMin) : null;
+      const slaWarningAtMs = slaMin ? calculateSlaWarningAtMs(openedAtMs, slaMin) : null;
+
+      // בדיקת תקינות: deadline חייב להיות אחרי פתיחה
+      if (slaDeadlineMs && slaDeadlineMs <= openedAtMs) {
+        throw new Error("SLA deadline must be after opened_at");
+      }
 
       // For regular users, use their own name if no customer_name given
       const customerName = data.customer_name || user?.full_name || "";
@@ -165,8 +172,13 @@ export default function NewTicket() {
         ...data,
         customer_name: customerName,
         ticket_number: ticketNumber,
-        sla_deadline: slaDeadline,
-        sla_warning_at: slaWarningAt,
+        opened_at: openedAtDate.toISOString(),
+        opened_at_ms: openedAtMs,
+        sla_minutes: slaMin,
+        sla_deadline: slaDeadlineMs ? new Date(slaDeadlineMs).toISOString() : null,
+        sla_deadline_ms: slaDeadlineMs,
+        sla_warning_at: slaWarningAtMs ? new Date(slaWarningAtMs).toISOString() : null,
+        sla_warning_at_ms: slaWarningAtMs,
         sla_breached: false,
         customer_response_sent: false,
         manager_alert_sent: false,
@@ -178,7 +190,7 @@ export default function NewTicket() {
         created_by: user?.email || "",
         created_by_id: user?.id || "",
         created_by_name: user?.full_name || "",
-        update_history: [{ date: now, action: "קריאה נפתחה", user: user?.full_name || "מערכת", note: "" }]
+        update_history: [{ date: openedAtDate.toISOString(), action: "קריאה נפתחה", user: user?.full_name || "מערכת", note: "" }]
       });
 
       // Send confirmation to user + urgent manager alert (handled in ticketNotifications)

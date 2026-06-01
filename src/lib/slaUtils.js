@@ -18,44 +18,70 @@ export const PRIORITY_SLA_MINUTES = {
   'קריטית': 2 * 60,
 };
 
-export function getSlaDeadline(createdAt, slaMinutes) {
-  if (!slaMinutes) return null;
-  const d = new Date(createdAt);
-  d.setMinutes(d.getMinutes() + slaMinutes);
-  return d.toISOString();
+// ─── חישוב יעד SLA לפי ms ─────────────────────────────────────────
+export function calculateSlaDeadlineMs(openedAtMs, slaMinutes) {
+  if (!openedAtMs || !slaMinutes) return null;
+  return Number(openedAtMs) + Number(slaMinutes) * 60 * 1000;
 }
 
-export function getSlaWarningAt(createdAt, slaMinutes) {
-  if (!slaMinutes) return null;
-  const created = new Date(createdAt);
-
-  if (slaMinutes <= 5) return created.toISOString();
-
+// ─── חישוב מועד תזכורת SLA לפי ms ────────────────────────────────
+export function calculateSlaWarningAtMs(openedAtMs, slaMinutes) {
+  if (!openedAtMs || !slaMinutes) return null;
+  const min = Number(slaMinutes);
+  if (min <= 5) return Number(openedAtMs); // אזהרה מיידית
   let warningBefore;
-  if (slaMinutes === 10) warningBefore = 5;
-  else if (slaMinutes === 20) warningBefore = 10;
-  else if (slaMinutes === 30) warningBefore = 15;
+  if (min === 10) warningBefore = 5;
+  else if (min === 20) warningBefore = 10;
+  else if (min === 30) warningBefore = 15;
   else warningBefore = 30;
-
-  return new Date(created.getTime() + (slaMinutes - warningBefore) * 60000).toISOString();
+  return Number(openedAtMs) + (min - warningBefore) * 60 * 1000;
 }
 
+// ─── שליפת deadline ms מקריאה (עם fallback מ-ISO string) ──────────
+export function getDeadlineMs(ticket) {
+  if (ticket.sla_deadline_ms) return Number(ticket.sla_deadline_ms);
+  if (ticket.sla_deadline) return new Date(ticket.sla_deadline).getTime();
+  return null;
+}
+
+// ─── שליפת opened_at ms מקריאה (עם fallback מ-created_date) ──────
+export function getOpenedAtMs(ticket) {
+  if (ticket.opened_at_ms) return Number(ticket.opened_at_ms);
+  if (ticket.opened_at) return new Date(ticket.opened_at).getTime();
+  if (ticket.created_date) return new Date(ticket.created_date).getTime();
+  return null;
+}
+
+// ─── בדיקת חריגת SLA ─────────────────────────────────────────────
+export function isTicketBreached(ticket, nowMs = Date.now()) {
+  if (ticket.status === 'נסגרה') return false;
+  const deadlineMs = getDeadlineMs(ticket);
+  return Boolean(deadlineMs && deadlineMs < nowMs);
+}
+
+// ─── סטטוס SLA ────────────────────────────────────────────────────
 export function getSlaStatus(ticket) {
   if (ticket.status === 'נסגרה') return 'closed';
-  if (!ticket.sla_deadline) return 'ok';
-  const now = new Date();
-  const deadline = new Date(ticket.sla_deadline);
-  if (deadline < now) return 'breached';
-  const warning = ticket.sla_warning_at ? new Date(ticket.sla_warning_at) : null;
-  if (warning && now >= warning) return 'warning';
+  const deadlineMs = getDeadlineMs(ticket);
+  if (!deadlineMs) return 'none';
+  const now = Date.now();
+  if (deadlineMs < now) return 'breached';
+  const warningAtMs = ticket.sla_warning_at_ms
+    ? Number(ticket.sla_warning_at_ms)
+    : ticket.sla_warning_at
+      ? new Date(ticket.sla_warning_at).getTime()
+      : null;
+  if (warningAtMs && now >= warningAtMs) return 'warning';
   return 'ok';
 }
 
-export function getTimeRemainingLabel(slaDeadline) {
-  if (!slaDeadline) return { text: '—', breached: false };
-  const now = new Date();
-  const deadline = new Date(slaDeadline);
-  const diffMs = deadline - now;
+// ─── תצוגת זמן שנותר (לטבלאות ובאדג׳ים) ─────────────────────────
+export function getTimeRemainingLabel(ticket) {
+  const deadlineMs = getDeadlineMs(ticket);
+  if (!deadlineMs) return { text: '—', breached: false };
+
+  const now = Date.now();
+  const diffMs = deadlineMs - now;
 
   if (diffMs <= 0) {
     const over = Math.abs(diffMs);
