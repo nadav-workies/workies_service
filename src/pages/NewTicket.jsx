@@ -8,20 +8,75 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowRight, Loader2, Send } from "lucide-react";
-import { generateTicketNumber, getSlaDeadline, getSlaWarningAt, PRIORITY_SLA_MINUTES } from "@/lib/slaUtils";
+import { ArrowRight, Loader2, Send, Search } from "lucide-react";
+import { generateTicketNumber, getSlaDeadline, getSlaWarningAt, PRIORITY_SLA_MINUTES, isManagerOrAdmin } from "@/lib/slaUtils";
 import { QUICK_TICKET_LIST } from "@/lib/quickTickets";
+import { WORKIES_ROOMS, WORKIES_PUBLIC_AREAS } from "@/lib/workiesRooms";
 import QuickTicketSelector from "@/components/tickets/QuickTicketSelector";
 
-const AREAS = ["משרד / חדר לקוח","חלל משותף","חדר ישיבות","מטבחון","שירותים","מיזוג","חשמל","אינטרנט / תקשורת","ניקיון","תחזוקה כללית","אחר"];
 const PRIORITIES = ["רגילה","בינונית","גבוהה","קריטית"];
-
 const PRIORITY_BUTTON_COLORS = {
   'קריטית': 'bg-red-500 text-white border-red-500',
   'גבוהה': 'bg-orange-500 text-white border-orange-500',
   'בינונית': 'bg-amber-500 text-white border-amber-500',
   'רגילה': 'bg-blue-500 text-white border-blue-500',
 };
+
+function RoomSelector({ value, onChange }) {
+  const [search, setSearch] = useState("");
+  const [mode, setMode] = useState("room"); // "room" | "public"
+
+  const filteredRooms = WORKIES_ROOMS.filter(r =>
+    r.room_number.includes(search) || r.room_label.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-2">
+        <button type="button" onClick={() => setMode("room")}
+          className={`text-xs px-3 py-1 rounded-full border transition-all ${mode === "room" ? "bg-primary text-primary-foreground border-primary" : "border-border hover:border-primary"}`}>
+          חדר / משרד
+        </button>
+        <button type="button" onClick={() => setMode("public")}
+          className={`text-xs px-3 py-1 rounded-full border transition-all ${mode === "public" ? "bg-primary text-primary-foreground border-primary" : "border-border hover:border-primary"}`}>
+          אזור ציבורי
+        </button>
+      </div>
+
+      {mode === "room" && (
+        <div className="space-y-1.5">
+          <div className="relative">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input placeholder="חיפוש חדר..." value={search} onChange={e => setSearch(e.target.value)} className="pr-9 text-sm h-9" />
+          </div>
+          <div className="max-h-40 overflow-y-auto border rounded-lg p-1 bg-card">
+            {filteredRooms.slice(0, 30).map(room => (
+              <button key={room.room_number} type="button"
+                onClick={() => onChange({ room_number: room.room_number, room_label: room.room_label, room_area: room.room_area, public_area_key: null, public_area_label: null })}
+                className={`w-full flex items-center justify-between px-3 py-1.5 rounded-md text-right transition-colors text-sm ${value?.room_number === room.room_number ? "bg-primary/10 font-medium" : "hover:bg-muted"}`}>
+                <span>{room.room_label}</span>
+                <span className="text-xs text-muted-foreground font-mono">{room.room_number}</span>
+              </button>
+            ))}
+          </div>
+          {value?.room_number && <p className="text-xs text-primary font-medium">✓ נבחר: {value.room_label} (חדר {value.room_number})</p>}
+        </div>
+      )}
+
+      {mode === "public" && (
+        <div className="grid grid-cols-2 gap-1.5">
+          {WORKIES_PUBLIC_AREAS.map(area => (
+            <button key={area.area_key} type="button"
+              onClick={() => onChange({ room_number: null, room_label: null, room_area: area.room_area, public_area_key: area.area_key, public_area_label: area.area_label })}
+              className={`px-3 py-2 rounded-lg border text-sm text-right transition-all ${value?.public_area_key === area.area_key ? "border-primary bg-primary/10 font-medium" : "border-border hover:border-primary"}`}>
+              {area.area_label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function NewTicket() {
   const navigate = useNavigate();
@@ -30,7 +85,6 @@ export default function NewTicket() {
   const [selectedQuickId, setSelectedQuickId] = useState(null);
   const [form, setForm] = useState({
     customer_name: "",
-    room_number: "",
     phone: "",
     issue_description: "",
     area: "",
@@ -40,12 +94,29 @@ export default function NewTicket() {
     sla_minutes: null,
     sla_label: "",
     notes: "",
+    room_number: null,
+    room_label: null,
+    room_area: null,
+    public_area_key: null,
+    public_area_label: null,
   });
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
+    base44.auth.me().then(u => {
+      setUser(u);
+      // Auto-fill room from user profile
+      if (u?.default_location_type === "room" && u?.default_room_number) {
+        setForm(f => ({
+          ...f,
+          room_number: u.default_room_number,
+          room_label: u.default_room_label,
+          room_area: u.default_room_area,
+        }));
+      }
+    }).catch(() => {});
   }, []);
 
+  const isMgr = isManagerOrAdmin(user);
   const update = (key, value) => setForm(f => ({ ...f, [key]: value }));
 
   const handleQuickSelect = (qt) => {
@@ -62,6 +133,10 @@ export default function NewTicket() {
     }));
   };
 
+  const handleLocationChange = (loc) => {
+    setForm(f => ({ ...f, ...loc }));
+  };
+
   const mutation = useMutation({
     mutationFn: async (data) => {
       const now = new Date().toISOString();
@@ -70,8 +145,12 @@ export default function NewTicket() {
       const slaDeadline = getSlaDeadline(now, slaMin);
       const slaWarningAt = getSlaWarningAt(now, slaMin);
 
+      // For regular users, use their own name if no customer_name given
+      const customerName = data.customer_name || user?.full_name || "";
+
       const ticket = await base44.entities.ServiceTicket.create({
         ...data,
+        customer_name: customerName,
         ticket_number: ticketNumber,
         sla_deadline: slaDeadline,
         sla_warning_at: slaWarningAt,
@@ -81,32 +160,38 @@ export default function NewTicket() {
         sla_reminder_sent: false,
         sla_breach_alert_sent: false,
         status: "פתוחה",
+        source_system: "Base44-ServiceTickets",
+        aio_ready: true,
         created_by: user?.email || "",
         created_by_id: user?.id || "",
         created_by_name: user?.full_name || "",
         update_history: [{ date: now, action: "קריאה נפתחה", user: user?.full_name || "מערכת", note: "" }]
       });
 
-      // Send alert for urgent/critical
       if (['גבוהה', 'קריטית'].includes(data.priority)) {
         base44.functions.invoke('notifyManagers', { ticket, type: 'urgent' }).catch(() => {});
       }
-
       return ticket;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
-      navigate("/tickets");
+      queryClient.invalidateQueries({ queryKey: ['my-tickets'] });
+      navigate("/");
     },
   });
 
-  const isValid = form.customer_name && form.room_number && form.phone && form.issue_description && form.area;
+  const locationDisplay = form.room_label
+    ? `חדר ${form.room_label} (${form.room_number})`
+    : form.public_area_label
+    ? form.public_area_label
+    : null;
+
+  const isValid = form.issue_description && form.area && (form.room_number || form.public_area_key || isMgr);
 
   return (
     <div className="max-w-2xl mx-auto" dir="rtl">
       <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-5 transition-colors">
-        <ArrowRight className="w-4 h-4" />
-        חזרה
+        <ArrowRight className="w-4 h-4" />חזרה
       </button>
 
       <div className="space-y-4">
@@ -123,49 +208,82 @@ export default function NewTicket() {
             <CardTitle className="text-base font-semibold">פרטי הקריאה</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label>שם הלקוח *</Label>
-                <Input value={form.customer_name} onChange={e => update("customer_name", e.target.value)} placeholder="שם מלא" />
+
+            {/* Location */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label>מיקום *</Label>
+                {locationDisplay && <span className="text-xs text-primary font-medium">✓ {locationDisplay}</span>}
               </div>
-              <div className="space-y-1.5">
-                <Label>מספר חדר *</Label>
-                <Input value={form.room_number} onChange={e => update("room_number", e.target.value)} placeholder="302" />
-              </div>
-              <div className="space-y-1.5">
-                <Label>טלפון *</Label>
-                <Input value={form.phone} onChange={e => update("phone", e.target.value)} placeholder="050-0000000" type="tel" dir="ltr" />
-              </div>
-              <div className="space-y-1.5">
-                <Label>אזור התקלה *</Label>
-                <Select value={form.area} onValueChange={v => update("area", v)}>
-                  <SelectTrigger><SelectValue placeholder="בחר אזור" /></SelectTrigger>
-                  <SelectContent>{AREAS.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
+              {/* If user has a default room, show it with option to change */}
+              {!isMgr && user?.default_location_type === "room" && user?.default_room_number && (
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 p-2 rounded-lg bg-muted text-sm">
+                    חדר {user.default_room_label} ({user.default_room_number})
+                  </div>
+                  <Button variant="ghost" size="sm" className="text-xs h-auto py-1" onClick={() => setForm(f => ({ ...f, room_number: null, room_label: null, room_area: null }))}>
+                    שנה
+                  </Button>
+                </div>
+              )}
+              {/* Show selector if: manager, or user without default room, or user chose to change */}
+              {(isMgr || !user?.default_location_type || user?.default_location_type === "none" || user?.default_location_type !== "room" || !form.room_number) && (
+                <RoomSelector value={form} onChange={handleLocationChange} />
+              )}
             </div>
+
+            {/* Manager fields */}
+            {isMgr && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label>שם הלקוח</Label>
+                  <Input value={form.customer_name} onChange={e => update("customer_name", e.target.value)} placeholder="שם מלא" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>טלפון</Label>
+                  <Input value={form.phone} onChange={e => update("phone", e.target.value)} placeholder="050-0000000" type="tel" dir="ltr" />
+                </div>
+              </div>
+            )}
 
             <div className="space-y-1.5">
               <Label>מהות התקלה *</Label>
               <Input value={form.issue_description} onChange={e => update("issue_description", e.target.value)} placeholder="תיאור קצר של התקלה" />
             </div>
 
-            <div className="space-y-1.5">
-              <Label>דחיפות</Label>
-              <div className="flex flex-wrap gap-2">
-                {PRIORITIES.map(p => (
-                  <button key={p} type="button" onClick={() => { update("priority", p); if (!selectedQuickId) update("sla_minutes", null); }}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${form.priority === p ? PRIORITY_BUTTON_COLORS[p] : 'bg-card border-border hover:border-foreground/30'}`}>
-                    {p}
-                  </button>
-                ))}
+            {/* Area - only if no quick ticket selected */}
+            {!selectedQuickId && (
+              <div className="space-y-1.5">
+                <Label>אזור התקלה *</Label>
+                <Select value={form.area} onValueChange={v => update("area", v)}>
+                  <SelectTrigger><SelectValue placeholder="בחר אזור" /></SelectTrigger>
+                  <SelectContent>
+                    {["משרד / חדר לקוח","חלל משותף","חדר ישיבות","מטבחון","שירותים","מיזוג","חשמל","אינטרנט / תקשורת","ניקיון","תחזוקה כללית","אחר"].map(a => (
+                      <SelectItem key={a} value={a}>{a}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              {form.sla_label ? (
-                <p className="text-xs text-muted-foreground">SLA: {form.sla_label}</p>
-              ) : (
-                <p className="text-xs text-muted-foreground">SLA: {form.priority === 'קריטית' ? '2 שעות' : form.priority === 'גבוהה' ? '8 שעות' : form.priority === 'בינונית' ? '24 שעות' : '48 שעות'}</p>
-              )}
-            </div>
+            )}
+
+            {/* Priority — manager or manual (no quick ticket) */}
+            {(isMgr || !selectedQuickId) && (
+              <div className="space-y-1.5">
+                <Label>דחיפות</Label>
+                <div className="flex flex-wrap gap-2">
+                  {PRIORITIES.map(p => (
+                    <button key={p} type="button"
+                      onClick={() => { update("priority", p); if (!selectedQuickId) update("sla_minutes", null); }}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${form.priority === p ? PRIORITY_BUTTON_COLORS[p] : 'bg-card border-border hover:border-foreground/30'}`}>
+                      {p}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {form.sla_label || `SLA: ${form.priority === 'קריטית' ? '2 שעות' : form.priority === 'גבוהה' ? '8 שעות' : form.priority === 'בינונית' ? '24 שעות' : '48 שעות'}`}
+                </p>
+              </div>
+            )}
 
             <div className="space-y-1.5">
               <Label>הערות</Label>
