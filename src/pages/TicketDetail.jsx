@@ -61,14 +61,18 @@ export default function TicketDetail() {
   const handleStatusChange = (newStatus) => {
     if (newStatus === "נסגרה") { setCloseDialog(true); return; }
     updateMutation.mutate({ updates: { status: newStatus }, historyEntry: addHistory(`סטטוס שונה ל: ${newStatus}`) });
+    // Notify user of status change
+    base44.functions.invoke('ticketNotifications', { action: 'status_changed', ticket: { ...ticket, status: newStatus }, newStatus, oldStatus: ticket.status }).catch(() => {});
   };
 
   const handleAssign = () => {
     if (!assignName.trim()) return;
+    const newStatus = ticket.status === "פתוחה" ? "שויכה לטיפול" : ticket.status;
     updateMutation.mutate({
-      updates: { assigned_to: assignName, status: ticket.status === "פתוחה" ? "שויכה לטיפול" : ticket.status },
+      updates: { assigned_to: assignName, status: newStatus },
       historyEntry: addHistory(`שויכה לטיפול: ${assignName}`)
     });
+    base44.functions.invoke('ticketNotifications', { action: 'status_changed', ticket: { ...ticket, assigned_to: assignName, status: newStatus }, newStatus: 'שויכה לטיפול', oldStatus: ticket.status }).catch(() => {});
     setAssignName("");
   };
 
@@ -83,17 +87,20 @@ export default function TicketDetail() {
     const now = new Date();
     const isBreach = ticket.sla_deadline && new Date(ticket.sla_deadline) < now;
     if (isBreach && !closeForm.sla_breach_reason) return;
+    const closedTicket = {
+      ...ticket,
+      status: "נסגרה",
+      resolution_summary: closeForm.resolution_summary,
+      customer_response_sent: true,
+      closed_at: now.toISOString(),
+      sla_breached: !!isBreach,
+      ...(isBreach && { sla_breach_reason: closeForm.sla_breach_reason }),
+    };
     updateMutation.mutate({
-      updates: {
-        status: "נסגרה",
-        resolution_summary: closeForm.resolution_summary,
-        customer_response_sent: true,
-        closed_at: now.toISOString(),
-        sla_breached: !!isBreach,
-        ...(isBreach && { sla_breach_reason: closeForm.sla_breach_reason }),
-      },
+      updates: closedTicket,
       historyEntry: addHistory("קריאה נסגרה", closeForm.resolution_summary)
     });
+    base44.functions.invoke('ticketNotifications', { action: 'status_changed', ticket: closedTicket, newStatus: 'נסגרה', oldStatus: ticket.status }).catch(() => {});
     setCloseDialog(false);
   };
 

@@ -1,0 +1,51 @@
+{
+  "name": "NotificationSetting",
+  "type": "object",
+  "properties": {
+    "key": {
+      "type": "string",
+      "description": "\u05de\u05e4\u05ea\u05d7 \u05d9\u05d9\u05d7\u05d5\u05d3\u05d9 \u05e9\u05dc \u05e1\u05d5\u05d2 \u05d4\u05d4\u05ea\u05e8\u05d0\u05d4"
+    },
+    "label": {
+      "type": "string",
+      "description": "\u05e9\u05dd \u05d4\u05d4\u05ea\u05e8\u05d0\u05d4 \u05dc\u05d4\u05e6\u05d2\u05d4"
+    },
+    "recipient_type": {
+      "type": "string",
+      "enum": [
+        "user",
+        "managers",
+        "admin"
+      ],
+      "description": "\u05dc\u05de\u05d9 \u05e0\u05e9\u05dc\u05d7\u05ea \u05d4\u05d4\u05ea\u05e8\u05d0\u05d4"
+    },
+    "enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "\u05d4\u05d0\u05dd \u05d4\u05d4\u05ea\u05e8\u05d0\u05d4 \u05e4\u05e2\u05d9\u05dc\u05d4"
+    },
+    "subject_template": {
+      "type": "string",
+      "description": "\u05ea\u05d1\u05e0\u05d9\u05ea \u05e0\u05d5\u05e9\u05d0 \u05d4\u05de\u05d9\u05d9\u05dc"
+    },
+    "body_template": {
+      "type": "string",
+      "description": "\u05ea\u05d1\u05e0\u05d9\u05ea \u05d2\u05d5\u05e3 \u05d4\u05de\u05d9\u05d9\u05dc"
+    },
+    "reminder_minutes": {
+      "type": "number",
+      "description": "\u05ea\u05d3\u05d9\u05e8\u05d5\u05ea \u05ea\u05d6\u05db\u05d5\u05e8\u05ea \u05d1\u05d3\u05e7\u05d5\u05ea"
+    },
+    "send_once": {
+      "type": "boolean",
+      "default": true,
+      "description": "\u05d4\u05d0\u05dd \u05dc\u05e9\u05dc\u05d5\u05d7 \u05e4\u05e2\u05dd \u05d0\u05d7\u05ea \u05d1\u05dc\u05d1\u05d3"
+    }
+  },
+  "required": [
+    "key",
+    "label",
+    "recipient_type",
+    "enabled"
+  ]
+}

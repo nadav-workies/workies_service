@@ -168,9 +168,8 @@ export default function NewTicket() {
         update_history: [{ date: now, action: "קריאה נפתחה", user: user?.full_name || "מערכת", note: "" }]
       });
 
-      if (['גבוהה', 'קריטית'].includes(data.priority)) {
-        base44.functions.invoke('notifyManagers', { ticket, type: 'urgent' }).catch(() => {});
-      }
+      // Send confirmation to user + urgent manager alert (handled in ticketNotifications)
+      base44.functions.invoke('ticketNotifications', { action: 'ticket_created', ticket }).catch(() => {});
       return ticket;
     },
     onSuccess: () => {

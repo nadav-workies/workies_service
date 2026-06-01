@@ -17,6 +17,7 @@ import NewTicket from '@/pages/NewTicket';
 import TicketDetail from '@/pages/TicketDetail';
 import SLAReport from '@/pages/SLAReport';
 import SLASettings from '@/pages/SLASettings';
+import NotificationSettings from '@/pages/NotificationSettings';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -48,6 +49,7 @@ const AuthenticatedApp = () => {
           <Route path="/tickets/:id" element={<TicketDetail />} />
           <Route path="/sla-report" element={<SLAReport />} />
           <Route path="/sla-settings" element={<SLASettings />} />
+          <Route path="/notification-settings" element={<NotificationSettings />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
