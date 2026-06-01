@@ -1,0 +1,145 @@
+{
+  "name": "ServiceTicket",
+  "type": "object",
+  "properties": {
+    "ticket_number": {
+      "type": "string",
+      "description": "\u05de\u05e1\u05e4\u05e8 \u05e7\u05e8\u05d9\u05d0\u05d4 \u05d9\u05d9\u05d7\u05d5\u05d3\u05d9"
+    },
+    "client_name": {
+      "type": "string",
+      "description": "\u05e9\u05dd \u05d4\u05dc\u05e7\u05d5\u05d7 \u05d4\u05de\u05ea\u05dc\u05d5\u05e0\u05df"
+    },
+    "room_number": {
+      "type": "string",
+      "description": "\u05de\u05e1\u05e4\u05e8 \u05d7\u05d3\u05e8 / \u05de\u05e9\u05e8\u05d3"
+    },
+    "phone_number": {
+      "type": "string",
+      "description": "\u05de\u05e1\u05e4\u05e8 \u05d8\u05dc\u05e4\u05d5\u05df"
+    },
+    "issue_description": {
+      "type": "string",
+      "description": "\u05de\u05d4\u05d5\u05ea \u05d4\u05ea\u05e7\u05dc\u05d4"
+    },
+    "fault_area": {
+      "type": "string",
+      "enum": [
+        "\u05de\u05e9\u05e8\u05d3 / \u05d7\u05d3\u05e8 \u05dc\u05e7\u05d5\u05d7",
+        "\u05d7\u05dc\u05dc \u05de\u05e9\u05d5\u05ea\u05e3",
+        "\u05d7\u05d3\u05e8 \u05d9\u05e9\u05d9\u05d1\u05d5\u05ea",
+        "\u05de\u05d8\u05d1\u05d7\u05d5\u05df",
+        "\u05e9\u05d9\u05e8\u05d5\u05ea\u05d9\u05dd",
+        "\u05de\u05d9\u05d6\u05d5\u05d2",
+        "\u05d7\u05e9\u05de\u05dc",
+        "\u05d0\u05d9\u05e0\u05d8\u05e8\u05e0\u05d8 / \u05ea\u05e7\u05e9\u05d5\u05e8\u05ea",
+        "\u05e0\u05d9\u05e7\u05d9\u05d5\u05df",
+        "\u05ea\u05d7\u05d6\u05d5\u05e7\u05d4 \u05db\u05dc\u05dc\u05d9\u05ea",
+        "\u05d0\u05d7\u05e8"
+      ],
+      "description": "\u05d0\u05d6\u05d5\u05e8 \u05d4\u05ea\u05e7\u05dc\u05d4"
+    },
+    "urgency": {
+      "type": "string",
+      "enum": [
+        "\u05e8\u05d2\u05d9\u05dc\u05d4",
+        "\u05d1\u05d9\u05e0\u05d5\u05e0\u05d9\u05ea",
+        "\u05d2\u05d1\u05d5\u05d4\u05d4",
+        "\u05e7\u05e8\u05d9\u05d8\u05d9\u05ea"
+      ],
+      "default": "\u05e8\u05d2\u05d9\u05dc\u05d4",
+      "description": "\u05e8\u05de\u05ea \u05d3\u05d7\u05d9\u05e4\u05d5\u05ea"
+    },
+    "notes": {
+      "type": "string",
+      "description": "\u05d4\u05e2\u05e8\u05d5\u05ea"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "\u05e4\u05ea\u05d5\u05d7\u05d4",
+        "\u05e9\u05d5\u05d9\u05db\u05d4 \u05dc\u05d8\u05d9\u05e4\u05d5\u05dc",
+        "\u05d1\u05d8\u05d9\u05e4\u05d5\u05dc",
+        "\u05de\u05de\u05ea\u05d9\u05e0\u05d4",
+        "\u05d8\u05d5\u05e4\u05dc\u05d4",
+        "\u05e0\u05e1\u05d2\u05e8\u05d4"
+      ],
+      "default": "\u05e4\u05ea\u05d5\u05d7\u05d4",
+      "description": "\u05e1\u05d8\u05d8\u05d5\u05e1 \u05d8\u05d9\u05e4\u05d5\u05dc"
+    },
+    "assigned_to": {
+      "type": "string",
+      "description": "\u05d0\u05d7\u05e8\u05d0\u05d9 \u05d8\u05d9\u05e4\u05d5\u05dc"
+    },
+    "sla_target": {
+      "type": "string",
+      "format": "date-time",
+      "description": "SLA \u05d9\u05e2\u05d3 - \u05ea\u05d0\u05e8\u05d9\u05da \u05d5\u05e9\u05e2\u05d4"
+    },
+    "sla_hours": {
+      "type": "number",
+      "description": "\u05e9\u05e2\u05d5\u05ea SLA \u05dc\u05e4\u05d9 \u05d3\u05d7\u05d9\u05e4\u05d5\u05ea"
+    },
+    "sla_breached": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05d7\u05e8\u05d9\u05d2\u05ea SLA"
+    },
+    "sla_breach_reason": {
+      "type": "string",
+      "enum": [
+        "\u05de\u05de\u05ea\u05d9\u05df \u05dc\u05e1\u05e4\u05e7",
+        "\u05d7\u05d5\u05e1\u05e8 \u05d1\u05d7\u05dc\u05e7\u05d9\u05dd",
+        "\u05dc\u05d0 \u05d0\u05d5\u05ea\u05e8 \u05d4\u05dc\u05e7\u05d5\u05d7",
+        "\u05d8\u05d9\u05e4\u05d5\u05dc \u05e0\u05d3\u05d7\u05d4",
+        "\u05ea\u05e7\u05dc\u05d4 \u05de\u05d5\u05e8\u05db\u05d1\u05ea",
+        "\u05e2\u05d5\u05de\u05e1 \u05ea\u05e4\u05e2\u05d5\u05dc\u05d9",
+        "\u05d0\u05d7\u05e8"
+      ],
+      "description": "\u05e1\u05d9\u05d1\u05ea \u05d7\u05e8\u05d9\u05d2\u05ea SLA"
+    },
+    "client_notified": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05de\u05e2\u05e0\u05d4 \u05dc\u05dc\u05e7\u05d5\u05d7"
+    },
+    "resolution_summary": {
+      "type": "string",
+      "description": "\u05e1\u05d9\u05db\u05d5\u05dd \u05d8\u05d9\u05e4\u05d5\u05dc"
+    },
+    "closed_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u05ea\u05d0\u05e8\u05d9\u05da \u05d5\u05e9\u05e2\u05ea \u05e1\u05d2\u05d9\u05e8\u05d4"
+    },
+    "update_history": {
+      "type": "array",
+      "description": "\u05d4\u05d9\u05e1\u05d8\u05d5\u05e8\u05d9\u05d9\u05ea \u05e2\u05d3\u05db\u05d5\u05e0\u05d9\u05dd",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "user": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "client_name",
+    "room_number",
+    "phone_number",
+    "issue_description",
+    "fault_area",
+    "urgency"
+  ]
+}

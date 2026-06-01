@@ -1,0 +1,18 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "operations_manager",
+        "service_rep",
+        "maintenance",
+        "management"
+      ],
+      "default": "service_rep",
+      "description": "\u05ea\u05e4\u05e7\u05d9\u05d3 \u05d4\u05de\u05e9\u05ea\u05de\u05e9"
+    }
+  }
+}
