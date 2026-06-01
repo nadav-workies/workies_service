@@ -73,9 +73,11 @@ Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   const now = new Date();
 
-  const { action, ticket, oldStatus, newStatus } = await req.json();
+  const { action, ticket, oldStatus, newStatus, rating, comment } = await req.json();
 
-  if (!ticket || !action) {
+  // Scheduled actions don't require a ticket
+  const scheduledActions = ['check_sla', 'check_post_closure'];
+  if (!action || (!ticket && !scheduledActions.includes(action))) {
     return Response.json({ error: 'missing action or ticket' }, { status: 400 });
   }
 
