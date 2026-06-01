@@ -102,10 +102,23 @@ export default function NewTicket() {
   });
 
   useEffect(() => {
+    // Pre-fill from URL params (e.g. when coming from service map)
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlRoom = urlParams.get('room_number');
+    if (urlRoom) {
+      setForm(f => ({
+        ...f,
+        room_number: urlRoom,
+        room_label: urlParams.get('room_label') || urlRoom,
+        room_area: urlParams.get('room_area') || '',
+        location_type: urlParams.get('location_type') || 'room',
+      }));
+    }
+
     base44.auth.me().then(u => {
       setUser(u);
-      // Auto-fill room from user profile
-      if (u?.default_location_type === "room" && u?.default_room_number) {
+      // Auto-fill room from user profile (only if not already set via URL)
+      if (!urlRoom && u?.default_location_type === "room" && u?.default_room_number) {
         setForm(f => ({
           ...f,
           room_number: u.default_room_number,
