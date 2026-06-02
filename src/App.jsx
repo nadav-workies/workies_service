@@ -21,6 +21,7 @@ import NotificationSettings from '@/pages/NotificationSettings';
 import ServiceMapPage from '@/pages/ServiceMapPage';
 import FeedbackSurvey from '@/pages/FeedbackSurvey';
 import SurveyResponses from '@/pages/SurveyResponses';
+import ResetTestData from '@/pages/ResetTestData';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -55,6 +56,7 @@ const AuthenticatedApp = () => {
           <Route path="/notification-settings" element={<NotificationSettings />} />
           <Route path="/service-map" element={<ServiceMapPage />} />
           <Route path="/survey-responses" element={<SurveyResponses />} />
+          <Route path="/reset-test-data" element={<ResetTestData />} />
         </Route>
       </Route>
       <Route path="/feedback/:token" element={<FeedbackSurvey />} />

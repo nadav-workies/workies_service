@@ -10,7 +10,7 @@ import TicketTable from "@/components/tickets/TicketTable";
 import TicketCard from "@/components/tickets/TicketCard";
 import RoomPickerModal from "@/components/user/RoomPickerModal";
 import { isManagerOrAdmin } from "@/lib/slaUtils";
-import { isTicketSlaBreached, getCurrentMonthRange, calculateMonthlySlaMetrics } from "@/lib/slaAgent.js";
+import { isTicketSlaBreached, getCurrentMonthRange, calculateMonthlySlaMetrics, getLiveTickets } from "@/lib/slaAgent.js";
 
 // ─── User dashboard ───────────────────────────────────────────────
 function UserDashboard({ user, onUserUpdated }) {
@@ -103,7 +103,8 @@ function ManagerDashboard({ user }) {
   if (isLoading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
 
   const nowMs = Date.now();
-  const open = tickets.filter(t => t.status !== 'נסגרה');
+  const liveTickets = getLiveTickets(tickets);
+  const open = liveTickets.filter(t => t.status !== 'נסגרה');
   const breached = open.filter(t => isTicketSlaBreached(t, nowMs));
   const warning = open.filter(t => {
     const dlMs = t.sla_deadline_ms ? Number(t.sla_deadline_ms) : (t.sla_deadline ? new Date(t.sla_deadline).getTime() : null);
@@ -113,7 +114,7 @@ function ManagerDashboard({ user }) {
   });
   const critical = open.filter(t => t.priority === 'קריטית');
   const monthRange = getCurrentMonthRange();
-  const slaMetrics = calculateMonthlySlaMetrics(tickets, monthRange, nowMs);
+  const slaMetrics = calculateMonthlySlaMetrics(liveTickets, monthRange, nowMs);
 
   return (
     <div className="space-y-5" dir="rtl">
@@ -127,9 +128,9 @@ function ManagerDashboard({ user }) {
         </Button>
       </div>
 
-      <KPICards tickets={tickets} slaMetrics={slaMetrics} />
+      <KPICards tickets={liveTickets} slaMetrics={slaMetrics} />
 
-      <ServiceMetricsCards tickets={tickets} surveyResponses={surveyResponses} />
+      <ServiceMetricsCards tickets={liveTickets} surveyResponses={surveyResponses} />
 
       {breached.length > 0 && (
         <section>
