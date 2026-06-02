@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -7,34 +7,47 @@ import { Loader2, Plus, Ticket } from "lucide-react";
 import TicketFilters from "@/components/tickets/TicketFilters";
 import TicketTable from "@/components/tickets/TicketTable";
 import TicketCard from "@/components/tickets/TicketCard";
+import DateRangeFilter from "@/components/dashboard/DateRangeFilter";
 import { isManagerOrAdmin } from "@/lib/slaUtils";
+import { getLiveTickets, isTicketSlaBreached } from "@/lib/slaAgent.js";
+import { getCurrentCalendarMonthRange, getCustomDateRange, filterTicketsByDateRange } from "@/lib/dateRangeUtils";
 
-// KPI filter mappings
+// KPI filter mappings (applied after date range)
 const KPI_FILTER_MAP = {
-  open:       { label: 'קריאות פתוחות',        fn: (t, now) => t.status === 'פתוחה' },
-  inProgress: { label: 'קריאות בטיפול',         fn: (t, now) => ['בטיפול', 'שויכה לטיפול'].includes(t.status) },
-  breached:   { label: 'קריאות חורגות SLA',     fn: (t, now) => t.sla_breached || (t.sla_deadline && new Date(t.sla_deadline) < now && t.status !== 'נסגרה') },
-  critical:   { label: 'קריאות קריטיות',        fn: (t, now) => t.priority === 'קריטית' && t.status !== 'נסגרה' },
-  closed:     { label: 'קריאות סגורות',          fn: (t, now) => t.status === 'נסגרה' },
-  slaRate:    { label: 'קריאות סגורות — עמידת SLA', fn: (t, now) => t.status === 'נסגרה' },
+  open:       { label: 'קריאות פתוחות',             fn: (t) => t.status !== 'נסגרה' },
+  inProgress: { label: 'קריאות בטיפול',              fn: (t) => ['בטיפול', 'שויכה לטיפול'].includes(t.status) },
+  breached:   { label: 'קריאות חורגות SLA',          fn: (t) => isTicketSlaBreached(t, Date.now()) },
+  critical:   { label: 'קריאות קריטיות',             fn: (t) => t.priority === 'קריטית' && t.status !== 'נסגרה' },
+  closed:     { label: 'קריאות סגורות',               fn: (t) => t.status === 'נסגרה' },
+  slaRate:    { label: 'קריאות סגורות — עמידת SLA',  fn: (t) => t.status === 'נסגרה' },
 };
 
 export default function Tickets() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [user, setUser] = useState(null);
   const [userLoaded, setUserLoaded] = useState(false);
   const [filters, setFilters] = useState({ status: "הכל", priority: "הכל", sla: "הכל", search: "" });
 
-  // Read KPI filter from URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const kpiKey = urlParams.get('kpi');
-  const kpiFilter = kpiKey ? KPI_FILTER_MAP[kpiKey] : null;
+  // Read params from URL
+  const kpiKey      = searchParams.get('kpi');
+  const kpiFilter   = kpiKey ? KPI_FILTER_MAP[kpiKey] : null;
+  const fromParam   = searchParams.get('from');
+  const toParam     = searchParams.get('to');
+  const statusParam = searchParams.get('status');
+  const slaParam    = searchParams.get('sla');
+
+  const initialRange = fromParam && toParam
+    ? getCustomDateRange(fromParam, toParam)
+    : getCurrentCalendarMonthRange();
+
+  const [selectedRange, setSelectedRange] = useState(initialRange);
 
   useEffect(() => {
     base44.auth.me().then(u => { setUser(u); setUserLoaded(true); }).catch(() => setUserLoaded(true));
   }, []);
 
-  const { data: tickets = [], isLoading } = useQuery({
+  const { data: rawTickets = [], isLoading } = useQuery({
     queryKey: ['tickets', user?.id],
     queryFn: () => {
       if (isManagerOrAdmin(user)) {
@@ -45,10 +58,15 @@ export default function Tickets() {
     enabled: userLoaded && !!user,
   });
 
+  // סינון: חיות → תקופה → KPI / filters
+  const liveTickets   = getLiveTickets(rawTickets);
+  const periodTickets = isManagerOrAdmin(user) ? filterTicketsByDateRange(liveTickets, selectedRange) : liveTickets;
   const now = new Date();
-  const filtered = tickets.filter(t => {
-    // KPI filter overrides regular filters
-    if (kpiFilter) return kpiFilter.fn(t, now);
+
+  const filtered = periodTickets.filter(t => {
+    if (kpiFilter) return kpiFilter.fn(t);
+    if (statusParam && t.status !== statusParam) return false;
+    if (slaParam === 'breached' && !isTicketSlaBreached(t, Date.now())) return false;
     if (filters.status !== "הכל" && t.status !== filters.status) return false;
     if (filters.priority !== "הכל" && t.priority !== filters.priority) return false;
     if (filters.sla !== "הכל") {
@@ -67,20 +85,7 @@ export default function Tickets() {
     return <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
   }
 
-  if (tickets.length === 0) {
-    return (
-      <div className="text-center py-20" dir="rtl">
-        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-          <Ticket className="w-8 h-8 text-muted-foreground" />
-        </div>
-        <p className="text-lg font-semibold mb-1">אין קריאות שירות</p>
-        <p className="text-muted-foreground text-sm mb-6">כאן יופיעו קריאות השירות לאחר פתיחת הקריאה הראשונה.</p>
-        <Button onClick={() => navigate("/tickets/new")} className="gap-2">
-          <Plus className="w-4 h-4" />פתח קריאת שירות
-        </Button>
-      </div>
-    );
-  }
+  const showDateFilter = isManagerOrAdmin(user);
 
   return (
     <div className="space-y-4" dir="rtl">
@@ -99,21 +104,30 @@ export default function Tickets() {
         </Button>
       </div>
 
-      {!kpiFilter && <TicketFilters filters={filters} onChange={setFilters} />}
+      {showDateFilter && (
+        <DateRangeFilter value={selectedRange} onChange={setSelectedRange} />
+      )}
 
-      {/* Desktop table */}
-      <div className="hidden md:block">
-        <TicketTable tickets={filtered} />
-      </div>
+      {!kpiFilter && !statusParam && !slaParam && (
+        <TicketFilters filters={filters} onChange={setFilters} />
+      )}
 
-      {/* Mobile cards */}
-      <div className="md:hidden space-y-3">
-        {filtered.length === 0 ? (
-          <p className="text-center py-8 text-muted-foreground text-sm">אין קריאות להצגה</p>
-        ) : (
-          filtered.map(t => <TicketCard key={t.id} ticket={t} />)
-        )}
-      </div>
+      {filtered.length === 0 ? (
+        <div className="text-center py-16" dir="rtl">
+          <Ticket className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+          <p className="font-semibold mb-1">אין קריאות בתקופה זו</p>
+          <p className="text-sm text-muted-foreground">נסה לשנות את טווח התאריכים או הפילטרים.</p>
+        </div>
+      ) : (
+        <>
+          <div className="hidden md:block">
+            <TicketTable tickets={filtered} />
+          </div>
+          <div className="md:hidden space-y-3">
+            {filtered.map(t => <TicketCard key={t.id} ticket={t} />)}
+          </div>
+        </>
+      )}
     </div>
   );
 }

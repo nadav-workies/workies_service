@@ -28,7 +28,7 @@ function KPICard({ title, value, icon: Icon, color, onClick }) {
  * KPICards — מקבל tickets ו-slaMetrics מבחוץ.
  * אינו מחשב SLA בעצמו — כל הנתונים מגיעים מ-calculateMonthlySlaMetrics (slaAgent).
  */
-export default function KPICards({ tickets, slaMetrics }) {
+export default function KPICards({ tickets, slaMetrics, selectedRange }) {
   const navigate = useNavigate();
   const open = tickets.filter(t => t.status !== 'נסגרה');
   const inProgress = tickets.filter(t => ['בטיפול', 'שויכה לטיפול'].includes(t.status));
@@ -48,16 +48,20 @@ export default function KPICards({ tickets, slaMetrics }) {
     ? (slaMetrics.slaCompliance >= 80 ? 'text-green-600' : 'text-red-600')
     : 'text-muted-foreground';
 
-  const go = (params) => navigate(`/tickets?${new URLSearchParams(params).toString()}`);
+  const rangeParams = selectedRange
+    ? `&from=${selectedRange.dateFrom}&to=${selectedRange.dateTo}`
+    : '';
+
+  const go = (kpi) => navigate(`/tickets?kpi=${kpi}${rangeParams}`);
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-      <KPICard title="פתוחות" value={open.length} icon={Ticket} onClick={() => go({ kpi: 'open' })} />
-      <KPICard title="בטיפול" value={inProgress.length} icon={Clock} color="text-blue-600" onClick={() => go({ kpi: 'inProgress' })} />
-      <KPICard title="חריגות SLA" value={breachedCount} icon={AlertTriangle} color="text-red-600" onClick={() => go({ kpi: 'breached' })} />
-      <KPICard title="קריטיות" value={critical.length} icon={AlertCircle} color="text-amber-600" onClick={() => go({ kpi: 'critical' })} />
-      <KPICard title="ממוצע טיפול" value={avgLabel} icon={Timer} color="text-indigo-600" onClick={() => go({ kpi: 'closed' })} />
-      <KPICard title="עמידה SLA" value={slaRate} icon={TrendingUp} color={slaColor} onClick={() => go({ kpi: 'slaRate' })} />
+      <KPICard title="פתוחות" value={open.length} icon={Ticket} onClick={() => go('open')} />
+      <KPICard title="בטיפול" value={inProgress.length} icon={Clock} color="text-blue-600" onClick={() => go('inProgress')} />
+      <KPICard title="חריגות SLA" value={breachedCount} icon={AlertTriangle} color="text-red-600" onClick={() => go('breached')} />
+      <KPICard title="קריטיות" value={critical.length} icon={AlertCircle} color="text-amber-600" onClick={() => go('critical')} />
+      <KPICard title="ממוצע טיפול" value={avgLabel} icon={Timer} color="text-indigo-600" onClick={() => go('closed')} />
+      <KPICard title="עמידה SLA" value={slaRate} icon={TrendingUp} color={slaColor} onClick={() => go('slaRate')} />
     </div>
   );
 }

@@ -5,30 +5,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { StatusBadge, PriorityBadge } from "@/components/tickets/TicketStatusBadge";
-import { format, subMonths } from "date-fns";
+import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
-import { Loader2, ShieldAlert, ChevronLeft, ChevronRight, AlertTriangle, CheckCircle, MinusCircle } from "lucide-react";
+import { Loader2, ShieldAlert, AlertTriangle, CheckCircle, MinusCircle, ChevronLeft } from "lucide-react";
 import { isManagerOrAdmin } from "@/lib/slaUtils";
-import {
-  calculateMonthlySlaMetrics,
-  getCurrentMonthRange,
-  getMonthRange,
-  formatDuration,
-} from "@/lib/slaAgent.js";
-
-const MONTH_LABELS = ["ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"];
+import { calculateMonthlySlaMetrics, getLiveTickets, formatDuration } from "@/lib/slaAgent.js";
+import { getCurrentCalendarMonthRange, filterTicketsByDateRange } from "@/lib/dateRangeUtils";
+import DateRangeFilter from "@/components/dashboard/DateRangeFilter";
 
 export default function SLAReport() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [userLoading, setUserLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedRange, setSelectedRange] = useState(() => getCurrentCalendarMonthRange());
 
   useEffect(() => {
     base44.auth.me().then(u => { setUser(u); setUserLoading(false); }).catch(() => setUserLoading(false));
   }, []);
 
-  const { data: tickets = [], isLoading } = useQuery({
+  const { data: rawTickets = [], isLoading } = useQuery({
     queryKey: ['tickets-sla-report'],
     queryFn: () => base44.entities.ServiceTicket.list('-opened_at_ms', 1000),
     enabled: !userLoading && isManagerOrAdmin(user),
@@ -37,15 +32,9 @@ export default function SLAReport() {
   if (userLoading || isLoading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
   if (!isManagerOrAdmin(user)) return <div className="text-center py-20 text-muted-foreground">אין הרשאה לצפות בדף זה</div>;
 
-  const range = getMonthRange(selectedDate.getFullYear(), selectedDate.getMonth());
-  const metrics = calculateMonthlySlaMetrics(tickets, range);
-
-  const prevMonth = () => setSelectedDate(d => subMonths(d, 1));
-  const nextMonth = () => {
-    const next = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1);
-    if (next <= new Date()) setSelectedDate(next);
-  };
-  const isCurrentMonth = selectedDate.getMonth() === new Date().getMonth() && selectedDate.getFullYear() === new Date().getFullYear();
+  const liveTickets   = getLiveTickets(rawTickets);
+  const periodTickets = filterTicketsByDateRange(liveTickets, selectedRange);
+  const metrics       = calculateMonthlySlaMetrics(periodTickets, selectedRange);
 
   return (
     <div className="space-y-5" dir="rtl">
@@ -56,21 +45,11 @@ export default function SLAReport() {
             <ShieldAlert className="w-5 h-5 text-red-500" />
             דוח SLA
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">מדידת עמידה ב-SLA לפי חודש</p>
-        </div>
-        {/* Month picker */}
-        <div className="flex items-center gap-2 border rounded-lg px-3 py-1.5">
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={prevMonth}>
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-          <span className="text-sm font-medium min-w-[100px] text-center">
-            {MONTH_LABELS[selectedDate.getMonth()]} {selectedDate.getFullYear()}
-          </span>
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={nextMonth} disabled={isCurrentMonth}>
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
+          <p className="text-muted-foreground text-sm mt-1">מדידת עמידה ב-SLA לפי תקופה</p>
         </div>
       </div>
+
+      <DateRangeFilter value={selectedRange} onChange={setSelectedRange} />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

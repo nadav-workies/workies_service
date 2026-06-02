@@ -11,15 +11,8 @@ import TicketTable from "@/components/tickets/TicketTable";
 import TicketCard from "@/components/tickets/TicketCard";
 import RoomPickerModal from "@/components/user/RoomPickerModal";
 import { isManagerOrAdmin } from "@/lib/slaUtils";
-import {
-  isTicketSlaBreached,
-  getCurrentMonthRange,
-  calculateMonthlySlaMetrics,
-  getLiveTickets,
-  getLiveSurveyResponses,
-  getDateRangeFromFilters,
-  filterTicketsByOpenedDate,
-} from "@/lib/slaAgent.js";
+import { isTicketSlaBreached, calculateMonthlySlaMetrics, getLiveTickets, getLiveSurveyResponses } from "@/lib/slaAgent.js";
+import { getCurrentCalendarMonthRange, filterTicketsByDateRange } from "@/lib/dateRangeUtils";
 
 // ─── User dashboard ───────────────────────────────────────────────
 function UserDashboard({ user, onUserUpdated }) {
@@ -101,12 +94,7 @@ function UserDashboard({ user, onUserUpdated }) {
 function ManagerDashboard({ user }) {
   const navigate = useNavigate();
 
-  // ─── פילטר תאריכים (ברירת מחדל: החודש הנוכחי) ─────────────────
-  const defaultRange = getCurrentMonthRange();
-  const defaultFrom = new Date(defaultRange.startMs).toISOString().slice(0, 10);
-  const defaultTo   = new Date(defaultRange.endMs - 1).toISOString().slice(0, 10);
-  const [dateFrom, setDateFrom] = useState(defaultFrom);
-  const [dateTo,   setDateTo]   = useState(defaultTo);
+  const [selectedRange, setSelectedRange] = useState(() => getCurrentCalendarMonthRange());
 
   const { data: tickets = [], isLoading } = useQuery({
     queryKey: ['tickets'],
@@ -121,24 +109,26 @@ function ManagerDashboard({ user }) {
 
   const nowMs = Date.now();
 
-  // ─── סינון קריאות חיות וטווח תאריכים ──────────────────────────
+  // ─── סינון: חיות → תקופה → סקרים ────────────────────────────────
   const liveTickets     = getLiveTickets(tickets);
+  const periodTickets   = filterTicketsByDateRange(liveTickets, selectedRange);
   const liveSurveys     = getLiveSurveyResponses(surveyResponses);
-  const range           = getDateRangeFromFilters({ dateFrom, dateTo });
-  const periodTickets   = filterTicketsByOpenedDate(liveTickets, range);
+  const periodTicketIds = new Set(periodTickets.map(t => t.id));
+  const periodSurveys   = liveSurveys.filter(r => periodTicketIds.has(r.ticket_id));
 
-  // ─── קריאות פתוחות (כל הזמן, לא רק לתקופה) ────────────────────
-  const open    = liveTickets.filter(t => t.status !== 'נסגרה');
-  const breached = open.filter(t => isTicketSlaBreached(t, nowMs));
-  const warning  = open.filter(t => {
+  // ─── מדדי SLA לפי טווח נבחר ─────────────────────────────────────
+  const slaMetrics = calculateMonthlySlaMetrics(periodTickets, selectedRange, nowMs);
+
+  // ─── קריאות פתוחות (בזמן אמת, ללא קשר לתקופה) ────────────────
+  const openAll   = liveTickets.filter(t => t.status !== 'נסגרה');
+  const breached  = openAll.filter(t => isTicketSlaBreached(t, nowMs));
+  const warning   = openAll.filter(t => {
     const dlMs = t.sla_deadline_ms ? Number(t.sla_deadline_ms) : (t.sla_deadline ? new Date(t.sla_deadline).getTime() : null);
     if (!dlMs) return false;
     const diffMin = (dlMs - nowMs) / 60000;
     return diffMin > 0 && diffMin <= 30;
   });
-
-  // ─── מדדי SLA לפי טווח תאריכים ─────────────────────────────────
-  const slaMetrics = calculateMonthlySlaMetrics(periodTickets, range, nowMs);
+  const open      = periodTickets.filter(t => t.status !== 'נסגרה');
 
   return (
     <div className="space-y-5" dir="rtl">
@@ -152,15 +142,11 @@ function ManagerDashboard({ user }) {
         </Button>
       </div>
 
-      <DateRangeFilter
-        dateFrom={dateFrom}
-        dateTo={dateTo}
-        onChange={({ dateFrom: f, dateTo: t }) => { setDateFrom(f); setDateTo(t); }}
-      />
+      <DateRangeFilter value={selectedRange} onChange={setSelectedRange} />
 
-      <KPICards tickets={periodTickets} slaMetrics={slaMetrics} />
+      <KPICards tickets={periodTickets} slaMetrics={slaMetrics} selectedRange={selectedRange} />
 
-      <ServiceMetricsCards tickets={periodTickets} surveyResponses={liveSurveys} />
+      <ServiceMetricsCards tickets={periodTickets} surveyResponses={periodSurveys} />
 
       {breached.length > 0 && (
         <section>
@@ -185,8 +171,8 @@ function ManagerDashboard({ user }) {
       {open.length === 0 ? (
         <div className="text-center py-16 border-2 border-dashed rounded-xl">
           <Ticket className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-          <p className="font-semibold mb-1">אין קריאות פתוחות</p>
-          <p className="text-sm text-muted-foreground mb-4">כאן יופיעו קריאות השירות לאחר פתיחת הקריאה הראשונה.</p>
+          <p className="font-semibold mb-1">אין קריאות פתוחות בתקופה זו</p>
+          <p className="text-sm text-muted-foreground mb-4">שנה את טווח התאריכים או פתח קריאה חדשה.</p>
           <Button onClick={() => navigate("/tickets/new")} className="gap-2">
             <Plus className="w-4 h-4" />פתח קריאת שירות
           </Button>
@@ -194,8 +180,8 @@ function ManagerDashboard({ user }) {
       ) : (
         <section>
           <div className="flex items-center justify-between mb-2">
-            <h2 className="font-semibold text-sm">כל הקריאות הפתוחות ({open.length})</h2>
-            <Button variant="ghost" size="sm" className="text-xs" onClick={() => navigate('/tickets')}>הצג הכל</Button>
+            <h2 className="font-semibold text-sm">קריאות פתוחות בתקופה ({open.length})</h2>
+            <Button variant="ghost" size="sm" className="text-xs" onClick={() => navigate(`/tickets?from=${selectedRange.dateFrom}&to=${selectedRange.dateTo}`)}>הצג הכל</Button>
           </div>
           <div className="hidden md:block"><TicketTable tickets={open.slice(0, 20)} /></div>
           <div className="md:hidden space-y-2">{open.slice(0, 10).map(t => <TicketCard key={t.id} ticket={t} />)}</div>

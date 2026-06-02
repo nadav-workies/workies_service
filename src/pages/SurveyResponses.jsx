@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { Star, ExternalLink, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import DateRangeFilter from "@/components/dashboard/DateRangeFilter";
+import { getLiveTickets, getLiveSurveyResponses } from "@/lib/slaAgent.js";
+import { getCurrentCalendarMonthRange, filterTicketsByDateRange } from "@/lib/dateRangeUtils";
 
 function RatingBadge({ rating }) {
   if (!rating) return <span className="text-muted-foreground text-xs">—</span>;
@@ -16,13 +19,25 @@ function RatingBadge({ rating }) {
 
 export default function SurveyResponses() {
   const navigate = useNavigate();
-  const [filterRating, setFilterRating] = useState("all");
+  const [filterRating, setFilterRating]     = useState("all");
   const [filterAssigned, setFilterAssigned] = useState("all");
+  const [selectedRange, setSelectedRange]   = useState(() => getCurrentCalendarMonthRange());
 
-  const { data: responses = [], isLoading } = useQuery({
-    queryKey: ["survey-responses"],
-    queryFn: () => base44.entities.SurveyResponse.list("-submitted_at", 200),
+  const { data: rawTickets = [] } = useQuery({
+    queryKey: ["tickets-for-surveys"],
+    queryFn: () => base44.entities.ServiceTicket.list('-created_date', 500),
   });
+
+  const { data: rawResponses = [], isLoading } = useQuery({
+    queryKey: ["survey-responses"],
+    queryFn: () => base44.entities.SurveyResponse.list("-submitted_at", 500),
+  });
+
+  // סינון: קריאות חיות בתקופה → סקרים רלוונטיים
+  const liveTickets     = getLiveTickets(rawTickets);
+  const periodTickets   = filterTicketsByDateRange(liveTickets, selectedRange);
+  const periodTicketIds = new Set(periodTickets.map(t => t.id));
+  const responses       = getLiveSurveyResponses(rawResponses).filter(r => periodTicketIds.has(r.ticket_id));
 
   const filtered = responses.filter(r => {
     if (filterRating === "low" && Number(r.rating) > 5) return false;
@@ -48,6 +63,8 @@ export default function SurveyResponses() {
           </p>
         </div>
       </div>
+
+      <DateRangeFilter value={selectedRange} onChange={setSelectedRange} />
 
       {/* Filters */}
       <div className="flex gap-3 flex-wrap items-center">

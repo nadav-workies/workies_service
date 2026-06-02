@@ -2,71 +2,94 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CalendarRange } from "lucide-react";
+import {
+  getCurrentCalendarMonthRange,
+  getPreviousCalendarMonthRange,
+  getCustomDateRange,
+  getRangeFromMonthValue,
+} from "@/lib/dateRangeUtils";
 
-function toDateStr(ms) {
-  const d = new Date(ms);
-  return d.toISOString().slice(0, 10);
-}
+export default function DateRangeFilter({ value, onChange }) {
+  const currentRange = value || getCurrentCalendarMonthRange();
 
-export default function DateRangeFilter({ dateFrom, dateTo, onChange }) {
-  const [localFrom, setLocalFrom] = useState(dateFrom);
-  const [localTo,   setLocalTo]   = useState(dateTo);
+  const [dateFrom, setDateFrom]   = useState(currentRange.dateFrom);
+  const [dateTo,   setDateTo]     = useState(currentRange.dateTo);
+  const [monthValue, setMonthValue] = useState("");
 
-  const applyFilter = () => {
-    if (localFrom && localTo) onChange({ dateFrom: localFrom, dateTo: localTo });
+  const applyCurrentMonth = () => {
+    const range = getCurrentCalendarMonthRange();
+    setDateFrom(range.dateFrom);
+    setDateTo(range.dateTo);
+    setMonthValue("");
+    onChange(range);
   };
 
-  const setCurrentMonth = () => {
-    const now = new Date();
-    const from = toDateStr(new Date(now.getFullYear(), now.getMonth(), 1).getTime());
-    const to   = toDateStr(new Date(now.getFullYear(), now.getMonth() + 1, 0).getTime());
-    setLocalFrom(from);
-    setLocalTo(to);
-    onChange({ dateFrom: from, dateTo: to });
+  const applyPreviousMonth = () => {
+    const range = getPreviousCalendarMonthRange();
+    setDateFrom(range.dateFrom);
+    setDateTo(range.dateTo);
+    setMonthValue("");
+    onChange(range);
   };
 
-  const setPrevMonth = () => {
-    const now = new Date();
-    const from = toDateStr(new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime());
-    const to   = toDateStr(new Date(now.getFullYear(), now.getMonth(), 0).getTime());
-    setLocalFrom(from);
-    setLocalTo(to);
-    onChange({ dateFrom: from, dateTo: to });
+  const applySelectedMonth = (val) => {
+    setMonthValue(val);
+    const range = getRangeFromMonthValue(val);
+    setDateFrom(range.dateFrom);
+    setDateTo(range.dateTo);
+    onChange(range);
+  };
+
+  const applyCustomRange = () => {
+    const range = getCustomDateRange(dateFrom, dateTo);
+    setMonthValue("");
+    onChange(range);
   };
 
   return (
     <div className="flex flex-wrap items-center gap-2 p-3 bg-muted/40 rounded-xl border" dir="rtl">
       <CalendarRange className="w-4 h-4 text-muted-foreground shrink-0" />
-      <span className="text-xs font-semibold text-muted-foreground">תקופת מדידה:</span>
 
-      <Button variant="outline" size="sm" className="text-xs h-7" onClick={setCurrentMonth}>
+      <div className="flex flex-col">
+        <span className="text-xs font-semibold text-muted-foreground">תקופת מדידה</span>
+        <span className="text-[10px] text-muted-foreground">מחושב לפי מועד פתיחת הקריאה</span>
+      </div>
+
+      <Button variant="outline" size="sm" className="text-xs h-7" onClick={applyCurrentMonth}>
         החודש הנוכחי
       </Button>
-      <Button variant="outline" size="sm" className="text-xs h-7" onClick={setPrevMonth}>
+      <Button variant="outline" size="sm" className="text-xs h-7" onClick={applyPreviousMonth}>
         חודש קודם
       </Button>
 
-      <div className="flex items-center gap-1.5">
-        <span className="text-xs text-muted-foreground">מ:</span>
-        <Input
-          type="date"
-          value={localFrom}
-          onChange={e => setLocalFrom(e.target.value)}
-          className="h-7 text-xs w-32"
-        />
-        <span className="text-xs text-muted-foreground">עד:</span>
-        <Input
-          type="date"
-          value={localTo}
-          onChange={e => setLocalTo(e.target.value)}
-          className="h-7 text-xs w-32"
-        />
-        <Button size="sm" className="h-7 text-xs" onClick={applyFilter}>
-          החל
-        </Button>
-      </div>
+      <Input
+        type="month"
+        value={monthValue}
+        onChange={(e) => applySelectedMonth(e.target.value)}
+        className="h-7 text-xs w-36"
+      />
 
-      <span className="text-[10px] text-muted-foreground mr-auto">המדדים מחושבים לפי מועד פתיחת הקריאה</span>
+      <span className="text-xs text-muted-foreground">מ:</span>
+      <Input
+        type="date"
+        value={dateFrom}
+        onChange={(e) => setDateFrom(e.target.value)}
+        className="h-7 text-xs w-32"
+      />
+      <span className="text-xs text-muted-foreground">עד:</span>
+      <Input
+        type="date"
+        value={dateTo}
+        onChange={(e) => setDateTo(e.target.value)}
+        className="h-7 text-xs w-32"
+      />
+      <Button size="sm" className="h-7 text-xs" onClick={applyCustomRange}>
+        החל
+      </Button>
+
+      <span className="text-[11px] font-medium text-orange-600 mr-auto">
+        טווח פעיל: {currentRange.dateFrom} עד {currentRange.dateTo}
+      </span>
     </div>
   );
 }
