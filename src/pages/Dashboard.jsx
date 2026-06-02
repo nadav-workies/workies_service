@@ -96,18 +96,34 @@ function ManagerDashboard({ user }) {
 
   const [selectedRange, setSelectedRange] = useState(() => getCurrentCalendarMonthRange());
 
-  const { data: tickets = [], isLoading } = useQuery({
+  const { data: tickets = [], isLoading, refetch: refetchTickets } = useQuery({
     queryKey: ['tickets'],
     queryFn: () => base44.entities.ServiceTicket.list('-created_date', 500),
+    refetchInterval: 60000,
   });
   const { data: surveyResponses = [] } = useQuery({
     queryKey: ['survey-responses-dash'],
     queryFn: () => base44.entities.SurveyResponse.list('-submitted_at', 300),
+    refetchInterval: 60000,
   });
 
-  if (isLoading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
+  // רענון מיידי כשנוצרת קריאה חדשה (real-time)
+  useEffect(() => {
+    const unsubscribe = base44.entities.ServiceTicket.subscribe((event) => {
+      if (event.type === 'create' || event.type === 'update') {
+        refetchTickets();
+      }
+    });
+    return unsubscribe;
+  }, [refetchTickets]);
 
-  const nowMs = Date.now();
+  const [nowMs, setNowMs] = useState(Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNowMs(Date.now()), 30000);
+    return () => clearInterval(t);
+  }, []);
+
+  if (isLoading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
 
   // ─── סינון: חיות → תקופה → סקרים ────────────────────────────────
   const liveTickets     = getLiveTickets(tickets);
@@ -159,9 +175,10 @@ function ManagerDashboard({ user }) {
       )}
 
       {warning.length > 0 && (
-        <section>
-          <h2 className="font-semibold text-sm text-orange-600 mb-2 flex items-center gap-1.5">
-            <Clock className="w-4 h-4" />מתקרבות לחריגה ({warning.length})
+        <section className="rounded-xl border-2 border-orange-300 bg-orange-50/60 p-3 animate-pulse-border">
+          <h2 className="font-semibold text-sm text-orange-700 mb-2 flex items-center gap-1.5">
+            <Clock className="w-4 h-4 animate-pulse" />
+            ⚠️ מתקרבות לחריגת SLA — נדרש טיפול מיידי! ({warning.length})
           </h2>
           <div className="hidden md:block"><TicketTable tickets={warning} /></div>
           <div className="md:hidden space-y-2">{warning.map(t => <TicketCard key={t.id} ticket={t} />)}</div>

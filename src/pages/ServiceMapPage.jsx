@@ -35,6 +35,15 @@ export default function ServiceMapPage() {
     select: (data) => data.filter(t => t.status !== 'נסגרה'),
   });
 
+  // רענון מיידי כשנפתחת קריאה חדשה
+  useEffect(() => {
+    if (!isManagerOrAdmin(user)) return;
+    const unsubscribe = base44.entities.ServiceTicket.subscribe((event) => {
+      if (event.type === 'create' || event.type === 'update') refetch();
+    });
+    return unsubscribe;
+  }, [user, refetch]);
+
   // כל קריאות 7 הימים האחרונים לחיווי "עמוס"
   const { data: recentTickets = [], isLoading: loadingRecent } = useQuery({
     queryKey: ['service-map-recent'],
