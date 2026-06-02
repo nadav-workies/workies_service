@@ -9,12 +9,37 @@ export { getDeadlineMs, getOpenedAtMs, getTimeRemainingLabel };
 
 // ─── סינון קריאות חיות (מוציא ארכיון ובדיקות) ──────────────────────────────
 
-export function getLiveTickets(tickets) {
+export function getLiveTickets(tickets = []) {
   return tickets.filter(t =>
-    !t.archived &&
-    !t.is_test_data &&
-    !t.exclude_from_metrics
+    t &&
+    t.archived !== true &&
+    t.is_test_data !== true &&
+    t.exclude_from_metrics !== true
   );
+}
+
+export function getLiveSurveyResponses(responses = []) {
+  return responses.filter(r =>
+    r &&
+    r.archived !== true &&
+    r.is_test_data !== true &&
+    r.exclude_from_metrics !== true
+  );
+}
+
+export function getDateRangeFromFilters({ dateFrom, dateTo }) {
+  if (!dateFrom || !dateTo) return getCurrentMonthRange();
+  const startMs = new Date(`${dateFrom}T00:00:00`).getTime();
+  const endMs   = new Date(`${dateTo}T23:59:59`).getTime();
+  return { startMs, endMs };
+}
+
+export function filterTicketsByOpenedDate(tickets, range) {
+  return getLiveTickets(tickets).filter(ticket => {
+    const openedAtMs = Number(ticket.opened_at_ms);
+    if (!openedAtMs) return false;
+    return openedAtMs >= range.startMs && openedAtMs <= range.endMs;
+  });
 }
 
 // ─── טווח חודש ──────────────────────────────────────────────────────────────

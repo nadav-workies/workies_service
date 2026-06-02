@@ -96,6 +96,8 @@ export default function ResetTestData() {
       }
 
       setResult({ success: true, ticketsArchived, surveysDeleted, logsDeleted, feedbackDeleted });
+      // רענון מלא כדי לנקות cache
+      setTimeout(() => { window.location.href = "/"; }, 2500);
     } catch (err) {
       setResult({ success: false, error: err.message });
     } finally {

@@ -6,11 +6,20 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import KPICards from "@/components/dashboard/KPICards";
 import ServiceMetricsCards from "@/components/dashboard/ServiceMetricsCards";
+import DateRangeFilter from "@/components/dashboard/DateRangeFilter";
 import TicketTable from "@/components/tickets/TicketTable";
 import TicketCard from "@/components/tickets/TicketCard";
 import RoomPickerModal from "@/components/user/RoomPickerModal";
 import { isManagerOrAdmin } from "@/lib/slaUtils";
-import { isTicketSlaBreached, getCurrentMonthRange, calculateMonthlySlaMetrics, getLiveTickets } from "@/lib/slaAgent.js";
+import {
+  isTicketSlaBreached,
+  getCurrentMonthRange,
+  calculateMonthlySlaMetrics,
+  getLiveTickets,
+  getLiveSurveyResponses,
+  getDateRangeFromFilters,
+  filterTicketsByOpenedDate,
+} from "@/lib/slaAgent.js";
 
 // ─── User dashboard ───────────────────────────────────────────────
 function UserDashboard({ user, onUserUpdated }) {
@@ -91,30 +100,45 @@ function UserDashboard({ user, onUserUpdated }) {
 // ─── Manager dashboard ────────────────────────────────────────────
 function ManagerDashboard({ user }) {
   const navigate = useNavigate();
+
+  // ─── פילטר תאריכים (ברירת מחדל: החודש הנוכחי) ─────────────────
+  const defaultRange = getCurrentMonthRange();
+  const defaultFrom = new Date(defaultRange.startMs).toISOString().slice(0, 10);
+  const defaultTo   = new Date(defaultRange.endMs - 1).toISOString().slice(0, 10);
+  const [dateFrom, setDateFrom] = useState(defaultFrom);
+  const [dateTo,   setDateTo]   = useState(defaultTo);
+
   const { data: tickets = [], isLoading } = useQuery({
     queryKey: ['tickets'],
-    queryFn: () => base44.entities.ServiceTicket.list('-created_date', 300),
+    queryFn: () => base44.entities.ServiceTicket.list('-created_date', 500),
   });
   const { data: surveyResponses = [] } = useQuery({
     queryKey: ['survey-responses-dash'],
-    queryFn: () => base44.entities.SurveyResponse.list('-submitted_at', 200),
+    queryFn: () => base44.entities.SurveyResponse.list('-submitted_at', 300),
   });
 
   if (isLoading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
 
   const nowMs = Date.now();
-  const liveTickets = getLiveTickets(tickets);
-  const open = liveTickets.filter(t => t.status !== 'נסגרה');
+
+  // ─── סינון קריאות חיות וטווח תאריכים ──────────────────────────
+  const liveTickets     = getLiveTickets(tickets);
+  const liveSurveys     = getLiveSurveyResponses(surveyResponses);
+  const range           = getDateRangeFromFilters({ dateFrom, dateTo });
+  const periodTickets   = filterTicketsByOpenedDate(liveTickets, range);
+
+  // ─── קריאות פתוחות (כל הזמן, לא רק לתקופה) ────────────────────
+  const open    = liveTickets.filter(t => t.status !== 'נסגרה');
   const breached = open.filter(t => isTicketSlaBreached(t, nowMs));
-  const warning = open.filter(t => {
+  const warning  = open.filter(t => {
     const dlMs = t.sla_deadline_ms ? Number(t.sla_deadline_ms) : (t.sla_deadline ? new Date(t.sla_deadline).getTime() : null);
     if (!dlMs) return false;
     const diffMin = (dlMs - nowMs) / 60000;
     return diffMin > 0 && diffMin <= 30;
   });
-  const critical = open.filter(t => t.priority === 'קריטית');
-  const monthRange = getCurrentMonthRange();
-  const slaMetrics = calculateMonthlySlaMetrics(liveTickets, monthRange, nowMs);
+
+  // ─── מדדי SLA לפי טווח תאריכים ─────────────────────────────────
+  const slaMetrics = calculateMonthlySlaMetrics(periodTickets, range, nowMs);
 
   return (
     <div className="space-y-5" dir="rtl">
@@ -128,9 +152,15 @@ function ManagerDashboard({ user }) {
         </Button>
       </div>
 
-      <KPICards tickets={liveTickets} slaMetrics={slaMetrics} />
+      <DateRangeFilter
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        onChange={({ dateFrom: f, dateTo: t }) => { setDateFrom(f); setDateTo(t); }}
+      />
 
-      <ServiceMetricsCards tickets={liveTickets} surveyResponses={surveyResponses} />
+      <KPICards tickets={periodTickets} slaMetrics={slaMetrics} />
+
+      <ServiceMetricsCards tickets={periodTickets} surveyResponses={liveSurveys} />
 
       {breached.length > 0 && (
         <section>

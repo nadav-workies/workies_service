@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import { Star, ThumbsUp, AlertCircle, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function MetricCard({ title, value, sub, color, onClick, warning }) {
@@ -16,23 +15,29 @@ function MetricCard({ title, value, sub, color, onClick, warning }) {
   );
 }
 
+/**
+ * ServiceMetricsCards
+ * tickets          — liveTickets כבר מסוננים מבחוץ (periodTickets)
+ * surveyResponses  — liveSurveyResponses כבר מסוננים מבחוץ
+ */
 export default function ServiceMetricsCards({ tickets, surveyResponses }) {
   const navigate = useNavigate();
   const nowMs = Date.now();
 
-  // ─── שביעות רצון ──────────────────────────────────────────────────
+  const closedTickets = tickets.filter(t => t.status === "נסגרה");
+
+  // ─── שביעות רצון ────────────────────────────────────────────────
   const responsesWithRating = surveyResponses.filter(r => Number(r.rating) > 0);
   const avgRating = responsesWithRating.length
     ? (responsesWithRating.reduce((s, r) => s + Number(r.rating), 0) / responsesWithRating.length).toFixed(1)
     : null;
-  const closedTickets = tickets.filter(t => t.status === "נסגרה");
   const responseRate = closedTickets.length
     ? Math.round((responsesWithRating.length / closedTickets.length) * 100)
     : null;
   const lowRatingCount = responsesWithRating.filter(r => Number(r.rating) <= 5).length;
   const requiresFollowup = tickets.filter(t => t.requires_manager_followup).length;
 
-  // ─── Google Review ─────────────────────────────────────────────────
+  // ─── Google Review ───────────────────────────────────────────────
   const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
   const googleSent = closedTickets.filter(t => t.google_review_request_sent).length;
   const googleWaiting = closedTickets.filter(t =>
@@ -52,14 +57,14 @@ export default function ServiceMetricsCards({ tickets, surveyResponses }) {
         <MetricCard
           title="דירוג ממוצע"
           value={avgRating ? `${avgRating}/10` : "אין נתונים"}
-          sub={responsesWithRating.length ? `${responsesWithRating.length} משובים` : undefined}
+          sub={responsesWithRating.length ? `${responsesWithRating.length} משובים` : "טרם התקבלו משובים"}
           color="text-amber-600"
           onClick={() => navigate("/survey-responses")}
         />
         <MetricCard
           title="אחוז מענה לסקרים"
-          value={responseRate !== null ? `${responseRate}%` : "—"}
-          sub={`מתוך ${closedTickets.length} קריאות סגורות`}
+          value={responseRate !== null ? `${responseRate}%` : "אין נתונים"}
+          sub={closedTickets.length ? `מתוך ${closedTickets.length} קריאות סגורות` : "אין קריאות סגורות"}
           color="text-indigo-600"
         />
         <MetricCard
@@ -79,8 +84,8 @@ export default function ServiceMetricsCards({ tickets, surveyResponses }) {
         />
         <MetricCard
           title="Google Reviews נשלחו"
-          value={googleSent}
-          sub={googleRate !== null ? `${googleRate}% מקריאות סגורות` : undefined}
+          value={googleSent !== 0 ? googleSent : "אין נתונים"}
+          sub={googleRate !== null && googleSent > 0 ? `${googleRate}% מקריאות סגורות` : undefined}
           color="text-blue-600"
         />
         <MetricCard

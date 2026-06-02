@@ -34,10 +34,7 @@ export default function KPICards({ tickets, slaMetrics }) {
   const inProgress = tickets.filter(t => ['בטיפול', 'שויכה לטיפול'].includes(t.status));
   const critical = open.filter(t => t.priority === 'קריטית');
 
-  const breachedCount = slaMetrics?.totalBreached ?? open.filter(t => {
-    const dlMs = t.sla_deadline_ms ? Number(t.sla_deadline_ms) : (t.sla_deadline ? new Date(t.sla_deadline).getTime() : null);
-    return dlMs && dlMs < Date.now();
-  }).length;
+  const breachedCount = slaMetrics?.totalBreached ?? 0;
 
   const avgLabel = slaMetrics?.averageHandlingTimeMs != null
     ? formatDuration(slaMetrics.averageHandlingTimeMs)
