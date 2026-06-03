@@ -1,40 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getDeadlineMs } from '@/lib/slaUtils';
-
-export function getLiveSlaDisplay(ticket, nowMs = Date.now()) {
-  if (ticket.status === 'נסגרה') return { label: 'נסגרה', status: 'closed', pulse: false };
-
-  const deadlineMs = getDeadlineMs(ticket);
-  const slaMinutes = Number(ticket.sla_minutes || 0);
-
-  if (!deadlineMs || !slaMinutes) return { label: 'ללא SLA', status: 'none', pulse: false };
-
-  const diffMs = deadlineMs - nowMs;
-  const diffMinutes = Math.ceil(diffMs / 60000);
-
-  if (diffMs <= 0) {
-    const overMin = Math.abs(diffMinutes);
-    const overH = Math.floor(overMin / 60);
-    const overM = overMin % 60;
-    const label = overH > 0 ? `חרג ב-${overH}ש׳ ${overM}ד׳` : `חרג ב-${overMin} ד׳`;
-    return { label, status: 'breached', pulse: true };
-  }
-
-  let criticalThreshold;
-  if (slaMinutes <= 5) criticalThreshold = slaMinutes;
-  else if (slaMinutes === 10) criticalThreshold = 5;
-  else if (slaMinutes === 20) criticalThreshold = 10;
-  else if (slaMinutes === 30) criticalThreshold = 15;
-  else criticalThreshold = 30;
-
-  const hours = Math.floor(diffMinutes / 60);
-  const mins = diffMinutes % 60;
-  const label = hours > 0 ? `נותרו ${hours}ש׳ ${mins}ד׳` : `נותרו ${diffMinutes} ד׳`;
-
-  if (diffMinutes <= 5) return { label, status: 'critical', pulse: true };
-  if (diffMinutes <= criticalThreshold) return { label, status: 'warning', pulse: false };
-  return { label, status: 'ok', pulse: false };
-}
+import { getLiveSlaDisplay } from '@/lib/slaAgent';
 
 const STATUS_CLASSES = {
   ok:       'bg-emerald-100 text-emerald-700 border-emerald-200',
@@ -49,14 +14,17 @@ export default function LiveSlaBadge({ ticket, compact = false }) {
   const [nowMs, setNowMs] = useState(Date.now());
 
   useEffect(() => {
-    if (ticket.status === 'נסגרה') return;
+    if (!ticket || ticket.status === 'נסגרה') return;
     const interval = setInterval(() => setNowMs(Date.now()), 10000);
     return () => clearInterval(interval);
-  }, [ticket.status]);
+  }, [ticket?.id, ticket?.status]);
 
   const { label, status, pulse } = getLiveSlaDisplay(ticket, nowMs);
   const cls = STATUS_CLASSES[status] || STATUS_CLASSES.none;
-  const icon = status === 'breached' ? '🔴' : status === 'critical' ? '🟠' : status === 'warning' ? '⚠️' : null;
+  const icon =
+    status === 'breached' ? '🔴' :
+    status === 'critical' ? '🟠' :
+    status === 'warning'  ? '⚠️' : null;
   const sizeClass = compact ? 'px-1 py-0 text-[9px]' : 'px-2 py-0.5 text-[11px]';
 
   return (

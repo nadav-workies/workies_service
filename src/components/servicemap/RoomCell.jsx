@@ -1,26 +1,10 @@
-import { useState, useEffect } from 'react';
 import { ROOM_STATUS_COLORS } from '@/lib/roomServiceStatus';
-import { getLiveSlaDisplay } from '@/lib/slaAgent';
+import LiveSlaBadge from '@/components/tickets/LiveSlaBadge';
 
 export default function RoomCell({ room, roomStatus, isSelected, onClick }) {
   const { status, openCount, mostUrgentTicket } = roomStatus;
   const colors = ROOM_STATUS_COLORS[status] || ROOM_STATUS_COLORS.inactive;
   const shouldPulse = status === 'breached' || status === 'critical';
-
-  // זמן חי — מתעדכן כל 10 שניות
-  const [nowMs, setNowMs] = useState(Date.now());
-  useEffect(() => {
-    if (!mostUrgentTicket) return;
-    const iv = setInterval(() => setNowMs(Date.now()), 10000);
-    return () => clearInterval(iv);
-  }, [mostUrgentTicket]);
-
-  const slaDisplay = mostUrgentTicket ? getLiveSlaDisplay(mostUrgentTicket, nowMs) : null;
-
-  const icon =
-    slaDisplay?.status === 'breached' ? '🔴' :
-    slaDisplay?.status === 'critical' ? '🟠' :
-    slaDisplay?.status === 'warning'  ? '⚠️' : null;
 
   const shortLabel = room.room_label
     .replace('CONFERENCE', 'CONF')
@@ -51,11 +35,10 @@ export default function RoomCell({ room, roomStatus, isSelected, onClick }) {
         )}
       </div>
 
-      {/* SLA חי */}
-      {slaDisplay && slaDisplay.status !== 'none' && slaDisplay.status !== 'closed' && (
-        <div className="flex items-center gap-0.5 mt-0.5">
-          {icon && <span className="text-[9px] leading-none">{icon}</span>}
-          <span className="text-[8px] font-semibold leading-tight truncate">{slaDisplay.label}</span>
+      {/* SLA חי — דרך LiveSlaBadge */}
+      {mostUrgentTicket && (
+        <div className="mt-0.5 scale-[0.82] origin-right">
+          <LiveSlaBadge ticket={mostUrgentTicket} compact />
         </div>
       )}
     </button>
