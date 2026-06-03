@@ -52,6 +52,8 @@ export function getRangeFromMonthValue(monthValue) {
   return getCalendarMonthRange(year, month - 1);
 }
 
+/* ─── alias לתאימות עם קוד ישן ───────────────────── */
+
 export function isTicketInDateRange(ticket, range) {
   const openedAtMs = Number(ticket.opened_at_ms);
   if (!openedAtMs) return false;
