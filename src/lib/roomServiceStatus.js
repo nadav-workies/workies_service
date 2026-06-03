@@ -9,7 +9,9 @@ const CLOSED_STATUS = 'נסגרה';
  */
 export function getRoomServiceStatus(roomNumber, tickets) {
   const roomTickets = tickets.filter(
-    t => String(t.room_number) === String(roomNumber) && t.status !== CLOSED_STATUS
+    t => String(t.room_number) === String(roomNumber) &&
+         t.status !== CLOSED_STATUS &&
+         !t.archived
   );
 
   if (roomTickets.length === 0) {

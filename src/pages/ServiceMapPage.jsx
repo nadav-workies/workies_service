@@ -20,19 +20,24 @@ export default function ServiceMapPage() {
     base44.auth.me().then(u => { setUser(u); setAuthLoading(false); }).catch(() => setAuthLoading(false));
   }, []);
 
-  // רק קריאות פתוחות (לא נסגרו) — ללא היסטוריה מצטברת
+  // כל הקריאות — מסננים בצד הלקוח רק את הפתוחות (לא נסגרו)
   const { data: openTickets = [], isLoading: loadingOpen, refetch, isFetching } = useQuery({
     queryKey: ['service-map-open'],
-    queryFn: () => base44.entities.ServiceTicket.filter({ status: { $ne: 'נסגרה' } }, '-created_date', 500),
+    queryFn: async () => {
+      const all = await base44.entities.ServiceTicket.list('-created_date', 1000);
+      return all.filter(t => t.status !== 'נסגרה' && !t.archived && !t.is_test_data);
+    },
     enabled: !authLoading && isManagerOrAdmin(user),
     refetchInterval: 60000,
+    staleTime: 0,        // תמיד טרי
+    cacheTime: 0,        // לא לשמור cache
   });
 
-  // רענון מיידי כשנפתחת קריאה חדשה
+  // רענון מיידי בכל שינוי קריאה (פתיחה, עדכון, סגירה)
   useEffect(() => {
     if (!isManagerOrAdmin(user)) return;
-    const unsubscribe = base44.entities.ServiceTicket.subscribe((event) => {
-      if (event.type === 'create' || event.type === 'update') refetch();
+    const unsubscribe = base44.entities.ServiceTicket.subscribe(() => {
+      refetch();
     });
     return unsubscribe;
   }, [user, refetch]);
