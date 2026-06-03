@@ -24,7 +24,7 @@ export default function TicketCard({ ticket }) {
             <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
               <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{ticket.area}</span>
               <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{format(new Date(ticket.created_date), "dd/MM HH:mm")}</span>
-              <SlaBadge slaDeadline={ticket.sla_deadline} status={ticket.status} />
+              <SlaBadge ticket={ticket} status={ticket.status} />
             </div>
           </div>
           <ChevronLeft className="w-4 h-4 text-muted-foreground shrink-0 mt-1" />

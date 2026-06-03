@@ -36,6 +36,7 @@ export function getOpenedAtMs(ticket) {
     const v = new Date(ticket.opened_at).getTime();
     return Number.isFinite(v) ? v : null;
   }
+  // fallback לנתוני עבר בלבד. קריאות חדשות חייבות להישמר עם opened_at_ms.
   if (ticket.created_date) {
     const v = new Date(ticket.created_date).getTime();
     return Number.isFinite(v) ? v : null;
@@ -83,8 +84,11 @@ export function getLiveTickets(tickets = []) {
 }
 
 export function getLiveSurveyResponses(responses = []) {
-  return responses.filter(
-    r => r && r.archived !== true && r.is_test_data !== true
+  return responses.filter(r =>
+    r &&
+    r.archived !== true &&
+    r.is_test_data !== true &&
+    r.exclude_from_metrics !== true
   );
 }
 
