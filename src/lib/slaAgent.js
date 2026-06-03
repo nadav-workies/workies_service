@@ -1,178 +1,79 @@
 /**
- * slaAgent.js — מקור אמת יחיד לכל חישובי SLA
- * ================================================
+ * slaAgent.js — מקור SLA מרכזי למפת שירות ולחיווי חי
  */
 
-import { getDeadlineMs, getOpenedAtMs, getTimeRemainingLabel } from "@/lib/slaUtils";
-
-export { getDeadlineMs, getOpenedAtMs, getTimeRemainingLabel };
-
-// ─── סינון קריאות חיות (מוציא ארכיון ובדיקות) ──────────────────────────────
-
-export function getLiveTickets(tickets = []) {
-  return tickets.filter(t =>
-    t &&
-    t.archived !== true &&
-    t.is_test_data !== true &&
-    t.exclude_from_metrics !== true
-  );
+export function getDeadlineMs(ticket) {
+  if (ticket.sla_deadline_ms) return Number(ticket.sla_deadline_ms);
+  if (ticket.sla_deadline) return new Date(ticket.sla_deadline).getTime();
+  return null;
 }
 
-export function getLiveSurveyResponses(responses = []) {
-  return responses.filter(r =>
-    r &&
-    r.archived !== true &&
-    r.is_test_data !== true &&
-    r.exclude_from_metrics !== true
-  );
-}
-
-export function getDateRangeFromFilters({ dateFrom, dateTo }) {
-  if (!dateFrom || !dateTo) return getCurrentMonthRange();
-  const startMs = new Date(`${dateFrom}T00:00:00`).getTime();
-  const endMs   = new Date(`${dateTo}T23:59:59`).getTime();
-  return { startMs, endMs };
-}
-
-export function filterTicketsByOpenedDate(tickets, range) {
-  return getLiveTickets(tickets).filter(ticket => {
-    const openedAtMs = Number(ticket.opened_at_ms);
-    if (!openedAtMs) return false;
-    return openedAtMs >= range.startMs && openedAtMs <= range.endMs;
-  });
-}
-
-// ─── טווח חודש ──────────────────────────────────────────────────────────────
-
-export function getMonthRange(year, month) {
-  const startMs = new Date(year, month, 1, 0, 0, 0, 0).getTime();
-  const endMs   = new Date(year, month + 1, 1, 0, 0, 0, 0).getTime();
-  return { startMs, endMs };
-}
-
-export function getCurrentMonthRange() {
-  const now = new Date();
-  return getMonthRange(now.getFullYear(), now.getMonth());
-}
-
-// ─── עיצוב משך זמן ──────────────────────────────────────────────────────────
-
-export function formatDuration(ms) {
-  if (!ms || ms <= 0) return 'אין נתונים';
-  const totalMin = Math.round(ms / 60000);
-  if (totalMin < 1) return 'פחות מדקה';
-  if (totalMin < 60) return `${totalMin} דק׳`;
-  const h = Math.floor(totalMin / 60);
-  const m = totalMin % 60;
-  if (h >= 24) {
-    const d = Math.floor(h / 24);
-    const rh = h % 24;
-    return rh > 0 ? `${d}י׳ ${rh}ש׳` : `${d} ימים`;
-  }
-  return m > 0 ? `${h} שע׳ ${m} דק׳` : `${h} שע׳`;
-}
-
-// ─── בדיקות עזר ─────────────────────────────────────────────────────────────
-
-export function isSlaExcluded(ticket) {
-  return ticket.sla_excluded === true || ticket.exclude_from_metrics === true;
-}
-
-export function isClosed(ticket) {
+export function isTicketClosed(ticket) {
   return ticket.status === 'נסגרה';
 }
 
-export function isTicketInPeriod(ticket, range) {
-  const openedAtMs = ticket.opened_at_ms ? Number(ticket.opened_at_ms) : null;
-  if (!openedAtMs) return false;
-  return openedAtMs >= range.startMs && openedAtMs < range.endMs;
+export function isTicketLive(ticket) {
+  return (
+    ticket &&
+    ticket.status !== 'נסגרה' &&
+    ticket.archived !== true &&
+    ticket.is_test_data !== true &&
+    ticket.exclude_from_metrics !== true
+  );
 }
 
-// ─── חריגת SLA ──────────────────────────────────────────────────────────────
-
 export function isTicketSlaBreached(ticket, nowMs = Date.now()) {
-  if (isSlaExcluded(ticket)) return false;
-  const deadlineMs = Number(ticket.sla_deadline_ms);
+  if (!isTicketLive(ticket)) return false;
+  const deadlineMs = getDeadlineMs(ticket);
   if (!deadlineMs) return false;
-  if (isClosed(ticket)) {
-    if (!ticket.closed_at) return false;
-    return new Date(ticket.closed_at).getTime() > deadlineMs;
-  }
   return nowMs > deadlineMs;
 }
 
-export function isTicketClosedOnTime(ticket) {
-  if (isSlaExcluded(ticket)) return false;
-  if (!isClosed(ticket)) return false;
-  const deadlineMs = Number(ticket.sla_deadline_ms);
-  const closedAtMs = ticket.closed_at ? new Date(ticket.closed_at).getTime() : null;
-  if (!deadlineMs || !closedAtMs) return false;
-  return closedAtMs <= deadlineMs;
+export function formatDuration(ms) {
+  if (!ms || ms <= 0) return '—';
+  const totalMinutes = Math.floor(ms / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours === 0) return `${minutes} דק׳`;
+  if (hours >= 24) return `${Math.floor(hours / 24)} ימים`;
+  return `${hours}ש׳ ${minutes}ד׳`;
 }
 
-// ─── זמן טיפול ──────────────────────────────────────────────────────────────
+export function getLiveSlaDisplay(ticket, nowMs = Date.now()) {
+  if (!ticket) return { label: 'ללא קריאה', status: 'none', pulse: false };
+  if (ticket.status === 'נסגרה') return { label: 'נסגרה', status: 'closed', pulse: false };
 
-export function getTicketHandlingTimeMs(ticket) {
-  if (isSlaExcluded(ticket)) return null;
-  if (!isClosed(ticket)) return null;
-  const openedAtMs = ticket.opened_at_ms ? Number(ticket.opened_at_ms) : null;
-  const closedAtMs = ticket.closed_at ? new Date(ticket.closed_at).getTime() : null;
-  if (!openedAtMs || !closedAtMs || closedAtMs <= openedAtMs) return null;
-  return closedAtMs - openedAtMs;
-}
+  const deadlineMs = getDeadlineMs(ticket);
+  const slaMinutes = Number(ticket.sla_minutes || 0);
 
-// ─── חישוב מדדי SLA חודשיים ─────────────────────────────────────────────────
+  if (!deadlineMs || !slaMinutes) return { label: 'ללא SLA', status: 'none', pulse: false };
 
-export function calculateMonthlySlaMetrics(allTickets, range, nowMs = Date.now()) {
-  // סינון לקריאות חיות בלבד
-  const liveTickets = getLiveTickets(allTickets);
+  const diffMs = deadlineMs - nowMs;
+  const diffMinutes = Math.ceil(diffMs / 60000);
 
-  // סינון לחודש
-  const monthTickets = liveTickets.filter(t => isTicketInPeriod(t, range));
+  if (diffMs <= 0) {
+    const overMinutes = Math.ceil(Math.abs(diffMs) / 60000);
+    const hours = Math.floor(overMinutes / 60);
+    const minutes = overMinutes % 60;
+    return {
+      label: hours > 0 ? `חרג ב-${hours}ש׳ ${minutes}ד׳` : `חרג ב-${overMinutes} ד׳`,
+      status: 'breached',
+      pulse: true,
+    };
+  }
 
-  // הפרדה: מוחרגות SLA vs עם נתוני SLA
-  const excluded = monthTickets.filter(t => isSlaExcluded(t));
-  const withSla  = monthTickets.filter(t =>
-    !isSlaExcluded(t) && Number(t.sla_deadline_ms) > 0
-  );
-  const noSlaData = monthTickets.filter(t =>
-    !isSlaExcluded(t) && !Number(t.sla_deadline_ms)
-  );
+  let warningThreshold;
+  if (slaMinutes <= 5) warningThreshold = slaMinutes;
+  else if (slaMinutes === 10) warningThreshold = 5;
+  else if (slaMinutes === 20) warningThreshold = 10;
+  else if (slaMinutes === 30) warningThreshold = 15;
+  else warningThreshold = 30;
 
-  const closed = withSla.filter(isClosed);
-  const open   = withSla.filter(t => !isClosed(t));
+  const hours = Math.floor(diffMinutes / 60);
+  const minutes = diffMinutes % 60;
+  const label = hours > 0 ? `נותרו ${hours}ש׳ ${minutes}ד׳` : `נותרו ${diffMinutes} ד׳`;
 
-  const breachedClosedList = closed.filter(t => isTicketSlaBreached(t, nowMs));
-  const breachedOpenList   = open.filter(t => isTicketSlaBreached(t, nowMs));
-  const closedOnTime       = closed.filter(isTicketClosedOnTime);
-
-  const totalMeasured  = closed.length + breachedOpenList.length;
-  const slaCompliance  = totalMeasured > 0
-    ? Math.round((closedOnTime.length / totalMeasured) * 100)
-    : null;
-
-  const handlingTimes = closed
-    .map(getTicketHandlingTimeMs)
-    .filter(ms => typeof ms === 'number' && ms > 0);
-  const averageHandlingTimeMs = handlingTimes.length > 0
-    ? Math.round(handlingTimes.reduce((a, b) => a + b, 0) / handlingTimes.length)
-    : null;
-
-  return {
-    totalTickets:           monthTickets.length,
-    openTickets:            monthTickets.filter(t => !isClosed(t)).length,
-    closedTickets:          closed.length,
-    totalMeasured,
-    closedOnTime:           closedOnTime.length,
-    slaCompliance,
-    totalBreached:          breachedOpenList.length + breachedClosedList.length,
-    breachedOpen:           breachedOpenList.length,
-    breachedClosed:         breachedClosedList.length,
-    breachedOpenList,
-    breachedClosedList,
-    averageHandlingTimeMs,
-    excludedList:           excluded,
-    noSlaDataCount:         noSlaData.length,
-    noSlaDataList:          noSlaData,
-  };
+  if (diffMinutes <= 5) return { label, status: 'critical', pulse: true };
+  if (diffMinutes <= warningThreshold) return { label, status: 'warning', pulse: false };
+  return { label, status: 'ok', pulse: false };
 }

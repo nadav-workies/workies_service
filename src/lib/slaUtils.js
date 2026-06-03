@@ -2,7 +2,6 @@
 export const QUICK_TICKETS = [
   { id: 1, ticket_type: "תחזוקת חדר", examples: "תלייה, צביעה, פתיחת דלת, תיקון חדר", sla_label: "עד 30 דקות", sla_minutes: 30, area: "משרד / חדר לקוח", priority: "גבוהה" },
   { id: 2, ticket_type: "מזגן SOS", examples: "מזגן לא עובד / תקלה משביתה", sla_label: "מענה ראשוני עד 30 דקות", sla_minutes: 30, area: "מיזוג", priority: "קריטית" },
-  { id: 3, ticket_type: "מזגן סיום טיפול", examples: "תקלה שדורשת ספק חיצוני", sla_label: "עד 24 שעות", sla_minutes: 1440, area: "מיזוג", priority: "גבוהה" },
   { id: 4, ticket_type: "שירותים", examples: "מים ברצפה, סוללה, דלת, מאגרה, נייר, סבון", sla_label: "עד 10 דקות", sla_minutes: 10, area: "שירותים", priority: "קריטית" },
   { id: 5, ticket_type: "חדר ישיבות", examples: "HDMI, חיבור מערכת, בעיית מצגת", sla_label: "עד 5 דקות", sla_minutes: 5, area: "חדר ישיבות", priority: "קריטית" },
   { id: 6, ticket_type: "תאורה בחללים", examples: "תאורה בחדרים ובחללים ציבוריים", sla_label: "עד 30 דקות", sla_minutes: 30, area: "תחזוקה כללית", priority: "גבוהה" },
