@@ -10,12 +10,6 @@ import RoomSidePanel from '@/components/servicemap/RoomSidePanel';
 import { Loader2, MapPin, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-const SEVEN_DAYS_AGO = () => {
-  const d = new Date();
-  d.setDate(d.getDate() - 7);
-  return d.toISOString();
-};
-
 export default function ServiceMapPage() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -26,13 +20,12 @@ export default function ServiceMapPage() {
     base44.auth.me().then(u => { setUser(u); setAuthLoading(false); }).catch(() => setAuthLoading(false));
   }, []);
 
-  // כל הקריאות הפתוחות (לא נסגרו)
+  // רק קריאות פתוחות (לא נסגרו) — ללא היסטוריה מצטברת
   const { data: openTickets = [], isLoading: loadingOpen, refetch, isFetching } = useQuery({
     queryKey: ['service-map-open'],
-    queryFn: () => base44.entities.ServiceTicket.list(),
+    queryFn: () => base44.entities.ServiceTicket.filter({ status: { $ne: 'נסגרה' } }, '-created_date', 500),
     enabled: !authLoading && isManagerOrAdmin(user),
     refetchInterval: 60000,
-    select: (data) => data.filter(t => t.status !== 'נסגרה'),
   });
 
   // רענון מיידי כשנפתחת קריאה חדשה
@@ -44,24 +37,12 @@ export default function ServiceMapPage() {
     return unsubscribe;
   }, [user, refetch]);
 
-  // כל קריאות 7 הימים האחרונים לחיווי "עמוס"
-  const { data: recentTickets = [], isLoading: loadingRecent } = useQuery({
-    queryKey: ['service-map-recent'],
-    queryFn: () => base44.entities.ServiceTicket.list('-created_date', 500),
-    enabled: !authLoading && isManagerOrAdmin(user),
-    refetchInterval: 300000,
-    select: (data) => {
-      const cutoff = SEVEN_DAYS_AGO();
-      return data.filter(t => t.created_date >= cutoff);
-    },
-  });
-
   const tickets = openTickets;
-  const isLoading = loadingOpen || loadingRecent;
+  const isLoading = loadingOpen;
 
-  // חדרים עמוסים: 3+ קריאות ב-7 ימים אחרונים
+  // חדרים עמוסים: לפי קריאות פתוחות בלבד (ללא היסטוריה מצטברת)
   const busyRooms = {};
-  recentTickets.forEach(t => {
+  openTickets.forEach(t => {
     if (t.room_number) {
       busyRooms[t.room_number] = (busyRooms[t.room_number] || 0) + 1;
     }
