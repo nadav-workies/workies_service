@@ -8,8 +8,8 @@ import { Star, ExternalLink, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DateRangeFilter from "@/components/dashboard/DateRangeFilter";
-import { getLiveTickets, getLiveSurveyResponses } from "@/lib/slaAgent.js";
-import { getCurrentCalendarMonthRange, filterTicketsByDateRange } from "@/lib/dateRangeUtils";
+import { getLiveTickets, getLiveSurveyResponses, filterTicketsByOpenedDate } from "@/lib/slaAgent.js";
+import { getCurrentCalendarMonthRange } from "@/lib/dateRangeUtils";
 
 function RatingBadge({ rating }) {
   if (!rating) return <span className="text-muted-foreground text-xs">—</span>;
@@ -17,11 +17,23 @@ function RatingBadge({ rating }) {
   return <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold ${color}`}><Star className="w-3 h-3" />{rating}/10</span>;
 }
 
+function MetricCard({ label, value, sub, color = "text-foreground" }) {
+  return (
+    <Card>
+      <CardContent className="pt-4 pb-3">
+        <p className="text-[11px] text-muted-foreground">{label}</p>
+        <p className={`text-xl font-bold mt-0.5 ${color}`}>{value}</p>
+        {sub && <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function SurveyResponses() {
   const navigate = useNavigate();
-  const [filterRating, setFilterRating]     = useState("all");
+  const [filterRating, setFilterRating]   = useState("all");
   const [filterAssigned, setFilterAssigned] = useState("all");
-  const [selectedRange, setSelectedRange]   = useState(() => getCurrentCalendarMonthRange());
+  const [selectedRange, setSelectedRange] = useState(() => getCurrentCalendarMonthRange());
 
   const { data: rawTickets = [] } = useQuery({
     queryKey: ["tickets-for-surveys"],
@@ -35,10 +47,25 @@ export default function SurveyResponses() {
 
   // סינון: קריאות חיות בתקופה → סקרים רלוונטיים
   const liveTickets     = getLiveTickets(rawTickets);
-  const periodTickets   = filterTicketsByDateRange(liveTickets, selectedRange);
+  const periodTickets   = filterTicketsByOpenedDate(liveTickets, selectedRange);
   const periodTicketIds = new Set(periodTickets.map(t => t.id));
-  const responses       = getLiveSurveyResponses(rawResponses).filter(r => periodTicketIds.has(r.ticket_id));
+  const liveResponses   = getLiveSurveyResponses(rawResponses);
+  const responses       = liveResponses.filter(r => periodTicketIds.has(r.ticket_id));
 
+  // אגרגציה
+  const closedTickets       = periodTickets.filter(t => t.status === "נסגרה");
+  const responsesWithRating = responses.filter(r => Number(r.rating) > 0);
+  const avgRating           = responsesWithRating.length
+    ? (responsesWithRating.reduce((s, r) => s + Number(r.rating), 0) / responsesWithRating.length).toFixed(1)
+    : null;
+  const responseRate        = closedTickets.length
+    ? Math.round((responsesWithRating.length / closedTickets.length) * 100)
+    : null;
+  const lowRatingCount      = responsesWithRating.filter(r => Number(r.rating) <= 5).length;
+  const highRatingCount     = responsesWithRating.filter(r => Number(r.rating) >= 9).length;
+  const requiresFollowup    = periodTickets.filter(t => t.requires_manager_followup).length;
+
+  // פילטר תצוגה
   const filtered = responses.filter(r => {
     if (filterRating === "low" && Number(r.rating) > 5) return false;
     if (filterRating === "high" && Number(r.rating) < 9) return false;
@@ -48,23 +75,24 @@ export default function SurveyResponses() {
 
   const assignees = [...new Set(responses.map(r => r.assigned_to).filter(Boolean))];
 
-  const avgRating = responses.filter(r => r.rating).length
-    ? (responses.filter(r => r.rating).reduce((s, r) => s + Number(r.rating), 0) / responses.filter(r => r.rating).length).toFixed(1)
-    : null;
-
   return (
     <div className="max-w-5xl mx-auto space-y-5" dir="rtl">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold">סקרי שירות</h1>
-          <p className="text-sm text-muted-foreground">
-            {responses.length} משובים התקבלו
-            {avgRating && ` | ממוצע ${avgRating}/10`}
-          </p>
-        </div>
+      <div>
+        <h1 className="text-xl font-bold">סקרי שירות</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">{responses.length} משובים בתקופה הנבחרת</p>
       </div>
 
       <DateRangeFilter value={selectedRange} onChange={setSelectedRange} />
+
+      {/* Summary metrics */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+        <MetricCard label="דירוג ממוצע" value={avgRating ? `${avgRating}/10` : "אין נתונים"} sub={responsesWithRating.length ? `${responsesWithRating.length} משובים` : undefined} color="text-amber-600" />
+        <MetricCard label="אחוז מענה" value={responseRate !== null ? `${responseRate}%` : "אין נתונים"} sub={closedTickets.length ? `מתוך ${closedTickets.length} סגורות` : "אין קריאות סגורות"} color="text-indigo-600" />
+        <MetricCard label="דירוגים נמוכים" value={lowRatingCount} sub="דירוג 1–5" color={lowRatingCount > 0 ? "text-red-600" : "text-muted-foreground"} />
+        <MetricCard label="דירוגים גבוהים" value={highRatingCount} sub="דירוג 9–10" color={highRatingCount > 0 ? "text-emerald-600" : "text-muted-foreground"} />
+        <MetricCard label="דורשות מעקב" value={requiresFollowup} sub="בעקבות דירוג נמוך" color={requiresFollowup > 0 ? "text-orange-600" : "text-muted-foreground"} />
+        <MetricCard label="סה״כ משובים" value={responses.length} sub="בתקופה הנבחרת" />
+      </div>
 
       {/* Filters */}
       <div className="flex gap-3 flex-wrap items-center">
@@ -95,7 +123,7 @@ export default function SurveyResponses() {
           <CardContent className="py-12 text-center">
             <Star className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
             <p className="font-semibold">אין משובים</p>
-            <p className="text-sm text-muted-foreground">לא התקבלו משובים עדיין.</p>
+            <p className="text-sm text-muted-foreground">לא התקבלו משובים בתקופה הנבחרת.</p>
           </CardContent>
         </Card>
       ) : (

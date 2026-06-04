@@ -63,9 +63,13 @@ export default function FeedbackSurvey() {
       if (q.required && !answers[q.question_id]) return;
     }
 
+    const rating = Number(answers["service_rating"]) || null;
+    if (!rating || rating < 1 || rating > 10) {
+      setSubmitting(false);
+      return;
+    }
     setSubmitting(true);
     const now = new Date().toISOString();
-    const rating = Number(answers["service_rating"]) || null;
     const comment = answers["service_comment"] || "";
 
     const answerArray = questions.map(q => ({
