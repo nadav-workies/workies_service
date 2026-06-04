@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { LayoutDashboard, Ticket, AlertTriangle, Plus, Settings, Users, LogOut, Menu, X, Bell, MapPin, Star, Archive } from "lucide-react";
+import { LayoutDashboard, Ticket, AlertTriangle, Plus, Settings, Users, LogOut, Menu, X, Bell, MapPin, Star, Archive, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { isManagerOrAdmin } from "@/lib/slaUtils";
@@ -26,6 +26,7 @@ export default function AppLayout() {
   { label: "מפת שירות", path: "/service-map", icon: MapPin, managerOnly: true },
   { label: "חורגות SLA", path: "/sla-report", icon: AlertTriangle, managerOnly: true },
   { label: "סקרי שירות", path: "/survey-responses", icon: Star, managerOnly: true },
+  { label: "בקרת ניקיון", path: "/cleaning-report", icon: Sparkles, managerOnly: true },
   { label: "הגדרות SLA", path: "/sla-settings", icon: Settings, managerOnly: true },
   { label: "הגדרות התראות", path: "/notification-settings", icon: Bell, adminOnly: true },
   { label: "ניהול משתמשים", path: "/users", icon: Users, adminOnly: true },

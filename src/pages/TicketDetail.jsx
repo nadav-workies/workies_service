@@ -17,6 +17,7 @@ import { getTimeRemainingLabel, getDeadlineMs, getOpenedAtMs, isTicketSlaBreache
 import { format } from "date-fns";
 import { ArrowRight, User, Phone, MapPin, Clock, Shield, MessageSquare, Loader2, CheckCircle, AlertTriangle, Star, ExternalLink } from "lucide-react";
 import FeedbackModal from "@/components/tickets/FeedbackModal";
+import AttachmentUploader from "@/components/tickets/AttachmentUploader";
 import SlaExclusionDialog from "@/components/tickets/SlaExclusionDialog";
 
 const STATUSES = ["פתוחה","שויכה לטיפול","בטיפול","ממתינה","טופלה","נסגרה"];
@@ -30,7 +31,7 @@ export default function TicketDetail() {
   const [noteText, setNoteText] = useState("");
   const [assignName, setAssignName] = useState("");
   const [closeDialog, setCloseDialog] = useState(false);
-  const [closeForm, setCloseForm] = useState({ resolution_summary: "", customer_response_sent: false, sla_breach_reason: "" });
+  const [closeForm, setCloseForm] = useState({ resolution_summary: "", customer_response_sent: false, sla_breach_reason: "", resolution_attachments: [] });
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [googleSending, setGoogleSending] = useState(false);
   const [googleSent, setGoogleSent] = useState(false);
@@ -103,6 +104,7 @@ export default function TicketDetail() {
       closed_at: now.toISOString(),
       sla_breached: !!isBreach,
       ...(isBreach && { sla_breach_reason: closeForm.sla_breach_reason }),
+      ...(closeForm.resolution_attachments?.length > 0 && { resolution_attachments: closeForm.resolution_attachments }),
     };
     updateMutation.mutate({
       updates: closedTicket,
@@ -185,6 +187,18 @@ export default function TicketDetail() {
                 <div className="mt-2 p-2 bg-muted rounded-lg">
                   <p className="text-xs text-muted-foreground mb-0.5">הערות</p>
                   <p className="text-sm">{ticket.notes}</p>
+                </div>
+              )}
+              {ticket.customer_attachments?.length > 0 && (
+                <div className="mt-3 pt-3 border-t">
+                  <p className="text-xs text-muted-foreground mb-1.5">קבצים שצורפו על ידי הלקוח</p>
+                  <AttachmentUploader attachments={ticket.customer_attachments} onChange={() => {}} disabled />
+                </div>
+              )}
+              {ticket.resolution_attachments?.length > 0 && (
+                <div className="mt-3 pt-3 border-t">
+                  <p className="text-xs text-muted-foreground mb-1.5">קבצים שצורפו בסגירת הטיפול</p>
+                  <AttachmentUploader attachments={ticket.resolution_attachments} onChange={() => {}} disabled />
                 </div>
               )}
             </CardContent>
@@ -393,6 +407,15 @@ export default function TicketDetail() {
             <div className="flex items-center gap-3">
               <Switch checked={closeForm.customer_response_sent} onCheckedChange={v => setCloseForm(f => ({ ...f, customer_response_sent: v }))} />
               <Label>הלקוח קיבל מענה *</Label>
+            </div>
+            <div className="space-y-1.5">
+              <Label>תמונת טיפול / קובץ טיפול</Label>
+              <AttachmentUploader
+                attachments={closeForm.resolution_attachments}
+                onChange={v => setCloseForm(f => ({ ...f, resolution_attachments: v }))}
+                label="צרף תמונת טיפול"
+                helpText="אפשר לצרף תמונה של הטיפול שבוצע. לא חובה."
+              />
             </div>
             {isBreach && (
               <div className="space-y-1.5">

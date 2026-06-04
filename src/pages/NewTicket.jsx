@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowRight, Loader2, Send, Search } from "lucide-react";
+import AttachmentUploader from "@/components/tickets/AttachmentUploader";
 import { generateTicketNumber, calculateSlaDeadlineMs, calculateSlaWarningAtMs, PRIORITY_SLA_MINUTES, isManagerOrAdmin } from "@/lib/slaUtils";
 import { QUICK_TICKET_LIST } from "@/lib/quickTickets";
 import { WORKIES_ROOMS, WORKIES_PUBLIC_AREAS } from "@/lib/workiesRooms";
@@ -94,6 +95,7 @@ export default function NewTicket() {
     sla_minutes: null,
     sla_label: "",
     notes: "",
+    customer_attachments: [],
     room_number: null,
     room_label: null,
     room_area: null,
@@ -312,6 +314,16 @@ export default function NewTicket() {
             <div className="space-y-1.5">
               <Label>הערות</Label>
               <Textarea value={form.notes} onChange={e => update("notes", e.target.value)} placeholder="הערות נוספות" rows={2} />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>צירוף תמונה של התקלה</Label>
+              <AttachmentUploader
+                attachments={form.customer_attachments}
+                onChange={v => update("customer_attachments", v)}
+                label="צרף תמונה / קובץ"
+                helpText="אם אפשר, צרפו תמונה של התקלה. זה יעזור לנו לטפל מהר ומדויק יותר. לא חובה."
+              />
             </div>
 
             <div className="flex gap-3 pt-1">

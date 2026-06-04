@@ -52,6 +52,18 @@ export function getRangeFromMonthValue(monthValue) {
   return getCalendarMonthRange(year, month - 1);
 }
 
+export function getTodayRange(now = new Date()) {
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+  const end   = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+  return {
+    startMs:  start.getTime(),
+    endMs:    end.getTime(),
+    dateFrom: formatLocalDateInput(start),
+    dateTo:   formatLocalDateInput(end),
+    label:    "היום",
+  };
+}
+
 /* ─── alias לתאימות עם קוד ישן ───────────────────── */
 
 export function isTicketInDateRange(ticket, range) {

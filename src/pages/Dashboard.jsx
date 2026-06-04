@@ -12,7 +12,8 @@ import TicketCard from "@/components/tickets/TicketCard";
 import RoomPickerModal from "@/components/user/RoomPickerModal";
 import { isManagerOrAdmin } from "@/lib/slaUtils";
 import { isTicketSlaBreached, calculateMonthlySlaMetrics, getLiveTickets, getLiveSurveyResponses } from "@/lib/slaAgent.js";
-import { getCurrentCalendarMonthRange, filterTicketsByDateRange } from "@/lib/dateRangeUtils";
+import { getTodayRange, filterTicketsByDateRange } from "@/lib/dateRangeUtils";
+import CleaningDashboardCard from "@/components/dashboard/CleaningDashboardCard";
 
 // ─── User dashboard ───────────────────────────────────────────────
 function UserDashboard({ user, onUserUpdated }) {
@@ -94,7 +95,7 @@ function UserDashboard({ user, onUserUpdated }) {
 function ManagerDashboard({ user }) {
   const navigate = useNavigate();
 
-  const [selectedRange, setSelectedRange] = useState(() => getCurrentCalendarMonthRange());
+  const [selectedRange, setSelectedRange] = useState(() => getTodayRange());
 
   const { data: tickets = [], isLoading, refetch: refetchTickets } = useQuery({
     queryKey: ['tickets'],
@@ -163,6 +164,8 @@ function ManagerDashboard({ user }) {
       <KPICards tickets={periodTickets} slaMetrics={slaMetrics} selectedRange={selectedRange} />
 
       <ServiceMetricsCards tickets={periodTickets} surveyResponses={periodSurveys} />
+
+      <CleaningDashboardCard />
 
       {breached.length > 0 && (
         <section>

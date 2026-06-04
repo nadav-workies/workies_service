@@ -22,6 +22,7 @@ import ServiceMapPage from '@/pages/ServiceMapPage';
 import FeedbackSurvey from '@/pages/FeedbackSurvey';
 import SurveyResponses from '@/pages/SurveyResponses';
 import ResetTestData from '@/pages/ResetTestData';
+import CleaningReport from '@/pages/CleaningReport';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -57,6 +58,7 @@ const AuthenticatedApp = () => {
           <Route path="/service-map" element={<ServiceMapPage />} />
           <Route path="/survey-responses" element={<SurveyResponses />} />
           <Route path="/reset-test-data" element={<ResetTestData />} />
+          <Route path="/cleaning-report" element={<CleaningReport />} />
         </Route>
       </Route>
       <Route path="/feedback/:token" element={<FeedbackSurvey />} />

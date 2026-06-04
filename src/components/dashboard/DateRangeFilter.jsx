@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CalendarRange } from "lucide-react";
 import {
+  getTodayRange,
   getCurrentCalendarMonthRange,
   getPreviousCalendarMonthRange,
   getCustomDateRange,
@@ -55,6 +56,9 @@ export default function DateRangeFilter({ value, onChange }) {
         <span className="text-[10px] text-muted-foreground">מחושב לפי מועד פתיחת הקריאה</span>
       </div>
 
+      <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => { const r = getTodayRange(); setDateFrom(r.dateFrom); setDateTo(r.dateTo); setMonthValue(""); onChange(r); }}>
+        היום
+      </Button>
       <Button variant="outline" size="sm" className="text-xs h-7" onClick={applyCurrentMonth}>
         החודש הנוכחי
       </Button>
