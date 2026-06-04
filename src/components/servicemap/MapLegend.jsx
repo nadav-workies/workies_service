@@ -3,15 +3,16 @@ import { ROOM_STATUS_COLORS } from '@/lib/roomServiceStatus';
 const ITEMS = [
   { status: 'clear', label: 'ללא קריאות' },
   { status: 'open', label: 'קריאה פתוחה' },
-  { status: 'urgent', label: 'דחוף / מתקרב ל-SLA' },
-  { status: 'breached', label: 'קריטי / חריגת SLA' },
+  { status: 'warning', label: 'מתקרב ל-SLA' },
+  { status: 'critical', label: 'קריטי' },
+  { status: 'breached', label: 'חריגת SLA' },
 ];
 
 export default function MapLegend() {
   return (
     <div className="flex flex-wrap gap-3 items-center" dir="rtl">
       {ITEMS.map(item => {
-        const c = ROOM_STATUS_COLORS[item.status];
+        const c = ROOM_STATUS_COLORS[item.status] || ROOM_STATUS_COLORS.clear;
         return (
           <div key={item.status} className="flex items-center gap-1.5">
             <div

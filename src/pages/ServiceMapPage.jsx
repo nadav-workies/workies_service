@@ -33,14 +33,7 @@ export default function ServiceMapPage() {
     cacheTime: 0,        // לא לשמור cache
   });
 
-  // רענון מיידי בכל שינוי קריאה (פתיחה, עדכון, סגירה)
-  useEffect(() => {
-    if (!isManagerOrAdmin(user)) return;
-    const unsubscribe = base44.entities.ServiceTicket.subscribe(() => {
-      refetch();
-    });
-    return unsubscribe;
-  }, [user, refetch]);
+  // subscription הוסר — polling בלבד (refetchInterval: 60000)
 
   const tickets = openTickets;
   const isLoading = loadingOpen;
@@ -75,7 +68,7 @@ export default function ServiceMapPage() {
     }).length,
     urgent: WORKIES_ROOMS.filter(r => {
       const s = getRoomServiceStatus(r.room_number, tickets);
-      return s.status === 'urgent';
+      return s.status === 'warning' || s.status === 'critical' || s.urgentCount > 0;
     }).length,
     totalOpen: tickets.length,
   };
