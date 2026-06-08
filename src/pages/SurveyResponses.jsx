@@ -8,8 +8,8 @@ import { Star, ExternalLink, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DateRangeFilter from "@/components/dashboard/DateRangeFilter";
-import { getLiveTickets, getLiveSurveyResponses, filterTicketsByOpenedDate } from "@/lib/slaAgent.js";
-import { getCurrentCalendarMonthRange } from "@/lib/dateRangeUtils";
+import { getLiveTickets, getLiveSurveyResponses } from "@/lib/slaAgent.js";
+import { getCurrentCalendarMonthRange, filterSurveyResponsesBySubmittedDate, filterTicketsByClosedDate } from "@/lib/dateRangeUtils";
 
 function RatingBadge({ rating }) {
   if (!rating) return <span className="text-muted-foreground text-xs">—</span>;
@@ -45,15 +45,13 @@ export default function SurveyResponses() {
     queryFn: () => base44.entities.SurveyResponse.list("-submitted_at", 500),
   });
 
-  // סינון: קריאות חיות בתקופה → סקרים רלוונטיים
-  const liveTickets     = getLiveTickets(rawTickets);
-  const periodTickets   = filterTicketsByOpenedDate(liveTickets, selectedRange);
-  const periodTicketIds = new Set(periodTickets.map(t => t.id));
-  const liveResponses   = getLiveSurveyResponses(rawResponses);
-  const responses       = liveResponses.filter(r => periodTicketIds.has(r.ticket_id));
+  // סינון: סקרים לפי מועד מילוי, קריאות שנסגרו בתקופה לאחוז מענה
+  const liveTickets   = getLiveTickets(rawTickets);
+  const liveResponses = getLiveSurveyResponses(rawResponses);
+  const responses     = filterSurveyResponsesBySubmittedDate(liveResponses, selectedRange);
+  const closedTickets = filterTicketsByClosedDate(liveTickets, selectedRange);
 
   // אגרגציה
-  const closedTickets       = periodTickets.filter(t => t.status === "נסגרה");
   const responsesWithRating = responses.filter(r => Number(r.rating) > 0);
   const avgRating           = responsesWithRating.length
     ? (responsesWithRating.reduce((s, r) => s + Number(r.rating), 0) / responsesWithRating.length).toFixed(1)
@@ -63,7 +61,8 @@ export default function SurveyResponses() {
     : null;
   const lowRatingCount      = responsesWithRating.filter(r => Number(r.rating) <= 5).length;
   const highRatingCount     = responsesWithRating.filter(r => Number(r.rating) >= 9).length;
-  const requiresFollowup    = periodTickets.filter(t => t.requires_manager_followup).length;
+  const responseTicketIds = new Set(responses.map(r => r.ticket_id));
+  const requiresFollowup  = liveTickets.filter(t => responseTicketIds.has(t.id) && t.requires_manager_followup).length;
 
   // פילטר תצוגה
   const filtered = responses.filter(r => {

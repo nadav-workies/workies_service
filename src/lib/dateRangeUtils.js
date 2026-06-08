@@ -75,3 +75,23 @@ export function isTicketInDateRange(ticket, range) {
 export function filterTicketsByDateRange(tickets, range) {
   return tickets.filter(ticket => isTicketInDateRange(ticket, range));
 }
+
+export function isMsInRange(ms, range) {
+  if (!ms || !range?.startMs || !range?.endMs) return false;
+  return ms >= range.startMs && ms <= range.endMs;
+}
+
+export function isDateStringInRange(dateString, range) {
+  if (!dateString) return false;
+  const ms = new Date(dateString).getTime();
+  if (!Number.isFinite(ms)) return false;
+  return isMsInRange(ms, range);
+}
+
+export function filterSurveyResponsesBySubmittedDate(responses = [], range) {
+  return responses.filter(r => isDateStringInRange(r.submitted_at, range));
+}
+
+export function filterTicketsByClosedDate(tickets = [], range) {
+  return tickets.filter(t => isDateStringInRange(t.closed_at, range));
+}

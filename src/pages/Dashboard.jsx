@@ -12,7 +12,7 @@ import TicketCard from "@/components/tickets/TicketCard";
 import RoomPickerModal from "@/components/user/RoomPickerModal";
 import { isManagerOrAdmin } from "@/lib/slaUtils";
 import { isTicketSlaBreached, calculateMonthlySlaMetrics, getLiveTickets, getLiveSurveyResponses } from "@/lib/slaAgent.js";
-import { getTodayRange, filterTicketsByDateRange } from "@/lib/dateRangeUtils";
+import { getTodayRange, filterTicketsByDateRange, filterSurveyResponsesBySubmittedDate, filterTicketsByClosedDate } from "@/lib/dateRangeUtils";
 import CleaningDashboardCard from "@/components/dashboard/CleaningDashboardCard";
 
 // ─── User dashboard ───────────────────────────────────────────────
@@ -128,10 +128,10 @@ function ManagerDashboard({ user }) {
 
   // ─── סינון: חיות → תקופה → סקרים ────────────────────────────────
   const liveTickets     = getLiveTickets(tickets);
-  const periodTickets   = filterTicketsByDateRange(liveTickets, selectedRange);
-  const liveSurveys     = getLiveSurveyResponses(surveyResponses);
-  const periodTicketIds = new Set(periodTickets.map(t => t.id));
-  const periodSurveys   = liveSurveys.filter(r => periodTicketIds.has(r.ticket_id));
+  const periodTickets        = filterTicketsByDateRange(liveTickets, selectedRange);
+  const liveSurveys          = getLiveSurveyResponses(surveyResponses);
+  const closedTicketsInRange = filterTicketsByClosedDate(liveTickets, selectedRange);
+  const periodSurveys        = filterSurveyResponsesBySubmittedDate(liveSurveys, selectedRange);
 
   // ─── מדדי SLA לפי טווח נבחר ─────────────────────────────────────
   const slaMetrics = calculateMonthlySlaMetrics(periodTickets, selectedRange, nowMs);
@@ -163,7 +163,7 @@ function ManagerDashboard({ user }) {
 
       <KPICards tickets={periodTickets} slaMetrics={slaMetrics} selectedRange={selectedRange} />
 
-      <ServiceMetricsCards tickets={periodTickets} surveyResponses={periodSurveys} />
+      <ServiceMetricsCards tickets={closedTicketsInRange} surveyResponses={periodSurveys} />
 
       <CleaningDashboardCard />
 
