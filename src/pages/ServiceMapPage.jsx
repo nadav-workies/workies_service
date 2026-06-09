@@ -28,12 +28,14 @@ export default function ServiceMapPage() {
       return all.filter(t => t.status !== 'נסגרה' && !t.archived && !t.is_test_data);
     },
     enabled: !authLoading && isManagerOrAdmin(user),
-    refetchInterval: 60000,
-    staleTime: 0,        // תמיד טרי
-    cacheTime: 0,        // לא לשמור cache
+    refetchInterval: 30000,
+    refetchIntervalInBackground: true,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
+    cacheTime: 0,
   });
 
-  // subscription הוסר — polling בלבד (refetchInterval: 60000)
+  // polling בלבד — מתרענן כל 30 שניות
 
   const tickets = openTickets;
   const isLoading = loadingOpen;
@@ -101,10 +103,13 @@ export default function ServiceMapPage() {
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">חיווי קריאות שירות לפי חדרים ואזורים</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching} className="gap-2">
-          <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
-          רענן
-        </Button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">מתרענן כל 30 שניות</span>
+          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching} className="gap-2">
+            <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+            רענן
+          </Button>
+        </div>
       </div>
 
       {/* Summary strip */}

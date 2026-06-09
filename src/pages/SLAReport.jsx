@@ -69,13 +69,13 @@ export default function SLAReport() {
           label="ממוצע זמן טיפול"
           value={metrics.averageHandlingTimeMs !== null ? formatDuration(metrics.averageHandlingTimeMs) : "אין נתונים"}
           color="text-indigo-600"
-          sub={metrics.closedTickets > 0 ? `${metrics.closedTickets} קריאות סגורות` : "אין קריאות סגורות"}
+          sub={((metrics.closedTickets?.length ?? metrics.closedTickets) || 0) > 0 ? `${metrics.closedTickets?.length ?? metrics.closedTickets ?? 0} קריאות סגורות` : "אין קריאות סגורות"}
         />
         <MetricCard
           label="סה״כ קריאות בחודש"
           value={metrics.totalTickets}
           color="text-foreground"
-          sub={`${metrics.openTickets} פתוחות · ${metrics.closedTickets} סגורות`}
+          sub={`${metrics.openTickets?.length ?? metrics.openTickets ?? 0} פתוחות · ${metrics.closedTickets?.length ?? metrics.closedTickets ?? 0} סגורות`}
         />
       </div>
 
