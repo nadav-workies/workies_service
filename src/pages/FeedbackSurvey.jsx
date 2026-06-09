@@ -69,55 +69,17 @@ export default function FeedbackSurvey() {
       return;
     }
     setSubmitting(true);
-    const now = new Date().toISOString();
     const comment = answers["service_comment"] || "";
 
-    const answerArray = questions.map(q => ({
-      question_id: q.question_id,
-      question_label: q.label,
-      answer: String(answers[q.question_id] || ""),
-      numeric_value: Number(answers[q.question_id]) || null,
-    }));
-
-    // Save SurveyResponse
-    await base44.entities.SurveyResponse.create({
-      survey_template_key: "service_ticket_feedback",
-      ticket_id: ticket.id,
-      ticket_number: ticket.ticket_number,
-      feedback_token: token,
-      customer_name: ticket.customer_name,
-      customer_email: ticket.created_by,
-      room_number: ticket.room_number,
-      room_label: ticket.room_label,
-      ticket_type: ticket.ticket_type,
-      assigned_to: ticket.assigned_to,
+    const result = await base44.functions.invoke("submitFeedbackSurvey", {
+      token,
       rating,
       comment,
-      answers: answerArray,
-      submitted_at: now,
     });
 
-    // Update ServiceTicket
-    const isLowRating = rating && rating <= 5;
-    await base44.entities.ServiceTicket.update(ticket.id, {
-      feedback_submitted: true,
-      feedback_rating: rating,
-      feedback_comment: comment,
-      feedback_submitted_at: now,
-      ...(isLowRating && {
-        requires_manager_followup: true,
-        google_review_blocked_reason: "דירוג שביעות רצון נמוך",
-      }),
-    });
-
-    // Notify managers on low rating
-    if (isLowRating) {
-      base44.functions.invoke("ticketNotifications", {
-        action: "low_rating_alert",
-        ticket: { ...ticket, feedback_rating: rating, feedback_comment: comment },
-        rating,
-        comment,
-      }).catch(() => {});
+    if (!result?.data?.ok) {
+      setSubmitting(false);
+      return;
     }
 
     setSubmitting(false);
