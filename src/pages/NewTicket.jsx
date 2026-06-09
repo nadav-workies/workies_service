@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowRight, Loader2, Send, Search } from "lucide-react";
 import AttachmentUploader from "@/components/tickets/AttachmentUploader";
-import { generateTicketNumber, calculateSlaDeadlineMs, calculateSlaWarningAtMs, PRIORITY_SLA_MINUTES, isManagerOrAdmin } from "@/lib/slaUtils";
+import { generateTicketNumber, calculateSlaWarningAtMs, PRIORITY_SLA_MINUTES, isManagerOrAdmin } from "@/lib/slaUtils";
+import { calculateSlaDeadlineWithinServiceHours, isWithinServiceHours } from "@/lib/slaAgent";
 import { QUICK_TICKET_LIST } from "@/lib/quickTickets";
 import { WORKIES_ROOMS, WORKIES_PUBLIC_AREAS } from "@/lib/workiesRooms";
 import QuickTicketSelector from "@/components/tickets/QuickTicketSelector";
@@ -131,6 +132,7 @@ export default function NewTicket() {
     }).catch(() => {});
   }, []);
 
+  const [offHoursMsg, setOffHoursMsg] = useState(null);
   const isMgr = isManagerOrAdmin(user);
   const update = (key, value) => setForm(f => ({ ...f, [key]: value }));
 
@@ -159,12 +161,25 @@ export default function NewTicket() {
       const ticketNumber = generateTicketNumber();
       const slaMin = Number(data.sla_minutes || PRIORITY_SLA_MINUTES[data.priority] || 0) || null;
 
-      const slaDeadlineMs = slaMin ? calculateSlaDeadlineMs(openedAtMs, slaMin) : null;
-      const slaWarningAtMs = slaMin ? calculateSlaWarningAtMs(openedAtMs, slaMin) : null;
+      let slaDeadlineMs = null;
+      let slaStartAtMs = null;
+      let slaWarningAtMs = null;
 
-      // בדיקת תקינות: deadline חייב להיות אחרי פתיחה
-      if (slaDeadlineMs && slaDeadlineMs <= openedAtMs) {
-        throw new Error("SLA deadline must be after opened_at");
+      if (slaMin) {
+        const { slaStart, slaDeadline } = calculateSlaDeadlineWithinServiceHours(openedAtDate, slaMin);
+        slaStartAtMs   = slaStart.getTime();
+        slaDeadlineMs  = slaDeadline.getTime();
+        slaWarningAtMs = calculateSlaWarningAtMs(slaStartAtMs, slaMin);
+      }
+
+      // חיווי מחוץ לשעות פעילות
+      if (!isWithinServiceHours(openedAtDate)) {
+        const h = openedAtDate.getHours();
+        if (h < 8) {
+          setOffHoursMsg("קריאתך נרשמה. הטיפול יחל היום בשעה 08:00.");
+        } else {
+          setOffHoursMsg("קריאתך נרשמה. הטיפול יחל ביום הפעילות הבא בשעה 08:00.");
+        }
       }
 
       // For regular users, use their own name if no customer_name given
@@ -177,6 +192,8 @@ export default function NewTicket() {
         opened_at: openedAtDate.toISOString(),
         opened_at_ms: openedAtMs,
         sla_minutes: slaMin,
+        sla_start_at: slaStartAtMs ? new Date(slaStartAtMs).toISOString() : null,
+        sla_start_at_ms: slaStartAtMs,
         sla_deadline: slaDeadlineMs ? new Date(slaDeadlineMs).toISOString() : null,
         sla_deadline_ms: slaDeadlineMs,
         sla_warning_at: slaWarningAtMs ? new Date(slaWarningAtMs).toISOString() : null,
@@ -325,6 +342,12 @@ export default function NewTicket() {
                 helpText="אם אפשר, צרפו תמונה של התקלה. זה יעזור לנו לטפל מהר ומדויק יותר. לא חובה."
               />
             </div>
+
+            {offHoursMsg && (
+              <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm">
+                ⏰ {offHoursMsg}
+              </div>
+            )}
 
             <div className="flex gap-3 pt-1">
               <Button onClick={() => mutation.mutate(form)} disabled={!isValid || mutation.isPending} className="gap-2">

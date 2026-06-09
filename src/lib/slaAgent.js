@@ -10,6 +10,66 @@ import {
 } from "@/lib/dateRangeUtils";
 
 /* ─────────────────────────────────────────────────────
+   שעות פעילות שירות
+───────────────────────────────────────────────────── */
+
+export const SERVICE_HOURS = { startHour: 8, endHour: 18 };
+
+export function getServiceDayStart(date = new Date()) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), SERVICE_HOURS.startHour, 0, 0, 0);
+}
+
+export function getServiceDayEnd(date = new Date()) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), SERVICE_HOURS.endHour, 0, 0, 0);
+}
+
+export function isWithinServiceHours(date = new Date()) {
+  const ms = date.getTime();
+  return ms >= getServiceDayStart(date).getTime() && ms < getServiceDayEnd(date).getTime();
+}
+
+export function getNextServiceStart(date = new Date()) {
+  const dayStart = getServiceDayStart(date);
+  const dayEnd   = getServiceDayEnd(date);
+  if (date.getTime() < dayStart.getTime()) return dayStart;
+  if (date.getTime() >= dayEnd.getTime()) {
+    const nextDay = new Date(date);
+    nextDay.setDate(nextDay.getDate() + 1);
+    return getServiceDayStart(nextDay);
+  }
+  return date;
+}
+
+export function calculateSlaDeadlineWithinServiceHours(openedAt, slaMinutes) {
+  const openedDate = openedAt instanceof Date ? openedAt : new Date(openedAt);
+  let current = getNextServiceStart(openedDate);
+  let remainingMinutes = Number(slaMinutes || 0);
+
+  if (!remainingMinutes || remainingMinutes <= 0) {
+    return { slaStart: current, slaDeadline: current };
+  }
+
+  while (remainingMinutes > 0) {
+    const serviceEnd = getServiceDayEnd(current);
+    const availableMinutes = Math.floor((serviceEnd.getTime() - current.getTime()) / 60000);
+
+    if (remainingMinutes <= availableMinutes) {
+      return {
+        slaStart: getNextServiceStart(openedDate),
+        slaDeadline: new Date(current.getTime() + remainingMinutes * 60000),
+      };
+    }
+
+    remainingMinutes -= availableMinutes;
+    const nextDay = new Date(current);
+    nextDay.setDate(nextDay.getDate() + 1);
+    current = getServiceDayStart(nextDay);
+  }
+
+  return { slaStart: getNextServiceStart(openedDate), slaDeadline: current };
+}
+
+/* ─────────────────────────────────────────────────────
    בסיס — קבלת ערכי זמן מ-ticket
 ───────────────────────────────────────────────────── */
 
@@ -175,6 +235,13 @@ export function isClosedTicketOnTime(ticket) {
 export function getLiveSlaDisplay(ticket, nowMs = Date.now()) {
   if (!ticket) return { label: "ללא קריאה", status: "none", pulse: false };
   if (isTicketClosed(ticket)) return { label: "נסגרה", status: "closed", pulse: false };
+
+  // אם SLA טרם התחיל (מחוץ לשעות פעילות)
+  const slaStartMs = ticket.sla_start_at_ms ? Number(ticket.sla_start_at_ms) : null;
+  if (slaStartMs && nowMs < slaStartMs) {
+    const startTime = new Date(slaStartMs).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" });
+    return { label: `יתחיל ב-${startTime}`, status: "pending", pulse: false };
+  }
 
   const deadlineMs = getDeadlineMs(ticket);
   const slaMinutes = Number(ticket.sla_minutes || 0);

@@ -8,6 +8,7 @@ const STATUS_CLASSES = {
   breached: 'bg-red-200 text-red-800 border-red-500',
   none:     'bg-slate-100 text-slate-500 border-slate-200',
   closed:   'bg-green-100 text-green-700 border-green-200',
+  pending:  'bg-slate-100 text-slate-600 border-slate-200',
 };
 
 export default function LiveSlaBadge({ ticket, compact = false }) {
