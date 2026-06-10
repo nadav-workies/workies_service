@@ -23,6 +23,7 @@ import FeedbackSurvey from '@/pages/FeedbackSurvey';
 import SurveyResponses from '@/pages/SurveyResponses';
 import ResetTestData from '@/pages/ResetTestData';
 import CleaningReport from '@/pages/CleaningReport';
+import UsersManagement from '@/pages/UsersManagement';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -59,6 +60,7 @@ const AuthenticatedApp = () => {
           <Route path="/survey-responses" element={<SurveyResponses />} />
           <Route path="/reset-test-data" element={<ResetTestData />} />
           <Route path="/cleaning-report" element={<CleaningReport />} />
+          <Route path="/users" element={<UsersManagement />} />
         </Route>
       </Route>
       <Route path="/feedback/:token" element={<FeedbackSurvey />} />
