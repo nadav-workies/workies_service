@@ -112,10 +112,11 @@ export default function UsersManagement() {
 
   const usersByRoom = {};
   users.forEach(u => {
-    if (!u.room_number) return;
-    const rn = String(u.room_number);
-    if (!usersByRoom[rn]) usersByRoom[rn] = [];
-    usersByRoom[rn].push(u);
+    const rn = u.default_room_number || u.room_number;
+    if (!rn) return;
+    const key = String(rn);
+    if (!usersByRoom[key]) usersByRoom[key] = [];
+    usersByRoom[key].push(u);
   });
 
   const roomStatusMap = {};
@@ -352,8 +353,8 @@ export default function UsersManagement() {
                   <th className="p-2 font-semibold">שם</th>
                   <th className="p-2 font-semibold">מייל</th>
                   <th className="p-2 font-semibold">טלפון</th>
+                  <th className="p-2 font-semibold">חדר משויך</th>
                   <th className="p-2 font-semibold">תפקיד</th>
-                  <th className="p-2 font-semibold">חדר</th>
                   <th className="p-2 font-semibold">סטטוס</th>
                 </tr>
               </thead>
@@ -363,8 +364,12 @@ export default function UsersManagement() {
                     <td className="p-2 font-medium">{user.full_name || "—"}</td>
                     <td className="p-2 text-xs" dir="ltr">{user.email || "—"}</td>
                     <td className="p-2 text-xs" dir="ltr">{user.phone || "—"}</td>
+                    <td className="p-2">
+                      {user.default_room_label || user.default_room_number
+                        ? <span className="text-xs">{user.default_room_label || user.default_room_number}</span>
+                        : <span className="text-muted-foreground text-xs">לא משויך</span>}
+                    </td>
                     <td className="p-2">{roleLabel(user.role)}</td>
-                    <td className="p-2">{user.room_label || user.room_number || "—"}</td>
                     <td className="p-2">{user.disabled ? "לא פעיל" : "פעיל"}</td>
                   </tr>
                 ))}
