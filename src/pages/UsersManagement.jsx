@@ -15,13 +15,17 @@ function getFourMonthsAgoMs() {
   return d.getTime();
 }
 
-function KpiCard({ icon: Icon, label, value, color = "text-foreground" }) {
+function KpiCard({ icon: Icon, label, value, filterKey, activeFilter, onFilter }) {
+  const isActive = activeFilter === filterKey;
   return (
-    <Card>
+    <Card
+      className={`cursor-pointer transition-all ${isActive ? "ring-2 ring-primary" : "hover:shadow-md"}`}
+      onClick={() => onFilter(isActive ? "all" : filterKey)}
+    >
       <CardContent className="pt-4 pb-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-muted">
-            <Icon className="w-4 h-4 text-muted-foreground" />
+          <div className={`p-2 rounded-lg ${isActive ? "bg-primary/10" : "bg-muted"}`}>
+            <Icon className={`w-4 h-4 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
           </div>
           <div>
             <p className="text-2xl font-bold leading-none">{value}</p>
@@ -48,8 +52,9 @@ const roleLabel = (role) => {
 
 export default function UsersManagement() {
   const [currentUser, setCurrentUser] = useState(null);
-  const [emptyDialog, setEmptyDialog] = useState(null); // { room_number, room_label, currentStatus }
+  const [emptyDialog, setEmptyDialog] = useState(null);
   const [emptyReason, setEmptyReason] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -155,6 +160,12 @@ export default function UsersManagement() {
 
   const isAdmin = currentUser?.role === 'admin';
 
+  const filteredRooms = roomData.filter(r => {
+    if (statusFilter === "all") return true;
+    if (statusFilter === "with_users") return r.users_count > 0;
+    return r.status === statusFilter;
+  });
+
   const handleToggleEmpty = async (room) => {
     const now = new Date().toISOString();
     if (room.is_empty && room.adminStatusId) {
@@ -200,17 +211,43 @@ export default function UsersManagement() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <KpiCard icon={Building2} label="חדרים מזוהים" value={totalRooms} />
-        <KpiCard icon={Building2} label="חדרים פעילים" value={activeRooms} />
-        <KpiCard icon={UserCheck} label="חדרים עם משתמשים" value={roomsWithUsers} />
-        <KpiCard icon={AlertTriangle} label="ללא פעילות 4 חודשים" value={inactiveRooms} />
-        <KpiCard icon={Archive} label="חדרים ריקים" value={emptyRooms} />
+        <KpiCard icon={Building2} label="חדרים מזוהים" value={totalRooms} filterKey="all" activeFilter={statusFilter} onFilter={setStatusFilter} />
+        <KpiCard icon={Building2} label="חדרים פעילים" value={activeRooms} filterKey="active" activeFilter={statusFilter} onFilter={setStatusFilter} />
+        <KpiCard icon={UserCheck} label="חדרים עם משתמשים" value={roomsWithUsers} filterKey="with_users" activeFilter={statusFilter} onFilter={setStatusFilter} />
+        <KpiCard icon={AlertTriangle} label="ללא פעילות 4 חודשים" value={inactiveRooms} filterKey="inactive" activeFilter={statusFilter} onFilter={setStatusFilter} />
+        <KpiCard icon={Archive} label="חדרים ריקים" value={emptyRooms} filterKey="empty" activeFilter={statusFilter} onFilter={setStatusFilter} />
       </div>
 
       {/* Rooms Table */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">סטטוס חדרים</CardTitle>
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <CardTitle className="text-base">
+              סטטוס חדרים
+              {statusFilter !== "all" && (
+                <span className="mr-2 text-xs font-normal text-muted-foreground">
+                  ({filteredRooms.length} מתוך {totalRooms})
+                </span>
+              )}
+            </CardTitle>
+            <div className="flex gap-1 flex-wrap">
+              {[
+                { key: "all", label: "הכל" },
+                { key: "active", label: "פעיל" },
+                { key: "inactive", label: "לא פעיל" },
+                { key: "empty", label: "חדר ריק" },
+                { key: "with_users", label: "עם משתמשים" },
+              ].map(opt => (
+                <button
+                  key={opt.key}
+                  onClick={() => setStatusFilter(opt.key)}
+                  className={`px-3 py-1 rounded-full text-xs border transition-colors ${statusFilter === opt.key ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -227,7 +264,7 @@ export default function UsersManagement() {
                 </tr>
               </thead>
               <tbody>
-                {roomData.map(room => (
+                {filteredRooms.map(room => (
                   <tr key={room.room_number} className="border-b hover:bg-muted/30">
                     <td className="p-2 font-medium">{room.room_label}</td>
                     <td className="p-2 text-muted-foreground text-xs">{room.room_area}</td>
