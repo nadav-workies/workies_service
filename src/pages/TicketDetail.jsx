@@ -36,6 +36,8 @@ export default function TicketDetail() {
   const [googleSending, setGoogleSending] = useState(false);
   const [googleSent, setGoogleSent] = useState(false);
   const [slaExclusionOpen, setSlaExclusionOpen] = useState(false);
+  const [treatmentDialogOpen, setTreatmentDialogOpen] = useState(false);
+  const [treatmentDeadlineForm, setTreatmentDeadlineForm] = useState({ date: "", time: "" });
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -68,9 +70,52 @@ export default function TicketDetail() {
 
   const handleStatusChange = (newStatus) => {
     if (newStatus === "נסגרה") { setCloseDialog(true); return; }
+
+    if (newStatus === "בטיפול") {
+      if (ticket.treatment_deadline_locked) {
+        // דדליין כבר ננעל — שינוי סטטוס בלבד
+        updateMutation.mutate({ updates: { status: "בטיפול" }, historyEntry: addHistory("סטטוס שונה ל: בטיפול") });
+        base44.functions.invoke('ticketNotifications', { action: 'status_changed', ticket: { ...ticket, status: "בטיפול" }, newStatus: "בטיפול", oldStatus: ticket.status }).catch(() => {});
+        return;
+      }
+      setTreatmentDeadlineForm({ date: "", time: "" });
+      setTreatmentDialogOpen(true);
+      return;
+    }
+
     updateMutation.mutate({ updates: { status: newStatus }, historyEntry: addHistory(`סטטוס שונה ל: ${newStatus}`) });
-    // Notify user of status change
     base44.functions.invoke('ticketNotifications', { action: 'status_changed', ticket: { ...ticket, status: newStatus }, newStatus, oldStatus: ticket.status }).catch(() => {});
+  };
+
+  const handleStartTreatmentWithDeadline = () => {
+    if (!treatmentDeadlineForm.date || !treatmentDeadlineForm.time) return;
+    const deadlineDate = new Date(`${treatmentDeadlineForm.date}T${treatmentDeadlineForm.time}:00`);
+    const deadlineMs = deadlineDate.getTime();
+    if (!Number.isFinite(deadlineMs) || deadlineMs <= Date.now()) return;
+
+    const now = new Date();
+    const updates = {
+      status: "בטיפול",
+      original_sla_deadline: ticket.original_sla_deadline || ticket.sla_deadline || null,
+      original_sla_deadline_ms: ticket.original_sla_deadline_ms || ticket.sla_deadline_ms || null,
+      treatment_started_at: now.toISOString(),
+      treatment_started_at_ms: now.getTime(),
+      treatment_started_by: user?.email || user?.full_name || "מערכת",
+      treatment_deadline: deadlineDate.toISOString(),
+      treatment_deadline_ms: deadlineMs,
+      treatment_deadline_locked: true,
+      treatment_deadline_set_at: now.toISOString(),
+      treatment_deadline_set_by: user?.email || user?.full_name || "מערכת",
+      sla_deadline: deadlineDate.toISOString(),
+      sla_deadline_ms: deadlineMs,
+    };
+
+    updateMutation.mutate({
+      updates,
+      historyEntry: addHistory("תחילת טיפול", `דדליין סיום טיפול: ${deadlineDate.toLocaleString("he-IL")}`)
+    });
+    base44.functions.invoke('ticketNotifications', { action: 'status_changed', ticket: { ...ticket, ...updates }, newStatus: "בטיפול", oldStatus: ticket.status }).catch(() => {});
+    setTreatmentDialogOpen(false);
   };
 
   const handleAssign = () => {
@@ -175,8 +220,13 @@ export default function TicketDetail() {
                 <InfoRow icon={Phone} label="טלפון" value={ticket.phone} dir="ltr" />
                 <InfoRow icon={MapPin} label="אזור" value={ticket.area} />
                 <InfoRow icon={Clock} label="נפתחה" value={openedAtMs ? format(new Date(openedAtMs), "dd/MM/yyyy HH:mm") : "—"} />
-                {slaDeadlineMs && (
+                {ticket.original_sla_deadline_ms ? (
+                  <InfoRow icon={Shield} label="יעד תחילת טיפול" value={format(new Date(Number(ticket.original_sla_deadline_ms)), "dd/MM/yyyy HH:mm")} />
+                ) : slaDeadlineMs && !ticket.treatment_deadline_ms ? (
                   <InfoRow icon={Shield} label="יעד SLA" value={format(new Date(slaDeadlineMs), "dd/MM/yyyy HH:mm")} />
+                ) : null}
+                {ticket.treatment_deadline_ms && (
+                  <InfoRow icon={Shield} label="דדליין סיום טיפול" value={format(new Date(Number(ticket.treatment_deadline_ms)), "dd/MM/yyyy HH:mm")} />
                 )}
               </div>
               <div className="mt-3 pt-3 border-t">
@@ -279,6 +329,12 @@ export default function TicketDetail() {
                 <CardContent className="space-y-2">
                   {ticket.status !== "בטיפול" && (
                     <Button variant="outline" className="w-full text-sm justify-start" onClick={() => handleStatusChange("בטיפול")}>סמן כבטיפול</Button>
+                  )}
+                  {ticket.treatment_deadline_locked && ticket.treatment_deadline && (
+                    <div className="text-xs text-muted-foreground bg-muted rounded px-2 py-1.5">
+                      🔒 דדליין סיום טיפול נקבע ולא ניתן לשינוי:<br />
+                      <span className="font-medium text-foreground">{format(new Date(ticket.treatment_deadline), "dd/MM/yyyy HH:mm")}</span>
+                    </div>
                   )}
                   {ticket.status !== "טופלה" && (
                     <Button variant="outline" className="w-full text-sm justify-start" onClick={() => handleStatusChange("טופלה")}>סמן כטופלה</Button>
@@ -394,6 +450,49 @@ export default function TicketDetail() {
         onClose={() => setFeedbackOpen(false)}
         onSubmitted={() => queryClient.invalidateQueries({ queryKey: ['ticket', id] })}
       />
+
+      {/* Treatment deadline dialog */}
+      <Dialog open={treatmentDialogOpen} onOpenChange={setTreatmentDialogOpen}>
+        <DialogContent dir="rtl" className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>התחלת טיפול — התחייבות לסיום</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              לפני העברת הקריאה לסטטוס בטיפול, יש לציין צפי סיום טיפול.
+              לא ניתן יהיה לשנות דדליין זה לאחר האישור.
+            </p>
+            <div className="space-y-1.5">
+              <Label>תאריך סיום צפוי *</Label>
+              <Input
+                type="date"
+                value={treatmentDeadlineForm.date}
+                onChange={e => setTreatmentDeadlineForm(f => ({ ...f, date: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>שעת סיום צפויה *</Label>
+              <Input
+                type="time"
+                value={treatmentDeadlineForm.time}
+                onChange={e => setTreatmentDeadlineForm(f => ({ ...f, time: e.target.value }))}
+              />
+            </div>
+            <div className="rounded-lg bg-orange-50 border border-orange-200 p-3 text-xs text-orange-800">
+              שים לב: לאחר האישור לא ניתן יהיה לעדכן שוב את דדליין סיום הטיפול.
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setTreatmentDialogOpen(false)}>ביטול</Button>
+            <Button
+              onClick={handleStartTreatmentWithDeadline}
+              disabled={!treatmentDeadlineForm.date || !treatmentDeadlineForm.time}
+            >
+              אשר התחלת טיפול
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Close dialog */}
       <Dialog open={closeDialog} onOpenChange={setCloseDialog}>

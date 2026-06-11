@@ -75,6 +75,16 @@ export function calculateSlaDeadlineWithinServiceHours(openedAt, slaMinutes) {
 
 export function getDeadlineMs(ticket) {
   if (!ticket) return null;
+
+  const shouldUseTreatmentDeadline =
+    ["בטיפול", "ממתינה", "טופלה"].includes(ticket.status) &&
+    ticket.treatment_deadline_ms;
+
+  if (shouldUseTreatmentDeadline) {
+    const value = Number(ticket.treatment_deadline_ms);
+    return Number.isFinite(value) ? value : null;
+  }
+
   if (ticket.sla_deadline_ms) {
     const v = Number(ticket.sla_deadline_ms);
     return Number.isFinite(v) ? v : null;
@@ -84,6 +94,16 @@ export function getDeadlineMs(ticket) {
     return Number.isFinite(v) ? v : null;
   }
   return null;
+}
+
+export function getActiveDeadlineType(ticket) {
+  if (
+    ["בטיפול", "ממתינה", "טופלה"].includes(ticket?.status) &&
+    ticket?.treatment_deadline_ms
+  ) {
+    return "treatment";
+  }
+  return "initial_response";
 }
 
 export function getOpenedAtMs(ticket) {
@@ -251,9 +271,13 @@ export function getLiveSlaDisplay(ticket, nowMs = Date.now()) {
   const diffMs = deadlineMs - nowMs;
   const diffMinutes = Math.ceil(diffMs / 60000);
 
+  const isTreatment = getActiveDeadlineType(ticket) === "treatment";
+  const deadlinePrefix = isTreatment ? "לסיום טיפול" : "לתחילת טיפול";
+  const breachedPrefix = isTreatment ? "חרג מסיום טיפול" : "חרג מתחילת טיפול";
+
   if (diffMs <= 0) {
     return {
-      label: `חרג ב-${formatDuration(Math.abs(diffMs))}`,
+      label: `${breachedPrefix} ב-${formatDuration(Math.abs(diffMs))}`,
       status: "breached",
       pulse: true,
     };
@@ -266,7 +290,7 @@ export function getLiveSlaDisplay(ticket, nowMs = Date.now()) {
   else if (slaMinutes === 30) warningThreshold = 15;
   else warningThreshold = 30;
 
-  const label = `נותרו ${formatDuration(diffMinutes * 60000)}`;
+  const label = `${deadlinePrefix}: נותרו ${formatDuration(diffMinutes * 60000)}`;
 
   if (diffMinutes <= 5) return { label, status: "critical", pulse: true };
   if (diffMinutes <= warningThreshold) return { label, status: "warning", pulse: false };
