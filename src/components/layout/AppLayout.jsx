@@ -29,7 +29,7 @@ export default function AppLayout() {
   { label: "בקרת ניקיון", path: "/cleaning-report", icon: Sparkles, managerOnly: true },
   { label: "הגדרות SLA", path: "/sla-settings", icon: Settings, managerOnly: true },
   { label: "הגדרות התראות", path: "/notification-settings", icon: Bell, adminOnly: true },
-  { label: "ניהול משתמשים", path: "/users", icon: Users, adminOnly: true },
+  { label: "ניהול משתמשים", path: "/users", icon: Users, managerOnly: true },
   { label: "איפוס נתוני ניסיון", path: "/reset-test-data", icon: Archive, adminOnly: true }].
   filter((item) => {
     if (item.adminOnly && !isAdmin) return false;
