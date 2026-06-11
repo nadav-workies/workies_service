@@ -146,6 +146,7 @@ export default function UsersManagement() {
       is_empty: isEmpty,
       adminStatusId: adminStatus?.id || null,
       users_count: roomUsers.length,
+      room_users: roomUsers,
       recent_tickets_count: roomTickets.length,
       last_ticket_at: lastTicket?.opened_at || lastTicket?.created_date || null,
     };
@@ -273,7 +274,21 @@ export default function UsersManagement() {
                         {STATUS_LABELS[room.status]}
                       </span>
                     </td>
-                    <td className="p-2 text-center">{room.users_count || "—"}</td>
+                    <td className="p-2">
+                      {room.room_users.length === 0 ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : (
+                        <div className="space-y-1">
+                          {room.room_users.map(u => (
+                            <div key={u.id} className="text-xs">
+                              <span className="font-medium">{u.full_name || "—"}</span>
+                              {u.email && <span className="text-muted-foreground block" dir="ltr">{u.email}</span>}
+                              {u.phone && <span className="text-muted-foreground block" dir="ltr">{u.phone}</span>}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </td>
                     <td className="p-2 text-center">{room.recent_tickets_count || "—"}</td>
                     <td className="p-2 text-xs text-muted-foreground">
                       {room.last_ticket_at ? format(new Date(room.last_ticket_at), "dd/MM/yy") : "—"}
@@ -336,6 +351,7 @@ export default function UsersManagement() {
                 <tr className="border-b bg-muted/40">
                   <th className="p-2 font-semibold">שם</th>
                   <th className="p-2 font-semibold">מייל</th>
+                  <th className="p-2 font-semibold">טלפון</th>
                   <th className="p-2 font-semibold">תפקיד</th>
                   <th className="p-2 font-semibold">חדר</th>
                   <th className="p-2 font-semibold">סטטוס</th>
@@ -345,7 +361,8 @@ export default function UsersManagement() {
                 {users.map(user => (
                   <tr key={user.id || user.email} className="border-b hover:bg-muted/30">
                     <td className="p-2 font-medium">{user.full_name || "—"}</td>
-                    <td className="p-2" dir="ltr">{user.email || "—"}</td>
+                    <td className="p-2 text-xs" dir="ltr">{user.email || "—"}</td>
+                    <td className="p-2 text-xs" dir="ltr">{user.phone || "—"}</td>
                     <td className="p-2">{roleLabel(user.role)}</td>
                     <td className="p-2">{user.room_label || user.room_number || "—"}</td>
                     <td className="p-2">{user.disabled ? "לא פעיל" : "פעיל"}</td>
@@ -353,7 +370,7 @@ export default function UsersManagement() {
                 ))}
                 {users.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-muted-foreground">לא נמצאו משתמשים</td>
+                    <td colSpan={6} className="p-8 text-center text-muted-foreground">לא נמצאו משתמשים</td>
                   </tr>
                 )}
               </tbody>
