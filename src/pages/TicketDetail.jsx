@@ -15,7 +15,7 @@ import { StatusBadge, PriorityBadge, SlaBadge } from "@/components/tickets/Ticke
 import { isManagerOrAdmin } from "@/lib/slaUtils";
 import { getTimeRemainingLabel, getDeadlineMs, getOpenedAtMs, isTicketSlaBreached as isTicketBreached } from "@/lib/slaAgent.js";
 import { format } from "date-fns";
-import { ArrowRight, User, Phone, MapPin, Clock, Shield, MessageSquare, Loader2, CheckCircle, AlertTriangle, Star, ExternalLink } from "lucide-react";
+import { ArrowRight, User, Phone, MapPin, Clock, Shield, MessageSquare, Loader2, CheckCircle, AlertTriangle, Star, ExternalLink, Send } from "lucide-react";
 import FeedbackModal from "@/components/tickets/FeedbackModal";
 import AttachmentUploader from "@/components/tickets/AttachmentUploader";
 import SlaExclusionDialog from "@/components/tickets/SlaExclusionDialog";
@@ -35,6 +35,8 @@ export default function TicketDetail() {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [googleSending, setGoogleSending] = useState(false);
   const [googleSent, setGoogleSent] = useState(false);
+  const [feedbackSending, setFeedbackSending] = useState(false);
+  const [feedbackSent, setFeedbackSent] = useState(false);
   const [slaExclusionOpen, setSlaExclusionOpen] = useState(false);
   const [treatmentDialogOpen, setTreatmentDialogOpen] = useState(false);
   const [treatmentDeadlineForm, setTreatmentDeadlineForm] = useState({ date: "", time: "" });
@@ -173,6 +175,14 @@ export default function TicketDetail() {
     queryClient.invalidateQueries({ queryKey: ['ticket', id] });
     setGoogleSending(false);
     setGoogleSent(true);
+  };
+
+  const handleSendFeedbackSurvey = async () => {
+    setFeedbackSending(true);
+    await base44.functions.invoke('ticketNotifications', { action: 'feedback_request', ticket });
+    queryClient.invalidateQueries({ queryKey: ['ticket', id] });
+    setFeedbackSending(false);
+    setFeedbackSent(true);
   };
 
   if (isLoading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
@@ -408,6 +418,23 @@ export default function TicketDetail() {
                     <Star className="w-3.5 h-3.5" />דרג את השירות
                   </Button>
                 ) : null}
+
+                {/* Send feedback survey — manager only */}
+                {isMgr && (
+                  <div className="pt-1 border-t">
+                    {ticket.feedback_request_sent || feedbackSent ? (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <CheckCircle className="w-3.5 h-3.5 text-green-500" />
+                        סקר נשלח ללקוח{ticket.feedback_request_sent_at ? ` · ${format(new Date(ticket.feedback_request_sent_at), "dd/MM HH:mm")}` : ""}
+                      </p>
+                    ) : (
+                      <Button variant="outline" size="sm" className="w-full gap-2 text-xs" onClick={handleSendFeedbackSurvey} disabled={feedbackSending}>
+                        {feedbackSending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                        שלח סקר ללקוח
+                      </Button>
+                    )}
+                  </div>
+                )}
 
                 {/* Google review — manager only */}
                 {isMgr && ticket.created_by && (
