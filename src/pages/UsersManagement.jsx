@@ -4,15 +4,23 @@ import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Users, Building2, UserCheck, AlertTriangle, Archive } from "lucide-react";
+import { Loader2, Users, Building2, UserCheck, AlertTriangle, Archive, UserPlus } from "lucide-react";
 import { isManagerOrAdmin } from "@/lib/slaUtils";
 import { WORKIES_ROOMS } from "@/lib/workiesRooms";
 import { format } from "date-fns";
+import DateRangeFilter from "@/components/dashboard/DateRangeFilter";
+import { getTodayRange } from "@/lib/dateRangeUtils";
 
 function getFourMonthsAgoMs() {
   const d = new Date();
   d.setMonth(d.getMonth() - 4);
   return d.getTime();
+}
+
+function getLastWeekRange() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7, 0, 0, 0, 0);
+  return { startMs: start.getTime(), dateFrom: format(start, "yyyy-MM-dd"), label: "7 ימים אחרונים" };
 }
 
 function KpiCard({ icon: Icon, label, value, filterKey, activeFilter, onFilter }) {
@@ -55,6 +63,7 @@ export default function UsersManagement() {
   const [emptyDialog, setEmptyDialog] = useState(null);
   const [emptyReason, setEmptyReason] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [usersRange, setUsersRange] = useState(() => getLastWeekRange());
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -135,7 +144,6 @@ export default function UsersManagement() {
     if (isEmpty) status = "empty";
     else if (hasUsers || hasRecentTickets) status = "active";
 
-    // last ticket across all time for display
     const allRoomTickets = tickets.filter(t => String(t.room_number) === rn && !t.archived && !t.is_test_data);
     const lastTicket = allRoomTickets[0];
 
@@ -160,25 +168,38 @@ export default function UsersManagement() {
   const inactiveRooms = roomData.filter(r => r.status === "inactive").length;
   const emptyRooms = roomData.filter(r => r.status === "empty").length;
 
+  // New users count for default (last 7 days) and current filter range
+  const newUsersLastWeek = users.filter(u => {
+    const ms = u.created_date ? new Date(u.created_date).getTime() : null;
+    return ms && ms >= getLastWeekRange().startMs;
+  }).length;
+
+  const newUsersInRange = users.filter(u => {
+    const ms = u.created_date ? new Date(u.created_date).getTime() : null;
+    if (!ms || !usersRange?.startMs) return false;
+    const endMs = usersRange.endMs || Date.now();
+    return ms >= usersRange.startMs && ms <= endMs;
+  });
+
   const isAdmin = currentUser?.role === 'admin';
+  const isNewUsersView = statusFilter === "new_users";
 
   const filteredRooms = roomData.filter(r => {
     if (statusFilter === "all") return true;
     if (statusFilter === "with_users") return r.users_count > 0;
+    if (statusFilter === "new_users") return false;
     return r.status === statusFilter;
   });
 
   const handleToggleEmpty = async (room) => {
     const now = new Date().toISOString();
     if (room.is_empty && room.adminStatusId) {
-      // Unmark empty
       await base44.entities.RoomStatus.update(room.adminStatusId, {
         is_empty: false,
         empty_updated_at: now,
         empty_updated_by: currentUser.email,
       });
     } else if (room.adminStatusId) {
-      // Already has record, mark empty
       await base44.entities.RoomStatus.update(room.adminStatusId, {
         is_empty: true,
         empty_reason: emptyReason || "",
@@ -186,7 +207,6 @@ export default function UsersManagement() {
         empty_updated_by: currentUser.email,
       });
     } else {
-      // Create new record
       await base44.entities.RoomStatus.create({
         room_number: room.room_number,
         room_label: room.room_label,
@@ -212,110 +232,165 @@ export default function UsersManagement() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
         <KpiCard icon={Building2} label="חדרים מזוהים" value={totalRooms} filterKey="all" activeFilter={statusFilter} onFilter={setStatusFilter} />
         <KpiCard icon={Building2} label="חדרים פעילים" value={activeRooms} filterKey="active" activeFilter={statusFilter} onFilter={setStatusFilter} />
         <KpiCard icon={UserCheck} label="חדרים עם משתמשים" value={roomsWithUsers} filterKey="with_users" activeFilter={statusFilter} onFilter={setStatusFilter} />
         <KpiCard icon={AlertTriangle} label="ללא פעילות 4 חודשים" value={inactiveRooms} filterKey="inactive" activeFilter={statusFilter} onFilter={setStatusFilter} />
         <KpiCard icon={Archive} label="חדרים ריקים" value={emptyRooms} filterKey="empty" activeFilter={statusFilter} onFilter={setStatusFilter} />
+        <KpiCard icon={UserPlus} label="משתמשים חדשים (שבוע)" value={newUsersLastWeek} filterKey="new_users" activeFilter={statusFilter} onFilter={setStatusFilter} />
       </div>
 
-      {/* Rooms Table */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <CardTitle className="text-base">
-              סטטוס חדרים
-              {statusFilter !== "all" && (
-                <span className="mr-2 text-xs font-normal text-muted-foreground">
-                  ({filteredRooms.length} מתוך {totalRooms})
-                </span>
+      {/* New Users View */}
+      {isNewUsersView && (
+        <>
+          <DateRangeFilter value={usersRange} onChange={setUsersRange} />
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">
+                משתמשים חדשים ({newUsersInRange.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {newUsersInRange.length === 0 ? (
+                <div className="py-12 text-center text-muted-foreground text-sm">
+                  לא נמצאו משתמשים חדשים בתקופה הנבחרת
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm text-right">
+                    <thead>
+                      <tr className="border-b bg-muted/40">
+                        <th className="p-2 font-semibold">שם</th>
+                        <th className="p-2 font-semibold">מייל</th>
+                        <th className="p-2 font-semibold">תאריך הצטרפות</th>
+                        <th className="p-2 font-semibold">תפקיד</th>
+                        <th className="p-2 font-semibold">חדר משויך</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {newUsersInRange.map(u => (
+                        <tr key={u.id || u.email} className="border-b hover:bg-muted/30">
+                          <td className="p-2 font-medium">{u.full_name || "—"}</td>
+                          <td className="p-2 text-xs" dir="ltr">{u.email || "—"}</td>
+                          <td className="p-2 text-xs text-muted-foreground">
+                            {u.created_date ? format(new Date(u.created_date), "dd/MM/yy") : "—"}
+                          </td>
+                          <td className="p-2">{roleLabel(u.role)}</td>
+                          <td className="p-2">
+                            {u.default_room_label || u.default_room_number
+                              ? <span className="text-xs">{u.default_room_label || u.default_room_number}</span>
+                              : <span className="text-muted-foreground text-xs">לא משויך</span>}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
-            </CardTitle>
-            <div className="flex gap-1 flex-wrap">
-              {[
-                { key: "all", label: "הכל" },
-                { key: "active", label: "פעיל" },
-                { key: "inactive", label: "לא פעיל" },
-                { key: "empty", label: "חדר ריק" },
-                { key: "with_users", label: "עם משתמשים" },
-              ].map(opt => (
-                <button
-                  key={opt.key}
-                  onClick={() => setStatusFilter(opt.key)}
-                  className={`px-3 py-1 rounded-full text-xs border transition-colors ${statusFilter === opt.key ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}
-                >
-                  {opt.label}
-                </button>
-              ))}
+            </CardContent>
+          </Card>
+        </>
+      )}
+
+      {/* Rooms Table — hidden in new_users view */}
+      {!isNewUsersView && (
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <CardTitle className="text-base">
+                סטטוס חדרים
+                {statusFilter !== "all" && (
+                  <span className="mr-2 text-xs font-normal text-muted-foreground">
+                    ({filteredRooms.length} מתוך {totalRooms})
+                  </span>
+                )}
+              </CardTitle>
+              <div className="flex gap-1 flex-wrap">
+                {[
+                  { key: "all", label: "הכל" },
+                  { key: "active", label: "פעיל" },
+                  { key: "inactive", label: "לא פעיל" },
+                  { key: "empty", label: "חדר ריק" },
+                  { key: "with_users", label: "עם משתמשים" },
+                ].map(opt => (
+                  <button
+                    key={opt.key}
+                    onClick={() => setStatusFilter(opt.key)}
+                    className={`px-3 py-1 rounded-full text-xs border transition-colors ${statusFilter === opt.key ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-right">
-              <thead>
-                <tr className="border-b bg-muted/40">
-                  <th className="p-2 font-semibold">חדר</th>
-                  <th className="p-2 font-semibold">אזור</th>
-                  <th className="p-2 font-semibold">סטטוס</th>
-                  <th className="p-2 font-semibold">משתמשים</th>
-                  <th className="p-2 font-semibold">קריאות 4 חודשים</th>
-                  <th className="p-2 font-semibold">קריאה אחרונה</th>
-                  {isAdmin && <th className="p-2 font-semibold">פעולה</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRooms.map(room => (
-                  <tr key={room.room_number} className="border-b hover:bg-muted/30">
-                    <td className="p-2 font-medium">{room.room_label}</td>
-                    <td className="p-2 text-muted-foreground text-xs">{room.room_area}</td>
-                    <td className="p-2">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[room.status]}`}>
-                        {STATUS_LABELS[room.status]}
-                      </span>
-                    </td>
-                    <td className="p-2">
-                      {room.room_users.length === 0 ? (
-                        <span className="text-muted-foreground">—</span>
-                      ) : (
-                        <div className="space-y-1">
-                          {room.room_users.map(u => (
-                            <div key={u.id} className="text-xs">
-                              <span className="font-medium">{u.full_name || "—"}</span>
-                              {u.email && <span className="text-muted-foreground block" dir="ltr">{u.email}</span>}
-                              {u.phone && <span className="text-muted-foreground block" dir="ltr">{u.phone}</span>}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </td>
-                    <td className="p-2 text-center">{room.recent_tickets_count || "—"}</td>
-                    <td className="p-2 text-xs text-muted-foreground">
-                      {room.last_ticket_at ? format(new Date(room.last_ticket_at), "dd/MM/yy") : "—"}
-                    </td>
-                    {isAdmin && (
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-right">
+                <thead>
+                  <tr className="border-b bg-muted/40">
+                    <th className="p-2 font-semibold">חדר</th>
+                    <th className="p-2 font-semibold">אזור</th>
+                    <th className="p-2 font-semibold">סטטוס</th>
+                    <th className="p-2 font-semibold">משתמשים</th>
+                    <th className="p-2 font-semibold">קריאות 4 חודשים</th>
+                    <th className="p-2 font-semibold">קריאה אחרונה</th>
+                    {isAdmin && <th className="p-2 font-semibold">פעולה</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRooms.map(room => (
+                    <tr key={room.room_number} className="border-b hover:bg-muted/30">
+                      <td className="p-2 font-medium">{room.room_label}</td>
+                      <td className="p-2 text-muted-foreground text-xs">{room.room_area}</td>
                       <td className="p-2">
-                        {room.is_empty ? (
-                          <Button size="sm" variant="outline" className="text-xs h-7"
-                            onClick={() => handleToggleEmpty(room)}>
-                            בטל סימון ריק
-                          </Button>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[room.status]}`}>
+                          {STATUS_LABELS[room.status]}
+                        </span>
+                      </td>
+                      <td className="p-2">
+                        {room.room_users.length === 0 ? (
+                          <span className="text-muted-foreground">—</span>
                         ) : (
-                          <Button size="sm" variant="ghost" className="text-xs h-7 text-muted-foreground"
-                            onClick={() => { setEmptyDialog(room); setEmptyReason(""); }}>
-                            סמן כחדר ריק
-                          </Button>
+                          <div className="space-y-1">
+                            {room.room_users.map(u => (
+                              <div key={u.id} className="text-xs">
+                                <span className="font-medium">{u.full_name || "—"}</span>
+                                {u.email && <span className="text-muted-foreground block" dir="ltr">{u.email}</span>}
+                                {u.phone && <span className="text-muted-foreground block" dir="ltr">{u.phone}</span>}
+                              </div>
+                            ))}
+                          </div>
                         )}
                       </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+                      <td className="p-2 text-center">{room.recent_tickets_count || "—"}</td>
+                      <td className="p-2 text-xs text-muted-foreground">
+                        {room.last_ticket_at ? format(new Date(room.last_ticket_at), "dd/MM/yy") : "—"}
+                      </td>
+                      {isAdmin && (
+                        <td className="p-2">
+                          {room.is_empty ? (
+                            <Button size="sm" variant="outline" className="text-xs h-7"
+                              onClick={() => handleToggleEmpty(room)}>
+                              בטל סימון ריק
+                            </Button>
+                          ) : (
+                            <Button size="sm" variant="ghost" className="text-xs h-7 text-muted-foreground"
+                              onClick={() => { setEmptyDialog(room); setEmptyReason(""); }}>
+                              סמן כחדר ריק
+                            </Button>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Empty Room Dialog */}
       {emptyDialog && (
