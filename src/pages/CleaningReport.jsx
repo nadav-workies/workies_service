@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,12 +9,30 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Filter, CheckCircle, AlertTriangle } from "lucide-react";
+import { Plus, Filter, CheckCircle, AlertTriangle, LayoutDashboard, Maximize2, X } from "lucide-react";
 import { format } from "date-fns";
 import AttachmentUploader from "@/components/tickets/AttachmentUploader";
 import { getTodayRange, getCurrentCalendarMonthRange, getPreviousCalendarMonthRange, getCustomDateRange } from "@/lib/dateRangeUtils";
 
-const AREAS = ["שירותים", "מטבחון", "מסדרון", "לאונג׳", "Open Space", "חדר ישיבות", "חלל ציבורי", "אחר"];
+const AREAS = ["שירותים", "מטבחון", "מסדרון", "לאונג׳", "Open Space", "חדר ישיבות", "חלל ציבורי", "משרד", "אחר"];
+
+const QUICK_ROOMS = [
+  { label: "חדרי שירותים", rooms: [
+    { label: "וורקיז 1", area: "שירותים", location: "וורקיז 1" },
+    { label: "וורקיז 2", area: "שירותים", location: "וורקיז 2" },
+    { label: "וורקיז 3", area: "שירותים", location: "וורקיז 3" },
+  ]},
+  { label: "חדרי ישיבות", rooms: [
+    { label: "חדר 28", area: "חדר ישיבות", location: "חדר ישיבות 28" },
+    { label: "חדר 8", area: "חדר ישיבות", location: "חדר ישיבות 8" },
+    { label: "חדר 74", area: "חדר ישיבות", location: "חדר ישיבות 74" },
+    { label: "חדר 70", area: "חדר ישיבות", location: "חדר ישיבות 70" },
+  ]},
+  { label: "אחר", rooms: [
+    { label: "משרד", area: "משרד", location: "משרד" },
+    { label: "גרין רום 26", area: "אחר", location: "גרין רום 26" },
+  ]},
+];
 
 function RatingButton({ value, selected, onClick }) {
   const color = value >= 9 ? "bg-emerald-500 text-white border-emerald-500"
@@ -41,7 +60,10 @@ function MetricCard({ label, value, color = "text-foreground", sub }) {
 
 export default function CleaningReport() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
+  const [quickPreset, setQuickPreset] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
   const [filterArea, setFilterArea] = useState("all");
   const [filterLow, setFilterLow] = useState(false);
   const [rangeMode, setRangeMode] = useState("today");
@@ -90,6 +112,25 @@ export default function CleaningReport() {
 
   const update = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
+  const handleQuickOpen = (room) => {
+    setQuickPreset(room);
+    setForm({
+      area: room.area,
+      specific_location: room.location,
+      cleanliness_rating: 8,
+      notes: "",
+      photo_attachments: [],
+      inspection_date: format(new Date(), "yyyy-MM-dd"),
+      inspection_time: format(new Date(), "HH:mm"),
+    });
+    setShowForm(true);
+  };
+
+  const handleCloseForm = () => {
+    setShowForm(false);
+    setQuickPreset(null);
+  };
+
   const createMutation = useMutation({
     mutationFn: async (data) => {
       const num = `CL-${Date.now().toString().slice(-6)}`;
@@ -103,6 +144,7 @@ export default function CleaningReport() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cleaning-inspections"] });
       setShowForm(false);
+      setQuickPreset(null);
       setForm({ area: "", specific_location: "", cleanliness_rating: null, notes: "", photo_attachments: [], inspection_date: format(new Date(), "yyyy-MM-dd"), inspection_time: format(new Date(), "HH:mm") });
     },
   });
@@ -111,14 +153,40 @@ export default function CleaningReport() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-5" dir="rtl">
+      <div className="flex items-center gap-2 mb-1">
+        <button onClick={() => navigate("/")} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+          <LayoutDashboard className="w-3.5 h-3.5" />דשבורד
+        </button>
+      </div>
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold">בקרת ניקיון</h1>
           <p className="text-sm text-muted-foreground mt-0.5">{inspections.length} בקרות בתקופה הנבחרת</p>
         </div>
-        <Button className="gap-2" onClick={() => setShowForm(true)}>
+        <Button className="gap-2" onClick={() => { setQuickPreset(null); setShowForm(true); }}>
           <Plus className="w-4 h-4" />פתח בקרת ניקיון
         </Button>
+      </div>
+
+      {/* Quick action buttons */}
+      <div className="space-y-2">
+        {QUICK_ROOMS.map(group => (
+          <div key={group.label} className="flex items-center gap-2 flex-wrap">
+            <span className="text-[11px] font-medium text-muted-foreground shrink-0">{group.label}:</span>
+            {group.rooms.map(room => (
+              <Button
+                key={room.label}
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs gap-1"
+                onClick={() => handleQuickOpen(room)}
+              >
+                <Plus className="w-3 h-3" />{room.label}
+              </Button>
+            ))}
+          </div>
+        ))}
       </div>
 
       {/* Range selector */}
@@ -203,9 +271,17 @@ export default function CleaningReport() {
                           {i.photo_attachments?.length > 0 ? (
                             <div className="flex gap-1">
                               {i.photo_attachments.slice(0, 2).map((att, idx) => (
-                                <a key={idx} href={att.file_url} target="_blank" rel="noopener noreferrer">
-                                  <img src={att.file_url} alt="" className="w-8 h-8 object-cover rounded border" />
-                                </a>
+                                <button
+                                  key={idx}
+                                  type="button"
+                                  onClick={() => setPreviewImage(att.file_url)}
+                                  className="relative group/thumb cursor-zoom-in"
+                                >
+                                  <img src={att.file_url} alt="" className="w-8 h-8 object-cover rounded border group-hover/thumb:opacity-80 transition-opacity" />
+                                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity">
+                                    <Maximize2 className="w-3 h-3 text-white drop-shadow-lg" />
+                                  </div>
+                                </button>
                               ))}
                               {i.photo_attachments.length > 2 && <span className="text-[10px] text-muted-foreground self-center">+{i.photo_attachments.length - 2}</span>}
                             </div>
@@ -222,64 +298,121 @@ export default function CleaningReport() {
       )}
 
       {/* New inspection dialog */}
-      <Dialog open={showForm} onOpenChange={setShowForm}>
+      <Dialog open={showForm} onOpenChange={(open) => { if (!open) handleCloseForm(); }}>
         <DialogContent dir="rtl" className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>פתח בקרת ניקיון</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{quickPreset ? `בקרת ניקיון — ${quickPreset.label}` : "פתח בקרת ניקיון"}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>תאריך *</Label>
-                <Input type="date" value={form.inspection_date} onChange={e => update("inspection_date", e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>שעה *</Label>
-                <Input type="time" value={form.inspection_time} onChange={e => update("inspection_time", e.target.value)} />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label>אזור *</Label>
-              <Select value={form.area} onValueChange={v => update("area", v)}>
-                <SelectTrigger><SelectValue placeholder="בחר אזור" /></SelectTrigger>
-                <SelectContent>{AREAS.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>מיקום ספציפי</Label>
-              <Input value={form.specific_location} onChange={e => update("specific_location", e.target.value)} placeholder="לדוג׳: שירותים גברים קומה 2" />
-            </div>
-            <div className="space-y-2">
-              <Label>דירוג ניקיון 1-10 *</Label>
-              <div className="flex flex-wrap gap-1.5">
-                {[1,2,3,4,5,6,7,8,9,10].map(n => (
-                  <RatingButton key={n} value={n} selected={form.cleanliness_rating} onClick={v => update("cleanliness_rating", v)} />
-                ))}
-              </div>
-              {form.cleanliness_rating && (
-                <p className="text-xs text-muted-foreground">
-                  {form.cleanliness_rating >= 9 ? "מצוין" : form.cleanliness_rating >= 6 ? "טוב" : form.cleanliness_rating >= 6 ? "סביר" : "דורש טיפול — יסומן אוטומטית"}
-                </p>
-              )}
-            </div>
-            <div className="space-y-1.5">
-              <Label>הערות לשיפור</Label>
-              <Textarea value={form.notes} onChange={e => update("notes", e.target.value)} placeholder="מה נמצא, מה צריך לשפר..." rows={2} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>תמונות בקרה</Label>
-              <AttachmentUploader
-                attachments={form.photo_attachments}
-                onChange={v => update("photo_attachments", v)}
-                label="צרף תמונת בקרה"
-                helpText="לא חובה"
-              />
-            </div>
+            {quickPreset ? (
+              <>
+                <div className="rounded-lg bg-muted/50 p-3 text-sm space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">אזור:</span>
+                    <span className="font-medium">{quickPreset.area}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">מיקום:</span>
+                    <span className="font-medium">{quickPreset.location}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">תאריך:</span>
+                    <span className="font-medium">{form.inspection_date}</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>דירוג ניקיון 1-10 *</Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[1,2,3,4,5,6,7,8,9,10].map(n => (
+                      <RatingButton key={n} value={n} selected={form.cleanliness_rating} onClick={v => update("cleanliness_rating", v)} />
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>הערות</Label>
+                  <Textarea value={form.notes} onChange={e => update("notes", e.target.value)} placeholder="מה צריך לשפר? (לא חובה)" rows={2} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>תמונות בקרה</Label>
+                  <AttachmentUploader
+                    attachments={form.photo_attachments}
+                    onChange={v => update("photo_attachments", v)}
+                    label="צרף תמונה"
+                    helpText="לא חובה"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>תאריך *</Label>
+                    <Input type="date" value={form.inspection_date} onChange={e => update("inspection_date", e.target.value)} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>שעה *</Label>
+                    <Input type="time" value={form.inspection_time} onChange={e => update("inspection_time", e.target.value)} />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>אזור *</Label>
+                  <Select value={form.area} onValueChange={v => update("area", v)}>
+                    <SelectTrigger><SelectValue placeholder="בחר אזור" /></SelectTrigger>
+                    <SelectContent>{AREAS.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>מיקום ספציפי</Label>
+                  <Input value={form.specific_location} onChange={e => update("specific_location", e.target.value)} placeholder="לדוג׳: שירותים גברים קומה 2" />
+                </div>
+                <div className="space-y-2">
+                  <Label>דירוג ניקיון 1-10 *</Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[1,2,3,4,5,6,7,8,9,10].map(n => (
+                      <RatingButton key={n} value={n} selected={form.cleanliness_rating} onClick={v => update("cleanliness_rating", v)} />
+                    ))}
+                  </div>
+                  {form.cleanliness_rating && (
+                    <p className="text-xs text-muted-foreground">
+                      {form.cleanliness_rating >= 9 ? "מצוין" : form.cleanliness_rating >= 6 ? "טוב" : "דורש טיפול — יסומן אוטומטית"}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-1.5">
+                  <Label>הערות לשיפור</Label>
+                  <Textarea value={form.notes} onChange={e => update("notes", e.target.value)} placeholder="מה נמצא, מה צריך לשפר..." rows={2} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>תמונות בקרה</Label>
+                  <AttachmentUploader
+                    attachments={form.photo_attachments}
+                    onChange={v => update("photo_attachments", v)}
+                    label="צרף תמונת בקרה"
+                    helpText="לא חובה"
+                  />
+                </div>
+              </>
+            )}
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setShowForm(false)}>ביטול</Button>
+            <Button variant="outline" onClick={handleCloseForm}>ביטול</Button>
             <Button onClick={() => createMutation.mutate(form)} disabled={!isValid || createMutation.isPending}>
-              שמור בקרה
+              {createMutation.isPending ? "שומר..." : "שמור בקרה"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Image preview lightbox */}
+      <Dialog open={!!previewImage} onOpenChange={() => setPreviewImage(null)}>
+        <DialogContent className="max-w-[90vw] max-h-[90vh] p-2 bg-black/90 border-none" onClick={() => setPreviewImage(null)}>
+          <button
+            type="button"
+            onClick={() => setPreviewImage(null)}
+            className="absolute top-3 right-3 z-10 w-8 h-8 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          {previewImage && (
+            <img src={previewImage} alt="תצוגה מקדימה" className="max-w-full max-h-[85vh] object-contain mx-auto rounded-lg" />
+          )}
         </DialogContent>
       </Dialog>
     </div>
