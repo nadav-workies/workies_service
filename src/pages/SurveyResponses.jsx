@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { Star, ExternalLink, Filter } from "lucide-react";
+import { Star, ExternalLink, Filter, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DateRangeFilter from "@/components/dashboard/DateRangeFilter";
@@ -29,42 +29,84 @@ function MetricCard({ label, value, sub, color = "text-foreground" }) {
   );
 }
 
+const VIEW_FILTERS = [
+  { key: "all", label: "הכל" },
+  { key: "rated", label: "מדורגות" },
+  { key: "unrated", label: "לא מדורגות" },
+];
+
 export default function SurveyResponses() {
   const navigate = useNavigate();
   const [filterRating, setFilterRating]   = useState("all");
   const [filterAssigned, setFilterAssigned] = useState("all");
   const [selectedRange, setSelectedRange] = useState(() => getCurrentCalendarMonthRange());
+  const [viewFilter, setViewFilter] = useState("all");
 
   const { data: rawTickets = [] } = useQuery({
     queryKey: ["tickets-for-surveys"],
     queryFn: () => base44.entities.ServiceTicket.list('-created_date', 500),
   });
 
-  const { data: rawResponses = [], isLoading } = useQuery({
+  const { data: rawResponses = [], isLoading: loadingResponses } = useQuery({
     queryKey: ["survey-responses"],
     queryFn: () => base44.entities.SurveyResponse.list("-submitted_at", 500),
   });
 
-  // סינון: סקרים לפי מועד מילוי, קריאות שנסגרו בתקופה לאחוז מענה
+  const { data: rawFeedbacks = [], isLoading: loadingFeedbacks } = useQuery({
+    queryKey: ["service-feedbacks"],
+    queryFn: () => base44.entities.ServiceFeedback.list("-submitted_at", 500),
+  });
+
+  const isLoading = loadingResponses || loadingFeedbacks;
+
+  // Normalize ServiceFeedback to match SurveyResponse shape
+  const normalizedFeedbacks = rawFeedbacks.map(f => ({
+    id: f.id,
+    ticket_id: f.ticket_id,
+    ticket_number: f.ticket_number,
+    customer_name: f.customer_name || "",
+    customer_email: f.customer_email || "",
+    room_label: null,
+    room_number: null,
+    assigned_to: null,
+    rating: f.rating,
+    comment: f.comment,
+    submitted_at: f.submitted_at,
+    source: "in_app",
+  }));
+
   const liveTickets   = getLiveTickets(rawTickets);
   const liveResponses = getLiveSurveyResponses(rawResponses);
-  const responses     = filterSurveyResponsesBySubmittedDate(liveResponses, selectedRange);
+
+  // Merge SurveyResponse + ServiceFeedback, deduplicating by ticket_id (SurveyResponse wins)
+  const srTicketIds = new Set(liveResponses.map(r => r.ticket_id));
+  const dedupedFeedbacks = normalizedFeedbacks.filter(f => !srTicketIds.has(f.ticket_id));
+  const allResponsesRaw = [...liveResponses, ...dedupedFeedbacks];
+
+  const responses     = filterSurveyResponsesBySubmittedDate(allResponsesRaw, selectedRange);
   const closedTickets = filterTicketsByClosedDate(liveTickets, selectedRange);
 
-  // אגרגציה
+  // Rated ticket IDs across ALL time (not just selected range) — for finding unrated tickets
+  const allRatedTicketIds = new Set(allResponsesRaw.filter(r => Number(r.rating) > 0).map(r => r.ticket_id));
+  const unratedTickets = closedTickets.filter(t => !allRatedTicketIds.has(t.id));
+
+  // Rated ticket IDs within selected period — for accurate response rate
+  const ratedTicketIdsInPeriod = new Set(responses.filter(r => Number(r.rating) > 0).map(r => r.ticket_id));
+
+  // Aggregation
   const responsesWithRating = responses.filter(r => Number(r.rating) > 0);
   const avgRating           = responsesWithRating.length
     ? (responsesWithRating.reduce((s, r) => s + Number(r.rating), 0) / responsesWithRating.length).toFixed(1)
     : null;
   const responseRate        = closedTickets.length
-    ? Math.round((responsesWithRating.length / closedTickets.length) * 100)
+    ? Math.round((ratedTicketIdsInPeriod.size / closedTickets.length) * 100)
     : null;
   const lowRatingCount      = responsesWithRating.filter(r => Number(r.rating) <= 5).length;
   const highRatingCount     = responsesWithRating.filter(r => Number(r.rating) >= 9).length;
-  const responseTicketIds = new Set(responses.map(r => r.ticket_id));
-  const requiresFollowup  = liveTickets.filter(t => responseTicketIds.has(t.id) && t.requires_manager_followup).length;
+  const responseTicketIds   = new Set(responses.map(r => r.ticket_id));
+  const requiresFollowup    = liveTickets.filter(t => responseTicketIds.has(t.id) && t.requires_manager_followup).length;
 
-  // פילטר תצוגה
+  // Display filter for rated responses
   const filtered = responses.filter(r => {
     if (filterRating === "low" && Number(r.rating) > 5) return false;
     if (filterRating === "high" && Number(r.rating) < 9) return false;
@@ -74,49 +116,121 @@ export default function SurveyResponses() {
 
   const assignees = [...new Set(responses.map(r => r.assigned_to).filter(Boolean))];
 
+  const showUnrated = viewFilter === "unrated";
+  const showRated   = viewFilter === "rated" || viewFilter === "all";
+
   return (
     <div className="max-w-5xl mx-auto space-y-5" dir="rtl">
       <div>
         <h1 className="text-xl font-bold">סקרי שירות</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">{responses.length} משובים בתקופה הנבחרת</p>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          {showUnrated
+            ? `${unratedTickets.length} קריאות סגורות ללא משוב בתקופה הנבחרת`
+            : `${responses.length} משובים בתקופה הנבחרת`}
+        </p>
       </div>
 
       <DateRangeFilter value={selectedRange} onChange={setSelectedRange} />
 
-      {/* Summary metrics */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
-        <MetricCard label="דירוג ממוצע" value={avgRating ? `${avgRating}/10` : "אין נתונים"} sub={responsesWithRating.length ? `${responsesWithRating.length} משובים` : undefined} color="text-amber-600" />
-        <MetricCard label="אחוז מענה" value={responseRate !== null ? `${responseRate}%` : "אין נתונים"} sub={closedTickets.length ? `מתוך ${closedTickets.length} סגורות` : "אין קריאות סגורות"} color="text-indigo-600" />
-        <MetricCard label="דירוגים נמוכים" value={lowRatingCount} sub="דירוג 1–5" color={lowRatingCount > 0 ? "text-red-600" : "text-muted-foreground"} />
-        <MetricCard label="דירוגים גבוהים" value={highRatingCount} sub="דירוג 9–10" color={highRatingCount > 0 ? "text-emerald-600" : "text-muted-foreground"} />
-        <MetricCard label="דורשות מעקב" value={requiresFollowup} sub="בעקבות דירוג נמוך" color={requiresFollowup > 0 ? "text-orange-600" : "text-muted-foreground"} />
-        <MetricCard label="סה״כ משובים" value={responses.length} sub="בתקופה הנבחרת" />
+      {/* View filter buttons — like UsersManagement */}
+      <div className="flex gap-1 flex-wrap">
+        {VIEW_FILTERS.map(opt => (
+          <button
+            key={opt.key}
+            onClick={() => setViewFilter(opt.key)}
+            className={`px-3 py-1 rounded-full text-xs border transition-colors ${viewFilter === opt.key ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}
+          >
+            {opt.label}
+          </button>
+        ))}
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-3 flex-wrap items-center">
-        <Filter className="w-4 h-4 text-muted-foreground" />
-        <Select value={filterRating} onValueChange={setFilterRating}>
-          <SelectTrigger className="w-36 h-8 text-xs"><SelectValue placeholder="דירוג" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">כל הדירוגים</SelectItem>
-            <SelectItem value="low">נמוך (1-5)</SelectItem>
-            <SelectItem value="high">גבוה (9-10)</SelectItem>
-          </SelectContent>
-        </Select>
-        {assignees.length > 0 && (
-          <Select value={filterAssigned} onValueChange={setFilterAssigned}>
-            <SelectTrigger className="w-36 h-8 text-xs"><SelectValue placeholder="אחראי" /></SelectTrigger>
+      {/* Summary metrics — only for rated/all views */}
+      {showRated && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+          <MetricCard label="דירוג ממוצע" value={avgRating ? `${avgRating}/10` : "אין נתונים"} sub={responsesWithRating.length ? `${responsesWithRating.length} משובים` : undefined} color="text-amber-600" />
+          <MetricCard label="אחוז מענה" value={responseRate !== null ? `${responseRate}%` : "אין נתונים"} sub={closedTickets.length ? `מתוך ${closedTickets.length} סגורות` : "אין קריאות סגורות"} color="text-indigo-600" />
+          <MetricCard label="דירוגים נמוכים" value={lowRatingCount} sub="דירוג 1–5" color={lowRatingCount > 0 ? "text-red-600" : "text-muted-foreground"} />
+          <MetricCard label="דירוגים גבוהים" value={highRatingCount} sub="דירוג 9–10" color={highRatingCount > 0 ? "text-emerald-600" : "text-muted-foreground"} />
+          <MetricCard label="דורשות מעקב" value={requiresFollowup} sub="בעקבות דירוג נמוך" color={requiresFollowup > 0 ? "text-orange-600" : "text-muted-foreground"} />
+          <MetricCard label="סה״כ משובים" value={responses.length} sub="בתקופה הנבחרת" />
+        </div>
+      )}
+
+      {/* Rating/Assignee filters — only for rated/all views */}
+      {showRated && (
+        <div className="flex gap-3 flex-wrap items-center">
+          <Filter className="w-4 h-4 text-muted-foreground" />
+          <Select value={filterRating} onValueChange={setFilterRating}>
+            <SelectTrigger className="w-36 h-8 text-xs"><SelectValue placeholder="דירוג" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">כל האחראים</SelectItem>
-              {assignees.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}
+              <SelectItem value="all">כל הדירוגים</SelectItem>
+              <SelectItem value="low">נמוך (1-5)</SelectItem>
+              <SelectItem value="high">גבוה (9-10)</SelectItem>
             </SelectContent>
           </Select>
-        )}
-      </div>
+          {assignees.length > 0 && (
+            <Select value={filterAssigned} onValueChange={setFilterAssigned}>
+              <SelectTrigger className="w-36 h-8 text-xs"><SelectValue placeholder="אחראי" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">כל האחראים</SelectItem>
+                {assignees.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+      )}
 
       {isLoading ? (
         <div className="py-12 text-center text-muted-foreground text-sm">טוען...</div>
+      ) : showUnrated && !showRated ? (
+        /* Unrated closed tickets table */
+        unratedTickets.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <MessageSquare className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+              <p className="font-semibold">כל הקריאות הסגורות מדורגות</p>
+              <p className="text-sm text-muted-foreground">לא נמצאו קריאות סגורות ללא משוב בתקופה הנבחרת.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-muted/40">
+                      <th className="text-right px-4 py-2.5 font-medium text-xs text-muted-foreground">נסגרה</th>
+                      <th className="text-right px-4 py-2.5 font-medium text-xs text-muted-foreground">קריאה</th>
+                      <th className="text-right px-4 py-2.5 font-medium text-xs text-muted-foreground">לקוח</th>
+                      <th className="text-right px-4 py-2.5 font-medium text-xs text-muted-foreground">חדר</th>
+                      <th className="text-right px-4 py-2.5 font-medium text-xs text-muted-foreground">אחראי</th>
+                      <th className="px-4 py-2.5"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {unratedTickets.map(t => (
+                      <tr key={t.id} className="border-b hover:bg-muted/20 transition-colors">
+                        <td className="px-4 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
+                          {t.closed_at ? format(new Date(t.closed_at), "dd/MM/yy HH:mm") : "—"}
+                        </td>
+                        <td className="px-4 py-2.5 font-mono text-xs">{t.ticket_number}</td>
+                        <td className="px-4 py-2.5">{t.customer_name || "—"}</td>
+                        <td className="px-4 py-2.5 text-xs">{t.room_label || "—"}</td>
+                        <td className="px-4 py-2.5 text-xs">{t.assigned_to || "—"}</td>
+                        <td className="px-4 py-2.5">
+                          <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => navigate(`/tickets/${t.id}`)}>
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        )
       ) : filtered.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
