@@ -159,27 +159,27 @@ export default function CleaningReport() {
         </button>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold">בקרת ניקיון</h1>
           <p className="text-sm text-muted-foreground mt-0.5">{inspections.length} בקרות בתקופה הנבחרת</p>
         </div>
-        <Button className="gap-2" onClick={() => { setQuickPreset(null); setShowForm(true); }}>
+        <Button size="sm" className="gap-2 sm:h-9 sm:text-sm self-start sm:self-auto" onClick={() => { setQuickPreset(null); setShowForm(true); }}>
           <Plus className="w-4 h-4" />פתח בקרת ניקיון
         </Button>
       </div>
 
       {/* Quick action buttons */}
-      <div className="space-y-2">
+      <div className="space-y-2.5 sm:space-y-2">
         {QUICK_ROOMS.map(group => (
-          <div key={group.label} className="flex items-center gap-2 flex-wrap">
-            <span className="text-[11px] font-medium text-muted-foreground shrink-0">{group.label}:</span>
+          <div key={group.label} className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[11px] font-medium text-muted-foreground shrink-0 w-full sm:w-auto sm:mb-0 mb-0.5">{group.label}:</span>
             {group.rooms.map(room => (
               <Button
                 key={room.label}
                 variant="outline"
                 size="sm"
-                className="h-7 text-xs gap-1"
+                className="h-8 text-xs gap-1 px-2.5"
                 onClick={() => handleQuickOpen(room)}
               >
                 <Plus className="w-3 h-3" />{room.label}
@@ -190,20 +190,20 @@ export default function CleaningReport() {
       </div>
 
       {/* Range selector */}
-      <div className="flex flex-wrap gap-2 items-center p-3 bg-muted/40 rounded-xl border">
+      <div className="flex flex-wrap gap-1.5 items-center p-2.5 sm:p-3 bg-muted/40 rounded-xl border">
         {[["today","היום"],["month","החודש"],["prev","חודש קודם"],["custom","טווח מותאם"]].map(([k, l]) => (
-          <Button key={k} variant={rangeMode === k ? "default" : "outline"} size="sm" className="h-7 text-xs" onClick={() => setRangeMode(k)}>{l}</Button>
+          <Button key={k} variant={rangeMode === k ? "default" : "outline"} size="sm" className="h-8 text-xs px-2.5" onClick={() => setRangeMode(k)}>{l}</Button>
         ))}
         {rangeMode === "custom" && (
           <>
-            <Input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)} className="h-7 text-xs w-32" />
-            <Input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)} className="h-7 text-xs w-32" />
+            <Input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)} className="h-8 text-xs w-28 sm:w-32" />
+            <Input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)} className="h-8 text-xs w-28 sm:w-32" />
           </>
         )}
       </div>
 
       {/* KPI */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
         <MetricCard label="בקרות בתקופה" value={inspections.length} />
         <MetricCard label="דירוג ממוצע" value={avgCleanliness ? `${avgCleanliness}/10` : null} color="text-amber-600" />
         <MetricCard label="דירוגים נמוכים" value={lowCount} sub="דירוג 1–5" color={lowCount > 0 ? "text-red-600" : "text-muted-foreground"} />
@@ -212,16 +212,16 @@ export default function CleaningReport() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 items-center">
-        <Filter className="w-4 h-4 text-muted-foreground" />
+      <div className="flex flex-wrap gap-2 items-center">
+        <Filter className="w-4 h-4 text-muted-foreground shrink-0" />
         <Select value={filterArea} onValueChange={setFilterArea}>
-          <SelectTrigger className="w-36 h-8 text-xs"><SelectValue placeholder="אזור" /></SelectTrigger>
+          <SelectTrigger className="w-32 sm:w-36 h-8 text-xs"><SelectValue placeholder="אזור" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">כל האזורים</SelectItem>
             {AREAS.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Button variant={filterLow ? "default" : "outline"} size="sm" className="h-8 text-xs" onClick={() => setFilterLow(v => !v)}>
+        <Button variant={filterLow ? "default" : "outline"} size="sm" className="h-8 text-xs px-2.5" onClick={() => setFilterLow(v => !v)}>
           דירוג נמוך בלבד
         </Button>
       </div>
