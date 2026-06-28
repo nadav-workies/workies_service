@@ -61,6 +61,21 @@ Deno.serve(async (req) => {
       ...(errorMsg && { error_message: errorMsg }),
     });
 
+    // Mark matching imported user as registered
+    try {
+      const importedUsers = await base44.asServiceRole.entities.ImportedUser.filter({ email: user.email });
+      for (const iu of importedUsers) {
+        if (!iu.registered) {
+          await base44.asServiceRole.entities.ImportedUser.update(iu.id, {
+            registered: true,
+            registered_user_id: user.id,
+          });
+        }
+      }
+    } catch (e) {
+      // non-critical
+    }
+
     return Response.json({ ok: true, status, email: user.email });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

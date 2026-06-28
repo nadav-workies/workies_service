@@ -4,7 +4,9 @@ import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Users, Building2, UserCheck, AlertTriangle, Archive, UserPlus } from "lucide-react";
+import { Loader2, Users, Building2, UserCheck, AlertTriangle, Archive, UserPlus, Upload } from "lucide-react";
+import ImportUsersDialog from "@/components/users/ImportUsersDialog";
+import ImportedUsersSection from "@/components/users/ImportedUsersSection";
 import { isManagerOrAdmin } from "@/lib/slaUtils";
 import { WORKIES_ROOMS } from "@/lib/workiesRooms";
 import { format } from "date-fns";
@@ -64,6 +66,7 @@ export default function UsersManagement() {
   const [emptyReason, setEmptyReason] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [usersRange, setUsersRange] = useState(() => getLastWeekRange());
+  const [showImportDialog, setShowImportDialog] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -223,12 +226,20 @@ export default function UsersManagement() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6" dir="rtl">
-      <div>
-        <h1 className="text-xl font-bold flex items-center gap-2">
-          <Users className="w-5 h-5" />
-          ניהול משתמשים וחדרים
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">{users.length} משתמשים · {totalRooms} חדרים מזוהים</p>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-xl font-bold flex items-center gap-2">
+            <Users className="w-5 h-5" />
+            ניהול משתמשים וחדרים
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">{users.length} משתמשים · {totalRooms} חדרים מזוהים</p>
+        </div>
+        {isAdmin && (
+          <Button variant="outline" className="gap-2" onClick={() => setShowImportDialog(true)}>
+            <Upload className="w-4 h-4" />
+            ייבוא מאקסל
+          </Button>
+        )}
       </div>
 
       {/* KPI Cards */}
@@ -240,6 +251,9 @@ export default function UsersManagement() {
         <KpiCard icon={Archive} label="חדרים ריקים" value={emptyRooms} filterKey="empty" activeFilter={statusFilter} onFilter={setStatusFilter} />
         <KpiCard icon={UserPlus} label="משתמשים חדשים (שבוע)" value={newUsersLastWeek} filterKey="new_users" activeFilter={statusFilter} onFilter={setStatusFilter} />
       </div>
+
+      {/* Imported Users — pending registration */}
+      <ImportedUsersSection />
 
       {/* New Users View */}
       {isNewUsersView && (
@@ -458,6 +472,16 @@ export default function UsersManagement() {
           </div>
         </CardContent>
       </Card>
+
+      {showImportDialog && (
+        <ImportUsersDialog
+          onClose={() => setShowImportDialog(false)}
+          onImported={() => {
+            queryClient.invalidateQueries({ queryKey: ["users-management"] });
+            queryClient.invalidateQueries({ queryKey: ["imported-users"] });
+          }}
+        />
+      )}
     </div>
   );
 }

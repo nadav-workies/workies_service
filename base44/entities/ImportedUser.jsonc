@@ -1,0 +1,111 @@
+{
+  "name": "ImportedUser",
+  "type": "object",
+  "properties": {
+    "full_name": {
+      "type": "string",
+      "description": "\u05e9\u05dd \u05de\u05dc\u05d0"
+    },
+    "email": {
+      "type": "string",
+      "description": "\u05db\u05ea\u05d5\u05d1\u05ea \u05de\u05d9\u05d9\u05dc"
+    },
+    "phone": {
+      "type": "string",
+      "description": "\u05d8\u05dc\u05e4\u05d5\u05df"
+    },
+    "room_number": {
+      "type": "string",
+      "description": "\u05de\u05e1\u05e4\u05e8 \u05d7\u05d3\u05e8"
+    },
+    "room_label": {
+      "type": "string",
+      "description": "\u05e9\u05dd \u05d7\u05d3\u05e8 \u05dc\u05d4\u05e6\u05d2\u05d4"
+    },
+    "room_area": {
+      "type": "string",
+      "description": "\u05d0\u05d6\u05d5\u05e8 / \u05de\u05ea\u05d7\u05dd"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "manager",
+        "user"
+      ],
+      "default": "user",
+      "description": "\u05ea\u05e4\u05e7\u05d9\u05d3 \u05de\u05d5\u05e6\u05e2"
+    },
+    "registered": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05d4\u05d0\u05dd \u05d4\u05de\u05e9\u05ea\u05de\u05e9 \u05db\u05d1\u05e8 \u05e0\u05e8\u05e9\u05dd \u05dc\u05de\u05e2\u05e8\u05db\u05ea"
+    },
+    "registered_user_id": {
+      "type": "string",
+      "description": "\u05de\u05d6\u05d4\u05d4 \u05d4\u05de\u05e9\u05ea\u05de\u05e9 \u05d4\u05e8\u05e9\u05d5\u05dd \u05e9\u05d4\u05d5\u05ea\u05d0\u05dd"
+    },
+    "invited_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u05de\u05d5\u05e2\u05d3 \u05e9\u05dc\u05d9\u05d7\u05ea \u05d4\u05d4\u05d6\u05de\u05e0\u05d4 \u05d4\u05d0\u05d7\u05e8\u05d5\u05e0\u05d4"
+    },
+    "invite_count": {
+      "type": "number",
+      "default": 0,
+      "description": "\u05de\u05e1\u05e4\u05e8 \u05d4\u05d6\u05de\u05e0\u05d5\u05ea \u05e9\u05e0\u05e9\u05dc\u05d7\u05d5"
+    },
+    "imported_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u05de\u05d5\u05e2\u05d3 \u05d4\u05d9\u05d9\u05d1\u05d5\u05d0"
+    },
+    "imported_by": {
+      "type": "string",
+      "description": "\u05de\u05d9\u05d9\u05dc \u05d4\u05de\u05e0\u05d4\u05dc \u05e9\u05d1\u05d9\u05e6\u05e2 \u05d0\u05ea \u05d4\u05d9\u05d9\u05d1\u05d5\u05d0"
+    }
+  },
+  "required": [
+    "email"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
