@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Users, Building2, UserCheck, AlertTriangle, Archive, UserPlus, Upload } from "lucide-react";
+import { Loader2, Users, Building2, UserCheck, AlertTriangle, Archive, UserPlus, Upload, Mail } from "lucide-react";
 import ImportUsersDialog from "@/components/users/ImportUsersDialog";
 import ImportedUsersSection from "@/components/users/ImportedUsersSection";
 import { isManagerOrAdmin } from "@/lib/slaUtils";
@@ -67,6 +67,8 @@ export default function UsersManagement() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [usersRange, setUsersRange] = useState(() => getLastWeekRange());
   const [showImportDialog, setShowImportDialog] = useState(false);
+  const [userTableFilter, setUserTableFilter] = useState("all");
+  const [invitingId, setInvitingId] = useState(null);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -92,6 +94,12 @@ export default function UsersManagement() {
   const { data: roomStatuses = [], isLoading: loadingRoomStatuses } = useQuery({
     queryKey: ["room-statuses"],
     queryFn: () => base44.entities.RoomStatus.list("-created_date", 500),
+    enabled: !!currentUser && isManagerOrAdmin(currentUser),
+  });
+
+  const { data: importedUsers = [] } = useQuery({
+    queryKey: ["imported-users"],
+    queryFn: () => base44.entities.ImportedUser.list("-imported_at", 500),
     enabled: !!currentUser && isManagerOrAdmin(currentUser),
   });
 
@@ -186,6 +194,22 @@ export default function UsersManagement() {
 
   const isAdmin = currentUser?.role === 'admin';
   const isNewUsersView = statusFilter === "new_users";
+
+  const pendingImported = importedUsers.filter(iu => !iu.registered);
+
+  const handleInvite = async (iu) => {
+    setInvitingId(iu.id);
+    try {
+      const res = await base44.functions.invoke("sendUserInvitation", { imported_user_id: iu.id });
+      const data = res.data || res;
+      if (!data.ok) throw new Error(data.error || "שגיאה בשליחת הזמנה");
+      queryClient.invalidateQueries({ queryKey: ["imported-users"] });
+    } catch (err) {
+      alert(err.message || "שגיאה בשליחת הזמנה");
+    } finally {
+      setInvitingId(null);
+    }
+  };
 
   const filteredRooms = roomData.filter(r => {
     if (statusFilter === "all") return true;
@@ -432,7 +456,26 @@ export default function UsersManagement() {
       {/* Users Table */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">רשימת משתמשים ({users.length})</CardTitle>
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <CardTitle className="text-base">
+              רשימת משתמשים ({users.length + pendingImported.length})
+            </CardTitle>
+            <div className="flex gap-1 flex-wrap">
+              {[
+                { key: "all", label: `הכל (${users.length + pendingImported.length})` },
+                { key: "registered", label: `רשומים (${users.length})` },
+                { key: "pending", label: `ממתינים (${pendingImported.length})` },
+              ].map(opt => (
+                <button
+                  key={opt.key}
+                  onClick={() => setUserTableFilter(opt.key)}
+                  className={`px-3 py-1 rounded-full text-xs border transition-colors ${userTableFilter === opt.key ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -445,26 +488,68 @@ export default function UsersManagement() {
                   <th className="p-2 font-semibold">חדר משויך</th>
                   <th className="p-2 font-semibold">תפקיד</th>
                   <th className="p-2 font-semibold">סטטוס</th>
+                  <th className="p-2 font-semibold">פעולה</th>
                 </tr>
               </thead>
               <tbody>
-                {users.map(user => (
-                  <tr key={user.id || user.email} className="border-b hover:bg-muted/30">
-                    <td className="p-2 font-medium">{user.full_name || "—"}</td>
-                    <td className="p-2 text-xs" dir="ltr">{user.email || "—"}</td>
-                    <td className="p-2 text-xs" dir="ltr">{user.phone || "—"}</td>
+                {userTableFilter !== "pending" && users.map(user => {
+                  const matchedImported = importedUsers.find(iu => iu.email?.toLowerCase() === user.email?.toLowerCase());
+                  return (
+                    <tr key={user.id || user.email} className="border-b hover:bg-muted/30">
+                      <td className="p-2 font-medium">{user.full_name || "—"}</td>
+                      <td className="p-2 text-xs" dir="ltr">{user.email || "—"}</td>
+                      <td className="p-2 text-xs" dir="ltr">{user.phone || "—"}</td>
+                      <td className="p-2">
+                        {user.default_room_label || user.default_room_number
+                          ? <span className="text-xs">{user.default_room_label || user.default_room_number}</span>
+                          : <span className="text-muted-foreground text-xs">לא משויך</span>}
+                      </td>
+                      <td className="p-2">{roleLabel(user.role)}</td>
+                      <td className="p-2">
+                        {matchedImported
+                          ? <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-medium">נרשם</span>
+                          : <span className="text-xs">{user.disabled ? "לא פעיל" : "פעיל"}</span>}
+                      </td>
+                      <td className="p-2 text-muted-foreground text-xs">—</td>
+                    </tr>
+                  );
+                })}
+                {userTableFilter !== "registered" && pendingImported.map(iu => (
+                  <tr key={iu.id} className="border-b hover:bg-muted/30 bg-amber-50/30">
+                    <td className="p-2 font-medium">{iu.full_name || "—"}</td>
+                    <td className="p-2 text-xs" dir="ltr">{iu.email}</td>
+                    <td className="p-2 text-xs" dir="ltr">{iu.phone || "—"}</td>
                     <td className="p-2">
-                      {user.default_room_label || user.default_room_number
-                        ? <span className="text-xs">{user.default_room_label || user.default_room_number}</span>
+                      {iu.room_label || iu.room_number
+                        ? <span className="text-xs">{iu.room_label || iu.room_number}</span>
                         : <span className="text-muted-foreground text-xs">לא משויך</span>}
                     </td>
-                    <td className="p-2">{roleLabel(user.role)}</td>
-                    <td className="p-2">{user.disabled ? "לא פעיל" : "פעיל"}</td>
+                    <td className="p-2">{roleLabel(iu.role)}</td>
+                    <td className="p-2">
+                      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
+                        <UserPlus className="w-3 h-3" />
+                        ממתין לרישום
+                      </span>
+                    </td>
+                    <td className="p-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs gap-1.5"
+                        onClick={() => handleInvite(iu)}
+                        disabled={invitingId === iu.id}
+                      >
+                        {invitingId === iu.id
+                          ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          : <Mail className="w-3.5 h-3.5" />}
+                        שלח הזמנה
+                      </Button>
+                    </td>
                   </tr>
                 ))}
-                {users.length === 0 && (
+                {users.length === 0 && pendingImported.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-muted-foreground">לא נמצאו משתמשים</td>
+                    <td colSpan={7} className="p-8 text-center text-muted-foreground">לא נמצאו משתמשים</td>
                   </tr>
                 )}
               </tbody>
