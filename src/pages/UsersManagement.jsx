@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Users, Building2, UserCheck, AlertTriangle, Archive, UserPlus, Upload, Mail } from "lucide-react";
 import ImportUsersDialog from "@/components/users/ImportUsersDialog";
 import ImportedUsersSection from "@/components/users/ImportedUsersSection";
+import ImportTenantsDialog from "@/components/users/ImportTenantsDialog";
+import TenantsSection from "@/components/users/TenantsSection";
 import { isManagerOrAdmin } from "@/lib/slaUtils";
 import { WORKIES_ROOMS } from "@/lib/workiesRooms";
 import { format } from "date-fns";
@@ -67,6 +69,7 @@ export default function UsersManagement() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [usersRange, setUsersRange] = useState(() => getLastWeekRange());
   const [showImportDialog, setShowImportDialog] = useState(false);
+  const [showTenantsDialog, setShowTenantsDialog] = useState(false);
   const [userTableFilter, setUserTableFilter] = useState("all");
   const [invitingId, setInvitingId] = useState(null);
   const navigate = useNavigate();
@@ -259,10 +262,16 @@ export default function UsersManagement() {
           <p className="text-sm text-muted-foreground mt-1">{users.length} משתמשים · {totalRooms} חדרים מזוהים</p>
         </div>
         {isAdmin && (
-          <Button variant="outline" className="gap-2" onClick={() => setShowImportDialog(true)}>
-            <Upload className="w-4 h-4" />
-            ייבוא מאקסל
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" className="gap-2" onClick={() => setShowTenantsDialog(true)}>
+              <Upload className="w-4 h-4" />
+              ייבוא דיירים
+            </Button>
+            <Button variant="outline" className="gap-2" onClick={() => setShowImportDialog(true)}>
+              <Upload className="w-4 h-4" />
+              ייבוא משתמשים
+            </Button>
+          </div>
         )}
       </div>
 
@@ -275,6 +284,9 @@ export default function UsersManagement() {
         <KpiCard icon={Archive} label="חדרים ריקים" value={emptyRooms} filterKey="empty" activeFilter={statusFilter} onFilter={setStatusFilter} />
         <KpiCard icon={UserPlus} label="משתמשים חדשים (שבוע)" value={newUsersLastWeek} filterKey="new_users" activeFilter={statusFilter} onFilter={setStatusFilter} />
       </div>
+
+      {/* Tenants — active customers loaded from Excel */}
+      <TenantsSection />
 
       {/* Imported Users — pending registration */}
       <ImportedUsersSection />
@@ -564,6 +576,15 @@ export default function UsersManagement() {
           onImported={() => {
             queryClient.invalidateQueries({ queryKey: ["users-management"] });
             queryClient.invalidateQueries({ queryKey: ["imported-users"] });
+          }}
+        />
+      )}
+
+      {showTenantsDialog && (
+        <ImportTenantsDialog
+          onClose={() => setShowTenantsDialog(false)}
+          onImported={() => {
+            queryClient.invalidateQueries({ queryKey: ["room-tenants"] });
           }}
         />
       )}
