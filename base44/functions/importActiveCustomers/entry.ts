@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import * as XLSX from 'npm:xlsx@0.18.5';
 
 // --- Room list (inlined from WORKIES_ROOMS) ---
 const ROOMS: { n: string; l: string; a: string }[] = [
@@ -124,55 +125,40 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'file_url is required' }, { status: 400 });
     }
 
-    // Extract data from the file
-    const extractRes = await base44.asServiceRole.integrations.Core.ExtractDataFromUploadedFile({
-      file_url,
-      json_schema: {
-        type: "object",
-        properties: {
-          customers: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                name: { type: "string", description: "Name column — customer/company name" },
-                company: { type: "string", description: "company column — company ID / ח.פ. MUST be string, not number" },
-                email: { type: "string" },
-                phone_number: { type: "string", description: "phone-number column. MUST be string, not number" },
-                offices: { type: "string", description: "Offices column — room description like Office 9" },
-                number_of_desks: { type: "number" },
-                security: { type: "number" },
-                payment_method: { type: "string" },
-                address: { type: "string" },
-                date_joined: { type: "string" },
-                industry: { type: "string" },
-                status: { type: "string" },
-                auto_charge_day: { type: "number" },
-                contact_name: { type: "string", description: "Contact name column if exists, otherwise same as Name" },
-                room_code: { type: "string", description: "קוד column — full office code like I - 09, II 65, VI + VIEW 31. MUST be string" },
-              },
-            },
-          },
-        },
-      },
-    });
-
-    if (!extractRes || extractRes.status !== 'success' || !extractRes.output) {
-      return Response.json({ error: extractRes?.details || 'Failed to extract data from file' }, { status: 400 });
+    // --- Fetch and parse the file directly (handles both Excel and CSV) ---
+    const fileRes = await fetch(file_url);
+    if (!fileRes.ok) {
+      return Response.json({ error: 'Failed to fetch file from storage' }, { status: 400 });
     }
-
-    let rows: any[] = [];
-    const output = extractRes.output;
-    if (Array.isArray(output)) {
-      rows = output;
-    } else if (output?.customers && Array.isArray(output.customers)) {
-      rows = output.customers;
-    } else if (output?.data && Array.isArray(output.data)) {
-      rows = output.data;
+    const buffer = await fileRes.arrayBuffer();
+    const uint8 = new Uint8Array(buffer);
+    // Detect file type: Excel (xlsx) starts with PK (0x50 0x4B), Excel (xls) starts with 0xD0 0xCF
+    const isExcel = (uint8.length > 1 && uint8[0] === 0x50 && uint8[1] === 0x4B) ||
+                    (uint8.length > 1 && uint8[0] === 0xD0 && uint8[1] === 0xCF);
+    let workbook;
+    if (isExcel) {
+      workbook = XLSX.read(buffer, { type: 'array', cellDates: true });
+    } else {
+      // CSV — decode as UTF-8 to preserve Hebrew headers correctly
+      const text = new TextDecoder('utf-8').decode(buffer);
+      workbook = XLSX.read(text, { type: 'string', cellDates: true });
     }
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+
+    // Get headers (first row)
+    const headerRows: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', blankrows: false });
+    const detectedHeaders: string[] = headerRows.length > 0
+      ? headerRows[0].map((h: any) => String(h ?? '').trim())
+      : [];
+
+    // Get rows as objects keyed by column header name
+    const rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false, blankrows: false });
+
+    console.log("Detected tenant import headers:", JSON.stringify(detectedHeaders));
 
     if (rows.length === 0) {
-      return Response.json({ error: 'No rows found in file' }, { status: 400 });
+      return Response.json({ error: 'No rows found in file', detected_headers: detectedHeaders }, { status: 400 });
     }
 
     const batchId = `import_${Date.now()}_${user.email}`;
@@ -180,21 +166,22 @@ Deno.serve(async (req) => {
     const seenKeys = new Set<string>();
 
     for (const row of rows) {
-      const roomCodeRaw = normalizeRoomCode(row.room_code);
-      const roomSourceLabel = toStr(row.offices);
-      const customerName = toStr(row.name);
-      const contactName = toStr(row.contact_name) || customerName;
-      const email = toStr(row.email).toLowerCase();
-      const phone = normalizePhone(row.phone_number);
-      const companyId = toStr(row.company);
-      const deskCount = toNum(row.number_of_desks);
-      const securityAmount = toNum(row.security);
-      const paymentMethod = toStr(row.payment_method);
-      const address = toStr(row.address);
-      const leaseStart = normalizeDate(row.date_joined);
-      const industry = toStr(row.industry);
-      const customerStatus = toStr(row.status).toLowerCase();
-      const autoChargeDay = toNum(row.auto_charge_day);
+      // Read columns by exact header name using bracket notation
+      const roomCodeRaw = normalizeRoomCode(row["קוד"]);
+      const roomSourceLabel = toStr(row["Offices"]);
+      const customerName = toStr(row["Name"]);
+      const contactName = toStr(row["contact_name"]) || customerName;
+      const email = toStr(row["email"]).toLowerCase();
+      const phone = normalizePhone(row["phone-number"]);
+      const companyId = toStr(row["company"]);
+      const deskCount = toNum(row["Number of desks"]);
+      const securityAmount = toNum(row["Security"]);
+      const paymentMethod = toStr(row["payment_method"]);
+      const address = toStr(row["address"]);
+      const leaseStart = normalizeDate(row["Date Joined"]);
+      const industry = toStr(row["Industry"]);
+      const customerStatus = toStr(row["Status"]).toLowerCase();
+      const autoChargeDay = toNum(row["Auto Charge Day"]);
 
       // Determine match status
       let matchStatus = "";
@@ -261,20 +248,20 @@ Deno.serve(async (req) => {
         is_primary_contact: true,
         contact_role: "",
         raw_import_row: {
-          Name: row.name ?? "",
-          company: row.company ?? "",
-          email: row.email ?? "",
-          "phone-number": row.phone_number ?? "",
-          Offices: row.offices ?? "",
-          "Number of desks": row.number_of_desks ?? "",
-          Security: row.security ?? "",
-          payment_method: row.payment_method ?? "",
-          address: row.address ?? "",
-          "Date Joined": row.date_joined ?? "",
-          Industry: row.industry ?? "",
-          Status: row.status ?? "",
-          "Auto Charge Day": row.auto_charge_day ?? "",
-          "קוד": row.room_code ?? "",
+          Name: row["Name"] ?? "",
+          company: row["company"] ?? "",
+          email: row["email"] ?? "",
+          "phone-number": row["phone-number"] ?? "",
+          Offices: row["Offices"] ?? "",
+          "Number of desks": row["Number of desks"] ?? "",
+          Security: row["Security"] ?? "",
+          payment_method: row["payment_method"] ?? "",
+          address: row["address"] ?? "",
+          "Date Joined": row["Date Joined"] ?? "",
+          Industry: row["Industry"] ?? "",
+          Status: row["Status"] ?? "",
+          "Auto Charge Day": row["Auto Charge Day"] ?? "",
+          "קוד": row["קוד"] ?? "",
         },
       });
     }
@@ -290,6 +277,7 @@ Deno.serve(async (req) => {
         will_save: validRows.length,
         skipped: rows.length - validRows.length,
         preview: previewRows,
+        detected_headers: detectedHeaders,
       });
     }
 
@@ -338,7 +326,7 @@ Deno.serve(async (req) => {
 
         const existingRecord = existingByKey[key];
         if (existingRecord) {
-          // Update — preserve invite_sent fields
+          // Update — preserve invite_sent and is_primary_contact fields
           await base44.asServiceRole.entities.RoomTenant.update(existingRecord.id, recordData);
           updated++;
         } else {
@@ -363,6 +351,7 @@ Deno.serve(async (req) => {
       updated,
       skipped: rows.length - validRows.length,
       errors: errors.slice(0, 20),
+      detected_headers: detectedHeaders,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
