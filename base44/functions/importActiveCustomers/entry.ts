@@ -112,13 +112,53 @@ function normalizeDate(val: any): string {
   return s;
 }
 
-// Read a value from a row by trying multiple possible column names (aliases)
+// Normalize a column header for fuzzy matching: trim, lowercase, collapse spaces
+function normalizeKey(key: any): string {
+  return String(key || "").trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+// Read a value from a row by trying multiple possible column names (aliases).
+// Matching is normalized (trim + lowercase + collapse spaces) so trailing spaces
+// or case differences don't break the lookup.
 function getValue(row: any, aliases: string[]): any {
-  for (const key of aliases) {
-    if (row[key] !== undefined && row[key] !== null && String(row[key]).trim() !== "") {
-      return row[key];
+  // Build a list of normalized keys -> values (first occurrence wins)
+  const normEntries: { normKey: string; value: any }[] = [];
+  const seen = new Set<string>();
+  for (const key of Object.keys(row)) {
+    const nk = normalizeKey(key);
+    if (nk && !seen.has(nk)) {
+      seen.add(nk);
+      normEntries.push({ normKey: nk, value: row[key] });
     }
   }
+
+  // First pass: exact normalized match
+  for (const alias of aliases) {
+    const na = normalizeKey(alias);
+    for (const entry of normEntries) {
+      if (entry.normKey === na) {
+        const val = entry.value;
+        if (val !== undefined && val !== null && String(val).trim() !== "") {
+          return val;
+        }
+      }
+    }
+  }
+
+  // Second pass: contains match (for Hebrew headers with extra words)
+  for (const alias of aliases) {
+    const na = normalizeKey(alias);
+    if (na.length < 4) continue; // skip short aliases to avoid false matches
+    for (const entry of normEntries) {
+      if (entry.normKey.includes(na) || na.includes(entry.normKey)) {
+        const val = entry.value;
+        if (val !== undefined && val !== null && String(val).trim() !== "") {
+          return val;
+        }
+      }
+    }
+  }
+
   return "";
 }
 
@@ -177,20 +217,20 @@ Deno.serve(async (req) => {
 
     for (const row of rows) {
       // Read columns by alias — supports both Hebrew and English header names
-      const customerName = toStr(getValue(row, ["שם הלקוח", "Name", "customer_name", "שם לקוח"]));
-      const companyId = toStr(getValue(row, ["חפ/עמ", "ח.פ", "חפ", "company", "company_id"]));
-      const email = toStr(getValue(row, ["email", "אימייל", "מייל"])).toLowerCase();
-      const phone = normalizePhone(getValue(row, ["phone-number", "טלפון", "נייד", "phone"]));
-      const roomSourceLabel = toStr(getValue(row, ["שם משרד פיקספייס", "Offices", "office", "שם משרד"]));
-      const roomCodeRaw = normalizeRoomCode(getValue(row, ["קוד משרד", "קוד", "room_code", "office_code"]));
-      const deskCount = toNum(getValue(row, ["עמדות מושכרות", "Number of desks", "desk_count"]));
-      const securityAmount = toNum(getValue(row, ["Security", "פיקדון", "ביטחונות"]));
-      const paymentMethod = toStr(getValue(row, ["שיטת תשלום", "payment_method"]));
-      const address = toStr(getValue(row, ["address", "כתובת"]));
-      const leaseStart = normalizeDate(getValue(row, ["תאריך הצטרפות וורקיז", "Date Joined", "lease_start_date"]));
-      const industry = toStr(getValue(row, ["תחום", "Industry", "industry"]));
-      const customerStatus = toStr(getValue(row, ["סטאטוס לקוח", "סטטוס לקוח", "Status", "customer_status"])).toLowerCase();
-      const autoChargeDay = toNum(getValue(row, ["Auto Charge Day", "יום חיוב אוטומטי"]));
+      const customerName = toStr(getValue(row, ["שם הלקוח", "שם לקוח", "שם החברה", "שם חברה", "שם העסק", "שם עסק", "לקוח", "חברה", "Name", "Customer Name", "customer_name", "company_name", "business_name", "client_name"]));
+      const companyId = toStr(getValue(row, ["חפ/עמ", "ח.פ", "חפ", "ח.פ.", "ח.פ / עמ", "ח.פ/עמ", "מספר ח.פ.", "מספר ח.פ", "עוסק מורשה", "מזהה", "ת.ז", "תז", "company", "company_id", "id_number", "מספר עוסק", "Company", "Company ID"]));
+      const email = toStr(getValue(row, ["email", "Email", "E-mail", "e-mail", "אימייל", "מייל", "דואר אלקטרוני"])).toLowerCase();
+      const phone = normalizePhone(getValue(row, ["phone-number", "phone number", "Phone", "Phone Number", "טלפון", "נייד", "ניידן", "סלולרי", "phone", "mobile", "tel", "טל"]));
+      const roomSourceLabel = toStr(getValue(row, ["שם משרד פיקספייס", "שם משרד", "שם המשרד", "שם חדר", "שם החדר", "Offices", "Office", "office", "office_name", "room_name", "משרד", "חדר"]));
+      const roomCodeRaw = normalizeRoomCode(getValue(row, ["קוד משרד", "קוד חדר", "מספר משרד", "מספר חדר", "קוד", "room_code", "office_code", "room_number", "office_number", "Office Code", "Room Code", "קוד משרד פיקספייס"]));
+      const deskCount = toNum(getValue(row, ["עמדות מושכרות", "עמדות", "מספר עמדות", "Number of desks", "desk_count", "desks", "Desks"]));
+      const securityAmount = toNum(getValue(row, ["Security", "פיקדון", "ביטחונות", "בטחונות", "security_amount", "deposit"]));
+      const paymentMethod = toStr(getValue(row, ["שיטת תשלום", "אמצעי תשלום", "תשלום", "payment_method", "Payment Method", "payment"]));
+      const address = toStr(getValue(row, ["address", "כתובת", "Address", "כתובת משרד"]));
+      const leaseStart = normalizeDate(getValue(row, ["תאריך הצטרפות וורקיז", "תאריך הצטרפות", "Date Joined", "lease_start_date", "start_date", "תאריך תחילת הסכם"]));
+      const industry = toStr(getValue(row, ["תחום", "תחום עיסוק", "Industry", "industry", "sector", "ענף"]));
+      const customerStatus = toStr(getValue(row, ["סטאטוס לקוח", "סטטוס לקוח", "סטאטוס", "סטטוס", "Status", "status", "customer_status", "סטטוס התאמה"])).toLowerCase();
+      const autoChargeDay = toNum(getValue(row, ["Auto Charge Day", "יום חיוב אוטומטי", "auto_charge_day", "יום חיוב"]));
       const contactName = customerName;
 
       // Determine match status

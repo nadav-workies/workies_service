@@ -139,6 +139,16 @@ export default function ImportTenantsDialog({ onClose, onImported }) {
                 <span className="text-muted-foreground">דולגו: <b>{preview.skipped}</b></span>
               </div>
             </div>
+            {preview.detected_headers?.length > 0 && (
+              <div className="text-xs bg-muted/40 rounded-lg p-2">
+                <p className="font-medium mb-1 text-muted-foreground">עמודות שזוהו בקובץ:</p>
+                <div className="flex flex-wrap gap-1">
+                  {preview.detected_headers.map((h, i) => (
+                    <span key={i} className="text-[10px] px-1.5 py-0.5 rounded border border-border bg-card">{h || "(ריק)"}</span>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="overflow-x-auto max-h-[50vh] overflow-y-auto border rounded-lg">
               <table className="w-full text-xs text-right">
                 <thead className="sticky top-0 bg-muted/60">
