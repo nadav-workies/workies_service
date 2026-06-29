@@ -148,6 +148,7 @@ Deno.serve(async (req) => {
                 industry: { type: "string" },
                 status: { type: "string" },
                 auto_charge_day: { type: "number" },
+                contact_name: { type: "string", description: "Contact name column if exists, otherwise same as Name" },
                 room_code: { type: "string", description: "קוד column — full office code like I - 09, II 65, VI + VIEW 31. MUST be string" },
               },
             },
@@ -182,6 +183,7 @@ Deno.serve(async (req) => {
       const roomCodeRaw = normalizeRoomCode(row.room_code);
       const roomSourceLabel = toStr(row.offices);
       const customerName = toStr(row.name);
+      const contactName = toStr(row.contact_name) || customerName;
       const email = toStr(row.email).toLowerCase();
       const phone = normalizePhone(row.phone_number);
       const companyId = toStr(row.company);
@@ -240,6 +242,7 @@ Deno.serve(async (req) => {
         room_label: roomLabel,
         room_area: roomArea,
         customer_name: customerName,
+        contact_name: contactName,
         company_id: companyId,
         email,
         phone,
@@ -255,6 +258,8 @@ Deno.serve(async (req) => {
         match_error: matchError,
         match_status: matchStatus,
         will_save: willSave,
+        is_primary_contact: true,
+        contact_role: "",
         raw_import_row: {
           Name: row.name ?? "",
           company: row.company ?? "",
@@ -312,6 +317,7 @@ Deno.serve(async (req) => {
           room_label: row.room_label,
           room_area: row.room_area,
           customer_name: row.customer_name,
+          contact_name: row.contact_name || row.customer_name,
           company_id: row.company_id,
           email: row.email,
           phone: row.phone,
@@ -338,6 +344,8 @@ Deno.serve(async (req) => {
         } else {
           await base44.asServiceRole.entities.RoomTenant.create({
             ...recordData,
+            is_primary_contact: true,
+            contact_role: "",
             invite_sent: false,
           });
           created++;

@@ -9,6 +9,8 @@ import ImportUsersDialog from "@/components/users/ImportUsersDialog";
 import ImportedUsersSection from "@/components/users/ImportedUsersSection";
 import ImportTenantsDialog from "@/components/users/ImportTenantsDialog";
 import TenantsSection from "@/components/users/TenantsSection";
+import RoomTenantsCell from "@/components/users/RoomTenantsCell";
+import AddTenantDialog from "@/components/users/AddTenantDialog";
 import { isManagerOrAdmin } from "@/lib/slaUtils";
 import { WORKIES_ROOMS } from "@/lib/workiesRooms";
 import { format } from "date-fns";
@@ -70,6 +72,8 @@ export default function UsersManagement() {
   const [usersRange, setUsersRange] = useState(() => getLastWeekRange());
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [showTenantsDialog, setShowTenantsDialog] = useState(false);
+  const [showAddTenantDialog, setShowAddTenantDialog] = useState(false);
+  const [addTenantRoom, setAddTenantRoom] = useState(null);
   const [userTableFilter, setUserTableFilter] = useState("all");
   const [invitingId, setInvitingId] = useState(null);
   const navigate = useNavigate();
@@ -103,6 +107,12 @@ export default function UsersManagement() {
   const { data: importedUsers = [] } = useQuery({
     queryKey: ["imported-users"],
     queryFn: () => base44.entities.ImportedUser.list("-imported_at", 500),
+    enabled: !!currentUser && isManagerOrAdmin(currentUser),
+  });
+
+  const { data: roomTenants = [] } = useQuery({
+    queryKey: ["room-tenants"],
+    queryFn: () => base44.entities.RoomTenant.list("-created_date", 2000),
     enabled: !!currentUser && isManagerOrAdmin(currentUser),
   });
 
@@ -142,6 +152,14 @@ export default function UsersManagement() {
     usersByRoom[key].push(u);
   });
 
+  const tenantsByRoom = {};
+  roomTenants.forEach(t => {
+    const rn = String(t.room_number || "");
+    if (!rn) return;
+    if (!tenantsByRoom[rn]) tenantsByRoom[rn] = [];
+    tenantsByRoom[rn].push(t);
+  });
+
   const roomStatusMap = {};
   roomStatuses.forEach(rs => { roomStatusMap[String(rs.room_number)] = rs; });
 
@@ -172,6 +190,7 @@ export default function UsersManagement() {
       room_users: roomUsers,
       recent_tickets_count: roomTickets.length,
       last_ticket_at: lastTicket?.opened_at || lastTicket?.created_date || null,
+      room_tenants: tenantsByRoom[rn] || [],
     };
   });
 
@@ -207,6 +226,20 @@ export default function UsersManagement() {
       const data = res.data || res;
       if (!data.ok) throw new Error(data.error || "שגיאה בשליחת הזמנה");
       queryClient.invalidateQueries({ queryKey: ["imported-users"] });
+    } catch (err) {
+      alert(err.message || "שגיאה בשליחת הזמנה");
+    } finally {
+      setInvitingId(null);
+    }
+  };
+
+  const handleTenantInvite = async (tenant) => {
+    setInvitingId(tenant.id);
+    try {
+      const res = await base44.functions.invoke("sendTenantInvitation", { tenant_id: tenant.id });
+      const data = res.data || res;
+      if (!data.ok) throw new Error(data.error || "שגיאה בשליחת הזמנה");
+      queryClient.invalidateQueries({ queryKey: ["room-tenants"] });
     } catch (err) {
       alert(err.message || "שגיאה בשליחת הזמנה");
     } finally {
@@ -400,19 +433,12 @@ export default function UsersManagement() {
                         </span>
                       </td>
                       <td className="p-2">
-                        {room.room_users.length === 0 ? (
-                          <span className="text-muted-foreground">—</span>
-                        ) : (
-                          <div className="space-y-1">
-                            {room.room_users.map(u => (
-                              <div key={u.id} className="text-xs">
-                                <span className="font-medium">{u.full_name || "—"}</span>
-                                {u.email && <span className="text-muted-foreground block" dir="ltr">{u.email}</span>}
-                                {u.phone && <span className="text-muted-foreground block" dir="ltr">{u.phone}</span>}
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                        <RoomTenantsCell
+                          tenants={room.room_tenants}
+                          roomUsers={room.room_users}
+                          invitingId={invitingId}
+                          onInvite={handleTenantInvite}
+                        />
                       </td>
                       <td className="p-2 text-center">{room.recent_tickets_count || "—"}</td>
                       <td className="p-2 text-xs text-muted-foreground">
@@ -420,17 +446,24 @@ export default function UsersManagement() {
                       </td>
                       {isAdmin && (
                         <td className="p-2">
-                          {room.is_empty ? (
-                            <Button size="sm" variant="outline" className="text-xs h-7"
-                              onClick={() => handleToggleEmpty(room)}>
-                              בטל סימון ריק
+                          <div className="flex flex-col gap-1">
+                            <Button size="sm" variant="ghost" className="text-xs h-7 text-primary gap-1"
+                              onClick={() => { setAddTenantRoom(room); setShowAddTenantDialog(true); }}>
+                              <UserPlus className="w-3 h-3" />
+                              הוסף משתמש
                             </Button>
-                          ) : (
-                            <Button size="sm" variant="ghost" className="text-xs h-7 text-muted-foreground"
-                              onClick={() => { setEmptyDialog(room); setEmptyReason(""); }}>
-                              סמן כחדר ריק
-                            </Button>
-                          )}
+                            {room.is_empty ? (
+                              <Button size="sm" variant="outline" className="text-xs h-7"
+                                onClick={() => handleToggleEmpty(room)}>
+                                בטל סימון ריק
+                              </Button>
+                            ) : (
+                              <Button size="sm" variant="ghost" className="text-xs h-7 text-muted-foreground"
+                                onClick={() => { setEmptyDialog(room); setEmptyReason(""); }}>
+                                סמן כחדר ריק
+                              </Button>
+                            )}
+                          </div>
                         </td>
                       )}
                     </tr>
@@ -585,6 +618,18 @@ export default function UsersManagement() {
           onClose={() => setShowTenantsDialog(false)}
           onImported={() => {
             queryClient.invalidateQueries({ queryKey: ["room-tenants"] });
+          }}
+        />
+      )}
+
+      {showAddTenantDialog && addTenantRoom && (
+        <AddTenantDialog
+          room={addTenantRoom}
+          onClose={() => { setShowAddTenantDialog(false); setAddTenantRoom(null); }}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ["room-tenants"] });
+            setShowAddTenantDialog(false);
+            setAddTenantRoom(null);
           }}
         />
       )}

@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Mail, Building2, CheckCircle, Search } from "lucide-react";
+import { Loader2, Mail, Phone, Star, Building2, CheckCircle, Search } from "lucide-react";
 import { WORKIES_ROOMS } from "@/lib/workiesRooms";
 
 export default function TenantsSection() {
@@ -30,10 +30,8 @@ export default function TenantsSection() {
     }
   };
 
-  // Build room lookup
   const roomMap = new Map(WORKIES_ROOMS.map(r => [String(r.room_number), r]));
 
-  // Group tenants by room_number
   const tenantsByRoom = {};
   tenants.forEach(t => {
     const rn = String(t.room_number || "");
@@ -41,14 +39,12 @@ export default function TenantsSection() {
     tenantsByRoom[rn].push(t);
   });
 
-  // Get room numbers that have tenants, sorted
   const roomNumbersWithTenants = Object.keys(tenantsByRoom).sort((a, b) => {
     const na = parseInt(a) || 0;
     const nb = parseInt(b) || 0;
     return na - nb;
   });
 
-  // Filter by search
   const filteredRooms = roomNumbersWithTenants.filter(rn => {
     if (!search) return true;
     const q = search.toLowerCase();
@@ -97,7 +93,11 @@ export default function TenantsSection() {
           <div className="space-y-3">
             {filteredRooms.map(rn => {
               const room = roomMap.get(rn);
-              const roomTenants = tenantsByRoom[rn];
+              const roomTenants = [...tenantsByRoom[rn]].sort((a, b) => {
+                if (a.is_primary_contact && !b.is_primary_contact) return -1;
+                if (!a.is_primary_contact && b.is_primary_contact) return 1;
+                return 0;
+              });
               return (
                 <div key={rn} className="border rounded-lg overflow-hidden">
                   <div className="bg-muted/40 px-3 py-2 flex items-center gap-2">
@@ -110,7 +110,10 @@ export default function TenantsSection() {
                       <div key={t.id} className="flex items-center justify-between gap-3 px-3 py-2 hover:bg-muted/20 flex-wrap">
                         <div className="flex-1 min-w-0 space-y-0.5">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-medium text-sm">{t.customer_name || "—"}</span>
+                            {t.is_primary_contact && <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />}
+                            <span className="font-medium text-sm">{t.contact_name || t.customer_name || "—"}</span>
+                            {t.is_primary_contact && <span className="text-[10px] text-amber-600 font-medium">מרכזי</span>}
+                            {t.contact_role && <span className="text-xs text-muted-foreground">· {t.contact_role}</span>}
                             {t.company_id && <span className="text-xs text-muted-foreground" dir="ltr">({t.company_id})</span>}
                             {t.customer_status && (
                               <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${t.customer_status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600"}`}>
@@ -125,7 +128,17 @@ export default function TenantsSection() {
                             {t.room_code && <span className="text-muted-foreground/70" dir="ltr">קוד: {t.room_code}</span>}
                           </div>
                         </div>
-                        <div className="shrink-0">
+                        <div className="shrink-0 flex items-center gap-1">
+                          {t.email && (
+                            <a href={`mailto:${t.email}`} className="inline-flex items-center justify-center w-7 h-7 rounded border hover:bg-muted" title="שלח מייל">
+                              <Mail className="w-3.5 h-3.5" />
+                            </a>
+                          )}
+                          {t.phone && (
+                            <a href={`tel:${t.phone}`} className="inline-flex items-center justify-center w-7 h-7 rounded border hover:bg-muted" title="חייג">
+                              <Phone className="w-3.5 h-3.5" />
+                            </a>
+                          )}
                           {t.invite_sent ? (
                             <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-medium">
                               <CheckCircle className="w-3.5 h-3.5" />
