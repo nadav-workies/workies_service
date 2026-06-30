@@ -1,168 +1,298 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import * as XLSX from 'npm:xlsx@0.18.5';
 
-function normalizeRole(role) {
-  const r = String(role || "").trim().toLowerCase();
-  if (r === 'admin' || r === 'מנהל מערכת' || r === 'מנהל מערכת') return 'admin';
-  if (r === 'manager' || r === 'מנהל' || r === 'מנהלית') return 'manager';
-  return 'user';
-}
+// --- Helpers ---
 
-function toStr(val) {
+function toStr(val: any): string {
   if (val === null || val === undefined) return "";
   return String(val).trim();
+}
+
+function normalizePhone(value: any): string {
+  if (value === null || value === undefined) return "";
+  let raw = String(value).trim();
+  if (/e\+/i.test(raw)) {
+    const num = Number(raw);
+    if (Number.isFinite(num)) {
+      raw = String(Math.trunc(num));
+    }
+  }
+  raw = raw.replace(/[^\d+]/g, "");
+  if (raw.startsWith("972")) {
+    raw = "+" + raw;
+  }
+  if (raw.length === 9 && raw.startsWith("5")) {
+    raw = "+972" + raw;
+  }
+  if (raw.length === 10 && raw.startsWith("0")) {
+    raw = "+972" + raw.slice(1);
+  }
+  return raw;
+}
+
+function normalizeRole(role: string): string {
+  const r = String(role || "").trim().toLowerCase();
+  if (r === 'admin' || r === 'מנהל מערכת') return 'admin';
+  if (r === 'manager' || r === 'מנהל' || r === 'מנהלית') return 'manager';
+  if (r === 'user' || r === 'משתמש') return 'user';
+  return "";
+}
+
+function cleanHeader(value: any): string {
+  return String(value ?? "")
+    .replace(/^\uFEFF/, "")
+    .replace(/[\u200E\u200F\u202A-\u202E]/g, "")
+    .replace(/\u00A0/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
+function normalizeKey(key: any): string {
+  return cleanHeader(key).toLowerCase();
+}
+
+function getValue(row: any, aliases: string[]): any {
+  const entries = Object.keys(row).map(key => ({
+    key,
+    normKey: normalizeKey(key),
+    value: row[key]
+  }));
+  for (const alias of aliases) {
+    const normAlias = normalizeKey(alias);
+    const exact = entries.find(e => e.normKey === normAlias);
+    if (exact && exact.value !== undefined && exact.value !== null && String(exact.value).trim() !== "") {
+      return exact.value;
+    }
+  }
+  return "";
 }
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    if (!user || user.role !== 'admin') {
-      return Response.json({ error: 'Unauthorized — admin only' }, { status: 403 });
+    if (!user || (user.role !== 'admin' && user.role !== 'manager')) {
+      return Response.json({ error: 'Unauthorized — admin or manager only' }, { status: 403 });
     }
 
-    const { file_url } = await req.json();
+    const isAdmin = user.role === 'admin';
+
+    const { file_url, dry_run, file_name } = await req.json();
     if (!file_url) {
       return Response.json({ error: 'file_url is required' }, { status: 400 });
     }
 
-    // Extract data from the Excel file
-    const extractRes = await base44.asServiceRole.integrations.Core.ExtractDataFromUploadedFile({
-      file_url,
-      json_schema: {
-        type: "object",
-        properties: {
-          users: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                full_name: { type: "string" },
-                email: { type: "string" },
-                phone: { type: "string" },
-                room_number: { type: "string" },
-                room_label: { type: "string" },
-                room_area: { type: "string" },
-                role: { type: "string" }
-              }
-            }
-          }
-        }
-      }
+    // --- Fetch and parse the file directly (handles both Excel and CSV) ---
+    const fileRes = await fetch(file_url);
+    if (!fileRes.ok) {
+      return Response.json({ error: 'Failed to fetch file from storage' }, { status: 400 });
+    }
+    const buffer = await fileRes.arrayBuffer();
+    const uint8 = new Uint8Array(buffer);
+    const isExcel = (uint8.length > 1 && uint8[0] === 0x50 && uint8[1] === 0x4B) ||
+                    (uint8.length > 1 && uint8[0] === 0xD0 && uint8[1] === 0xCF);
+    let workbook;
+    if (isExcel) {
+      workbook = XLSX.read(buffer, { type: 'array', cellDates: true });
+    } else {
+      const text = new TextDecoder('utf-8').decode(buffer);
+      workbook = XLSX.read(text, { type: 'string', cellDates: true });
+    }
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+
+    const matrix: any[][] = XLSX.utils.sheet_to_json(sheet, {
+      header: 1,
+      defval: "",
+      raw: false,
+      blankrows: false
     });
 
-    if (!extractRes || extractRes.status !== 'success' || !extractRes.output) {
-      return Response.json({ error: extractRes?.details || 'Failed to extract data from file' }, { status: 400 });
+    if (!matrix || matrix.length < 2) {
+      return Response.json({ error: "No data rows found in file" }, { status: 400 });
     }
 
-    // Normalize rows — handle both array and object-with-users responses
-    let rows: any[] = [];
-    const output = extractRes.output;
-    if (Array.isArray(output)) {
-      rows = output;
-    } else if (output?.users && Array.isArray(output.users)) {
-      rows = output.users;
-    } else if (output?.data && Array.isArray(output.data)) {
-      rows = output.data;
-    }
+    const detectedHeaders: string[] = matrix[0].map((h: any) => cleanHeader(h));
+
+    const rows: any[] = matrix
+      .slice(1)
+      .filter((row: any[]) => row.some(cell => String(cell ?? "").trim() !== ""))
+      .map((row: any[]) => {
+        const obj: Record<string, any> = {};
+        detectedHeaders.forEach((header, index) => {
+          if (!header) return;
+          obj[header] = row[index] ?? "";
+        });
+        return obj;
+      });
 
     if (rows.length === 0) {
-      return Response.json({ error: 'No user rows found in file' }, { status: 400 });
+      return Response.json({ error: 'No rows found in file' }, { status: 400 });
     }
 
-    // Load existing registered users (by email)
+    // --- Load existing users by email ---
     const existingUsers = await base44.asServiceRole.entities.User.list("-created_date", 500);
-    const existingByEmail: Record<string, any> = {};
+    const usersByEmail: Record<string, any> = {};
     existingUsers.forEach((u: any) => {
-      if (u.email) existingByEmail[u.email.toLowerCase()] = u;
+      if (u.email) usersByEmail[u.email.toLowerCase()] = u;
     });
 
-    // Load existing imported users (by email)
-    const existingImported = await base44.asServiceRole.entities.ImportedUser.list("-created_date", 1000);
-    const importedByEmail: Record<string, any> = {};
-    existingImported.forEach((iu: any) => {
-      if (iu.email) importedByEmail[iu.email.toLowerCase()] = iu;
-    });
+    const adminCount = existingUsers.filter((u: any) => u.role === 'admin').length;
 
-    let updatedUsers = 0;
-    let updatedImported = 0;
-    let newImported = 0;
+    const previewRows: any[] = [];
+    let willUpdate = 0;
+    let notFound = 0;
     let skipped = 0;
-    const errors: string[] = [];
+    let permErrors = 0;
 
     for (const row of rows) {
-      const email = toStr(row.email).toLowerCase();
-      const fullName = toStr(row.full_name);
-      if (!email) { skipped++; continue; }
+      const email = toStr(getValue(row, ["email", "Email", "אימייל", "מייל", "כתובת מייל"])).toLowerCase();
+      const fullName = toStr(getValue(row, ["שם מלא", "שם", "full_name", "name", "Full Name", "Name"]));
+      const phone = toStr(getValue(row, ["טלפון", "phone", "phone-number", "phone number", "נייד", "mobile", "Phone"]));
+      const roleRaw = toStr(getValue(row, ["תפקיד", "role", "Role"]));
+      const roomNumber = toStr(getValue(row, ["חדר", "מספר חדר", "room_number", "default_room_number", "Room Number"]));
+      const roomCode = toStr(getValue(row, ["קוד משרד", "קוד", "room_code", "office_code", "Office Code"]));
+      const status = toStr(getValue(row, ["סטטוס", "status", "Status", "סטאטוס"]));
 
-      try {
-        // 1) Check if this is an existing registered user
-        const existingUser = existingByEmail[email];
-        if (existingUser) {
-          // Only fill in missing fields — never overwrite existing data
-          const updates: Record<string, any> = {};
-          if (!existingUser.default_room_number && toStr(row.room_number)) {
-            updates.default_room_number = toStr(row.room_number);
-          }
-          if (!existingUser.default_room_label && toStr(row.room_label)) {
-            updates.default_room_label = toStr(row.room_label);
-          }
-          if (!existingUser.default_room_area && toStr(row.room_area)) {
-            updates.default_room_area = toStr(row.room_area);
-          }
-          if (!existingUser.default_location_type && toStr(row.room_number)) {
-            updates.default_location_type = "room";
-          }
-          if (Object.keys(updates).length > 0) {
-            await base44.asServiceRole.entities.User.update(existingUser.id, updates);
-            updatedUsers++;
-          }
-          continue;
-        }
-
-        // 2) Check if this is an existing imported user
-        const existingImportedUser = importedByEmail[email];
-        if (existingImportedUser) {
-          // Only fill in missing fields
-          const updates: Record<string, any> = {};
-          if (!existingImportedUser.full_name && fullName) updates.full_name = fullName;
-          if (!existingImportedUser.phone && toStr(row.phone)) updates.phone = toStr(row.phone);
-          if (!existingImportedUser.room_number && toStr(row.room_number)) updates.room_number = toStr(row.room_number);
-          if (!existingImportedUser.room_label && toStr(row.room_label)) updates.room_label = toStr(row.room_label);
-          if (!existingImportedUser.room_area && toStr(row.room_area)) updates.room_area = toStr(row.room_area);
-          if (Object.keys(updates).length > 0) {
-            await base44.asServiceRole.entities.ImportedUser.update(existingImportedUser.id, updates);
-            updatedImported++;
-          }
-          continue;
-        }
-
-        // 3) New imported user — not registered yet
-        await base44.asServiceRole.entities.ImportedUser.create({
-          full_name: fullName,
-          email,
-          phone: toStr(row.phone),
-          room_number: toStr(row.room_number),
-          room_label: toStr(row.room_label),
-          room_area: toStr(row.room_area),
-          role: normalizeRole(row.role),
-          registered: false,
-          invite_count: 0,
-          imported_at: new Date().toISOString(),
-          imported_by: user.email,
+      if (!email) {
+        previewRows.push({
+          email: "",
+          existing_name: "",
+          new_name: fullName,
+          existing_phone: "",
+          new_phone: "",
+          existing_role: "",
+          new_role: "",
+          action: "חסר אימייל",
+          will_update: false,
         });
-        newImported++;
-      } catch (err) {
-        errors.push(`${email}: ${err.message}`);
+        skipped++;
+        continue;
       }
+
+      const existingUser = usersByEmail[email];
+      if (!existingUser) {
+        previewRows.push({
+          email,
+          existing_name: "",
+          new_name: fullName,
+          existing_phone: "",
+          new_phone: phone ? normalizePhone(phone) : "",
+          existing_role: "",
+          new_role: roleRaw,
+          action: "לא נמצא",
+          will_update: false,
+        });
+        notFound++;
+        continue;
+      }
+
+      // Build updates — only fields that have values
+      const updates: Record<string, any> = {};
+      if (fullName) updates.full_name = fullName;
+      if (phone) updates.phone = normalizePhone(phone);
+      if (roomNumber) updates.default_room_number = roomNumber;
+      if (roomCode) updates.room_code = roomCode;
+      if (status) updates.status = status;
+
+      // Role protection
+      let newRole = "";
+      let roleAction = "";
+      if (roleRaw) {
+        const normalizedRole = normalizeRole(roleRaw);
+        if (normalizedRole) {
+          if (!isAdmin) {
+            roleAction = "שגיאת הרשאה — Manager לא יכול לעדכן תפקיד";
+            permErrors++;
+          } else if (existingUser.role === 'admin' && normalizedRole !== 'admin' && adminCount <= 1) {
+            roleAction = "לא ניתן להסיר הרשאת Admin מהאדמין היחיד";
+            permErrors++;
+          } else {
+            updates.role = normalizedRole;
+            newRole = normalizedRole;
+          }
+        }
+      }
+
+      const hasUpdates = Object.keys(updates).length > 0;
+
+      if (hasUpdates) {
+        willUpdate++;
+      }
+
+      previewRows.push({
+        email,
+        existing_name: existingUser.full_name || "",
+        new_name: fullName || "",
+        existing_phone: existingUser.phone || "",
+        new_phone: phone ? normalizePhone(phone) : "",
+        existing_role: existingUser.role || "",
+        new_role: newRole || roleRaw,
+        action: roleAction || (hasUpdates ? "יעודכן" : "אין שינוי"),
+        will_update: hasUpdates && !roleAction,
+        updates,
+        user_id: existingUser.id,
+      });
+    }
+
+    // --- Dry run: return preview only ---
+    if (dry_run) {
+      return Response.json({
+        ok: true,
+        dry_run: true,
+        total: rows.length,
+        will_update: willUpdate,
+        not_found: notFound,
+        skipped,
+        perm_errors: permErrors,
+        preview: previewRows,
+      });
+    }
+
+    // --- Apply: update users ---
+    let updatedCount = 0;
+    const errors: string[] = [];
+
+    for (const row of previewRows) {
+      if (!row.will_update) continue;
+      try {
+        await base44.asServiceRole.entities.User.update(row.user_id, row.updates);
+        updatedCount++;
+      } catch (err) {
+        errors.push(`${row.email}: ${err.message}`);
+      }
+    }
+
+    // --- Save import log ---
+    try {
+      await base44.asServiceRole.entities.UserImportLog.create({
+        imported_at: new Date().toISOString(),
+        imported_by: user.email,
+        file_name: file_name || "",
+        file_url: file_url || "",
+        total_rows: rows.length,
+        updated_count: updatedCount,
+        not_found_count: notFound,
+        skipped_count: skipped,
+        error_count: errors.length,
+        raw_summary: {
+          will_update: willUpdate,
+          perm_errors: permErrors,
+        },
+      });
+    } catch (logErr) {
+      // Log failure should not block the response
+      console.log("Failed to save import log:", logErr.message);
     }
 
     return Response.json({
       ok: true,
+      dry_run: false,
       total: rows.length,
-      updatedUsers,
-      updatedImported,
-      newImported,
+      updated: updatedCount,
+      not_found: notFound,
       skipped,
+      perm_errors: permErrors,
       errors: errors.slice(0, 20),
     });
   } catch (error) {
