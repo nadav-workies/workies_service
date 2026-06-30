@@ -1,26 +1,52 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  Loader2, Mail, Phone, Star, Users, CheckCircle, Search, Pencil, Send, X,
-  UserCheck, Clock, UserPlus, Building2
+  Loader2, Mail, Phone, Star, Search, Pencil, Send, X,
+  UserCheck, Clock, UserPlus, Users, Activity, CheckCircle
 } from "lucide-react";
 import { WORKIES_ROOMS } from "@/lib/workiesRooms";
 import EditTenantDialog from "@/components/users/EditTenantDialog";
 
 const MAX_BULK_INVITE = 10;
 
-export default function UnifiedUsersTable() {
+function normalizeEmail(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function KpiCard({ icon: Icon, label, value, filterKey, activeFilter, onFilter }) {
+  const isActive = activeFilter === filterKey;
+  return (
+    <Card
+      className={`cursor-pointer transition-all ${isActive ? "ring-2 ring-primary" : "hover:shadow-md"}`}
+      onClick={() => onFilter(isActive ? "all" : filterKey)}
+    >
+      <CardContent className="pt-4 pb-4">
+        <div className="flex items-center gap-3">
+          <div className={`p-2 rounded-lg ${isActive ? "bg-primary/10" : "bg-muted"}`}>
+            <Icon className={`w-4 h-4 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
+          </div>
+          <div>
+            <p className="text-2xl font-bold leading-none">{value}</p>
+            <p className="text-xs text-muted-foreground mt-1">{label}</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function CustomersAndRoomsTab() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [tenantFilter, setTenantFilter] = useState("all");
   const [invitingId, setInvitingId] = useState(null);
   const [selected, setSelected] = useState(new Set());
   const [bulkInviting, setBulkInviting] = useState(false);
   const [bulkResult, setBulkResult] = useState(null);
   const [editingTenant, setEditingTenant] = useState(null);
-  const [statusFilter, setStatusFilter] = useState("all");
 
   const { data: tenants = [], isLoading } = useQuery({
     queryKey: ["room-tenants"],
@@ -33,12 +59,13 @@ export default function UnifiedUsersTable() {
   });
 
   const registeredEmails = new Set(
-    users.map(u => (u.email || "").toLowerCase()).filter(Boolean)
+    users.map(u => normalizeEmail(u.email)).filter(Boolean)
   );
 
   const getTenantStatus = (t) => {
-    if (t.email && registeredEmails.has(t.email.toLowerCase())) return "registered";
-    if (t.invite_sent) return "invited";
+    const email = normalizeEmail(t.email);
+    if (email && registeredEmails.has(email)) return "registered";
+    if (t.invite_sent === true) return "invited";
     return "pending";
   };
 
@@ -47,6 +74,10 @@ export default function UnifiedUsersTable() {
     acc[s] = (acc[s] || 0) + 1;
     return acc;
   }, { registered: 0, invited: 0, pending: 0 });
+
+  const activeCustomersCount = tenants.filter(t =>
+    String(t.customer_status || "").trim().toLowerCase() === "active"
+  ).length;
 
   const roomMap = new Map(WORKIES_ROOMS.map(r => [String(r.room_number), r]));
 
@@ -111,15 +142,41 @@ export default function UnifiedUsersTable() {
     queryClient.invalidateQueries({ queryKey: ["room-tenants"] });
   };
 
+  const q = search.trim().toLowerCase();
+
   const filteredTenants = tenants.filter(t => {
-    const matchesSearch = !search ||
-      (t.customer_name || "").toLowerCase().includes(search.toLowerCase()) ||
-      (t.contact_name || "").toLowerCase().includes(search.toLowerCase()) ||
-      (t.email || "").toLowerCase().includes(search.toLowerCase()) ||
-      (t.company_id || "").toLowerCase().includes(search.toLowerCase()) ||
-      (t.room_code || "").toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === "all" || getTenantStatus(t) === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesSearch =
+      !q ||
+      String(t.customer_name || "").toLowerCase().includes(q) ||
+      String(t.contact_name || "").toLowerCase().includes(q) ||
+      String(t.email || "").toLowerCase().includes(q) ||
+      String(t.phone || "").toLowerCase().includes(q) ||
+      String(t.company_id || "").toLowerCase().includes(q) ||
+      String(t.room_code || "").toLowerCase().includes(q) ||
+      String(t.room_number || "").toLowerCase().includes(q);
+
+    const status = getTenantStatus(t);
+
+    const matchesFilter =
+      tenantFilter === "all" ||
+      tenantFilter === status ||
+      (
+        tenantFilter === "active_customers" &&
+        String(t.customer_status || "").trim().toLowerCase() === "active"
+      );
+
+    return matchesSearch && matchesFilter;
+  });
+
+  const sortedTenants = [...filteredTenants].sort((a, b) => {
+    const rnA = parseInt(a.room_number) || 9999;
+    const rnB = parseInt(b.room_number) || 9999;
+    if (rnA !== rnB) return rnA - rnB;
+    if (a.is_primary_contact && !b.is_primary_contact) return -1;
+    if (!a.is_primary_contact && b.is_primary_contact) return 1;
+    const nameA = (a.contact_name || a.customer_name || "").toLowerCase();
+    const nameB = (b.contact_name || b.customer_name || "").toLowerCase();
+    return nameA.localeCompare(nameB);
   });
 
   if (isLoading) {
@@ -130,27 +187,51 @@ export default function UnifiedUsersTable() {
     );
   }
 
+  const kpiCards = [
+    { icon: Users, label: "סה״כ לקוחות / אנשי קשר", value: tenants.length, filterKey: "all" },
+    { icon: UserCheck, label: "רשומים במערכת", value: statusCounts.registered, filterKey: "registered" },
+    { icon: Clock, label: "הוזמנו — ממתינים לרישום", value: statusCounts.invited, filterKey: "invited" },
+    { icon: UserPlus, label: "ממתינים להזמנה", value: statusCounts.pending, filterKey: "pending" },
+    { icon: Activity, label: "לקוחות פעילים", value: activeCustomersCount, filterKey: "active_customers" },
+  ];
+
   const filterOptions = [
     { key: "all", label: `הכל (${tenants.length})` },
-    { key: "registered", label: `רשום במערכת (${statusCounts.registered})`, icon: UserCheck },
-    { key: "invited", label: `הוזמן (${statusCounts.invited})`, icon: Clock },
-    { key: "pending", label: `ממתין להזמנה (${statusCounts.pending})`, icon: UserPlus },
+    { key: "registered", label: `רשומים במערכת (${statusCounts.registered})`, icon: UserCheck },
+    { key: "invited", label: `הוזמנו (${statusCounts.invited})`, icon: Clock },
+    { key: "pending", label: `ממתינים להזמנה (${statusCounts.pending})`, icon: UserPlus },
+    { key: "active_customers", label: `לקוחות פעילים (${activeCustomersCount})`, icon: Activity },
   ];
 
   return (
     <>
+      {/* KPI Dashboard */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3" dir="rtl">
+        {kpiCards.map(card => (
+          <KpiCard
+            key={card.filterKey}
+            icon={card.icon}
+            label={card.label}
+            value={card.value}
+            filterKey={card.filterKey}
+            activeFilter={tenantFilter}
+            onFilter={setTenantFilter}
+          />
+        ))}
+      </div>
+
       <Card dir="rtl">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <CardTitle className="text-base flex items-center gap-2">
+        <CardContent className="pt-4">
+          <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+            <h2 className="text-base font-semibold flex items-center gap-2">
               <Users className="w-4 h-4" />
-              רשימת לקוחות ({tenants.length})
-            </CardTitle>
+              רשימת לקוחות ({sortedTenants.length})
+            </h2>
             <div className="relative">
               <Search className="w-4 h-4 absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="חיפוש לפי שם, אימייל, ח.פ, קוד..."
+                placeholder="חיפוש לפי שם, אימייל, טלפון, ח.פ, קוד..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 className="pr-8 pl-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-1 focus:ring-ring w-64"
@@ -159,12 +240,12 @@ export default function UnifiedUsersTable() {
           </div>
 
           {/* Status filter tabs */}
-          <div className="flex gap-1 flex-wrap mt-2">
+          <div className="flex gap-1 flex-wrap mb-3">
             {filterOptions.map(opt => (
               <button
                 key={opt.key}
-                onClick={() => setStatusFilter(opt.key)}
-                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs border transition-colors ${statusFilter === opt.key ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}
+                onClick={() => setTenantFilter(opt.key)}
+                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs border transition-colors ${tenantFilter === opt.key ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}
               >
                 {opt.icon && <opt.icon className="w-3 h-3" />}
                 {opt.label}
@@ -174,7 +255,7 @@ export default function UnifiedUsersTable() {
 
           {/* Bulk invite bar */}
           {selected.size > 0 && (
-            <div className="flex items-center justify-between gap-2 bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 mt-2">
+            <div className="flex items-center justify-between gap-2 bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 mb-3">
               <div className="flex items-center gap-2 text-sm">
                 <span className="font-medium">{selected.size} נבחרו</span>
                 <span className="text-xs text-muted-foreground">(מקסימום {MAX_BULK_INVITE})</span>
@@ -193,7 +274,7 @@ export default function UnifiedUsersTable() {
 
           {/* Bulk result */}
           {bulkResult && (
-            <div className="mt-2 space-y-1.5 text-xs bg-muted/40 rounded-lg p-3">
+            <div className="mb-3 space-y-1.5 text-xs bg-muted/40 rounded-lg p-3">
               <div className="flex items-center justify-between">
                 <span className="font-medium">תוצאות שליחה קבוצתית</span>
                 <button onClick={() => setBulkResult(null)} className="text-muted-foreground hover:text-foreground">
@@ -215,8 +296,7 @@ export default function UnifiedUsersTable() {
               )}
             </div>
           )}
-        </CardHeader>
-        <CardContent>
+
           {tenants.length === 0 ? (
             <div className="py-12 text-center text-muted-foreground text-sm">
               אין לקוחות טעונים. ניתן לייבא קובץ דיירים פעילים מאקסל.
@@ -227,25 +307,28 @@ export default function UnifiedUsersTable() {
                 <thead>
                   <tr className="border-b bg-muted/40">
                     <th className="p-2 font-semibold w-8"></th>
-                    <th className="p-2 font-semibold">שם</th>
+                    <th className="p-2 font-semibold">שם לקוח / איש קשר</th>
                     <th className="p-2 font-semibold">מייל</th>
                     <th className="p-2 font-semibold">טלפון</th>
                     <th className="p-2 font-semibold">חדר</th>
-                    <th className="p-2 font-semibold">תפקיד</th>
-                    <th className="p-2 font-semibold">סטטוס</th>
-                    <th className="p-2 font-semibold">פעולה</th>
+                    <th className="p-2 font-semibold">קוד משרד</th>
+                    <th className="p-2 font-semibold">עמדות</th>
+                    <th className="p-2 font-semibold">סטטוס לקוח</th>
+                    <th className="p-2 font-semibold">סטטוס רישום</th>
+                    <th className="p-2 font-semibold">פעולות</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredTenants.map(t => {
+                  {sortedTenants.map(t => {
                     const isSelected = selected.has(t.id);
-                    const tenantStatus = getTenantStatus(t);
-                    const isRegistered = tenantStatus === "registered";
-                    const isInvited = tenantStatus === "invited";
+                    const regStatus = getTenantStatus(t);
+                    const isRegistered = regStatus === "registered";
+                    const isInvited = regStatus === "invited";
                     const canSelect = t.email && !isRegistered;
                     const room = roomMap.get(String(t.room_number || ""));
+                    const isActiveCustomer = String(t.customer_status || "").trim().toLowerCase() === "active";
                     return (
-                      <tr key={t.id} className={`border-b hover:bg-muted/30 ${isSelected ? "bg-primary/5" : ""} ${isRegistered ? "border-r-2 border-emerald-400" : tenantStatus === "pending" ? "border-r-2 border-orange-400" : ""}`}>
+                      <tr key={t.id} className={`border-b hover:bg-muted/30 ${isSelected ? "bg-primary/5" : ""}`}>
                         <td className="p-2">
                           {canSelect && (
                             <input
@@ -267,9 +350,18 @@ export default function UnifiedUsersTable() {
                         <td className="p-2 text-xs" dir="ltr">{t.phone || "—"}</td>
                         <td className="p-2 text-xs">
                           {room?.room_label || t.room_label || t.room_number || "—"}
-                          {room?.room_area && <span className="text-muted-foreground"> · {room.room_area}</span>}
                         </td>
-                        <td className="p-2 text-xs">{t.contact_role || "—"}</td>
+                        <td className="p-2 text-xs" dir="ltr">{t.room_code || "—"}</td>
+                        <td className="p-2 text-xs text-center">{t.desk_count != null ? t.desk_count : "—"}</td>
+                        <td className="p-2">
+                          {t.customer_status ? (
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${isActiveCustomer ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600"}`}>
+                              {t.customer_status}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </td>
                         <td className="p-2">
                           {isRegistered ? (
                             <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-emerald-100 text-emerald-700">
@@ -309,7 +401,7 @@ export default function UnifiedUsersTable() {
                             </button>
                             {isRegistered ? (
                               <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-medium px-2">
-                                <UserCheck className="w-3.5 h-3.5" />
+                                <CheckCircle className="w-3.5 h-3.5" />
                               </span>
                             ) : isInvited ? (
                               <span className="inline-flex items-center gap-1 text-xs text-amber-600 font-medium px-2">
@@ -336,9 +428,9 @@ export default function UnifiedUsersTable() {
                       </tr>
                     );
                   })}
-                  {filteredTenants.length === 0 && (
+                  {sortedTenants.length === 0 && (
                     <tr>
-                      <td colSpan={8} className="p-8 text-center text-muted-foreground">לא נמצאו תוצאות</td>
+                      <td colSpan={10} className="p-8 text-center text-muted-foreground">לא נמצאו תוצאות</td>
                     </tr>
                   )}
                 </tbody>
