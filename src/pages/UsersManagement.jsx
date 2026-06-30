@@ -6,9 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, Users, Building2, UserCheck, AlertTriangle, Archive, UserPlus, Upload, Mail } from "lucide-react";
 import ImportUsersDialog from "@/components/users/ImportUsersDialog";
-import ImportedUsersSection from "@/components/users/ImportedUsersSection";
 import ImportTenantsDialog from "@/components/users/ImportTenantsDialog";
-import TenantsSection from "@/components/users/TenantsSection";
+import UnifiedUsersTable from "@/components/users/UnifiedUsersTable";
 import RoomTenantsCell from "@/components/users/RoomTenantsCell";
 import AddTenantDialog from "@/components/users/AddTenantDialog";
 import { isManagerOrAdmin, canManageCustomers } from "@/lib/permissions";
@@ -318,11 +317,8 @@ export default function UsersManagement() {
         <KpiCard icon={UserPlus} label="משתמשים חדשים (שבוע)" value={newUsersLastWeek} filterKey="new_users" activeFilter={statusFilter} onFilter={setStatusFilter} />
       </div>
 
-      {/* Tenants — active customers loaded from Excel */}
-      <TenantsSection />
-
-      {/* Imported Users — pending registration */}
-      <ImportedUsersSection />
+      {/* Unified users/tenants table */}
+      <UnifiedUsersTable />
 
       {/* New Users View */}
       {isNewUsersView && (
@@ -497,111 +493,6 @@ export default function UsersManagement() {
           </div>
         </div>
       )}
-
-      {/* Users Table */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <CardTitle className="text-base">
-              רשימת משתמשים ({users.length + pendingImported.length})
-            </CardTitle>
-            <div className="flex gap-1 flex-wrap">
-              {[
-                { key: "all", label: `הכל (${users.length + pendingImported.length})` },
-                { key: "registered", label: `רשומים (${users.length})` },
-                { key: "pending", label: `ממתינים (${pendingImported.length})` },
-              ].map(opt => (
-                <button
-                  key={opt.key}
-                  onClick={() => setUserTableFilter(opt.key)}
-                  className={`px-3 py-1 rounded-full text-xs border transition-colors ${userTableFilter === opt.key ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-right">
-              <thead>
-                <tr className="border-b bg-muted/40">
-                  <th className="p-2 font-semibold">שם</th>
-                  <th className="p-2 font-semibold">מייל</th>
-                  <th className="p-2 font-semibold">טלפון</th>
-                  <th className="p-2 font-semibold">חדר משויך</th>
-                  <th className="p-2 font-semibold">תפקיד</th>
-                  <th className="p-2 font-semibold">סטטוס</th>
-                  <th className="p-2 font-semibold">פעולה</th>
-                </tr>
-              </thead>
-              <tbody>
-                {userTableFilter !== "pending" && users.map(user => {
-                  const matchedImported = importedUsers.find(iu => iu.email?.toLowerCase() === user.email?.toLowerCase());
-                  return (
-                    <tr key={user.id || user.email} className="border-b hover:bg-muted/30">
-                      <td className="p-2 font-medium">{user.full_name || "—"}</td>
-                      <td className="p-2 text-xs" dir="ltr">{user.email || "—"}</td>
-                      <td className="p-2 text-xs" dir="ltr">{user.phone || "—"}</td>
-                      <td className="p-2">
-                        {user.default_room_label || user.default_room_number
-                          ? <span className="text-xs">{user.default_room_label || user.default_room_number}</span>
-                          : <span className="text-muted-foreground text-xs">לא משויך</span>}
-                      </td>
-                      <td className="p-2">{roleLabel(user.role)}</td>
-                      <td className="p-2">
-                        {matchedImported
-                          ? <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-medium">נרשם</span>
-                          : <span className="text-xs">{user.disabled ? "לא פעיל" : "פעיל"}</span>}
-                      </td>
-                      <td className="p-2 text-muted-foreground text-xs">—</td>
-                    </tr>
-                  );
-                })}
-                {userTableFilter !== "registered" && pendingImported.map(iu => (
-                  <tr key={iu.id} className="border-b hover:bg-muted/30 bg-amber-50/30">
-                    <td className="p-2 font-medium">{iu.full_name || "—"}</td>
-                    <td className="p-2 text-xs" dir="ltr">{iu.email}</td>
-                    <td className="p-2 text-xs" dir="ltr">{iu.phone || "—"}</td>
-                    <td className="p-2">
-                      {iu.room_label || iu.room_number
-                        ? <span className="text-xs">{iu.room_label || iu.room_number}</span>
-                        : <span className="text-muted-foreground text-xs">לא משויך</span>}
-                    </td>
-                    <td className="p-2">{roleLabel(iu.role)}</td>
-                    <td className="p-2">
-                      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
-                        <UserPlus className="w-3 h-3" />
-                        ממתין לרישום
-                      </span>
-                    </td>
-                    <td className="p-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-xs gap-1.5"
-                        onClick={() => handleInvite(iu)}
-                        disabled={invitingId === iu.id}
-                      >
-                        {invitingId === iu.id
-                          ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          : <Mail className="w-3.5 h-3.5" />}
-                        שלח הזמנה
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-                {users.length === 0 && pendingImported.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="p-8 text-center text-muted-foreground">לא נמצאו משתמשים</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
 
       {showImportDialog && (
         <ImportUsersDialog
