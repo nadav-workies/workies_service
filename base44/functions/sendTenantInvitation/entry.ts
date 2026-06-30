@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Tenant has no email' }, { status: 400 });
     }
 
-    // Invite the user to the system
+    // Invite the user to the system via the platform's built-in invitation
     try {
       await base44.users.inviteUser(tenant.email, "user");
     } catch (err) {
