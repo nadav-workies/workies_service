@@ -123,15 +123,26 @@ export default function TenantsSection() {
     return na - nb;
   });
 
-  const filteredRooms = roomNumbersWithTenants.filter(rn => {
-    const matchesSearch = !search || tenantsByRoom[rn].some(t =>
-      (t.customer_name || "").toLowerCase().includes(search.toLowerCase()) ||
-      (t.email || "").toLowerCase().includes(search.toLowerCase()) ||
-      (t.company_id || "").toLowerCase().includes(search.toLowerCase()) ||
-      (t.room_code || "").toLowerCase().includes(search.toLowerCase())
-    );
-    const matchesStatus = statusFilter === "all" || tenantsByRoom[rn].some(t => getTenantStatus(t) === statusFilter);
-    return matchesSearch && matchesStatus;
+  const filteredTenantsByRoom = {};
+  roomNumbersWithTenants.forEach(rn => {
+    const matching = tenantsByRoom[rn].filter(t => {
+      const matchesSearch = !search ||
+        (t.customer_name || "").toLowerCase().includes(search.toLowerCase()) ||
+        (t.email || "").toLowerCase().includes(search.toLowerCase()) ||
+        (t.company_id || "").toLowerCase().includes(search.toLowerCase()) ||
+        (t.room_code || "").toLowerCase().includes(search.toLowerCase());
+      const matchesStatus = statusFilter === "all" || getTenantStatus(t) === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+    if (matching.length > 0) {
+      filteredTenantsByRoom[rn] = matching;
+    }
+  });
+
+  const filteredRooms = Object.keys(filteredTenantsByRoom).sort((a, b) => {
+    const na = parseInt(a) || 0;
+    const nb = parseInt(b) || 0;
+    return na - nb;
   });
 
   if (isLoading) {
@@ -235,7 +246,7 @@ export default function TenantsSection() {
             <div className="space-y-3">
               {filteredRooms.map(rn => {
                 const room = roomMap.get(rn);
-                const roomTenants = [...tenantsByRoom[rn]].sort((a, b) => {
+                const roomTenants = [...filteredTenantsByRoom[rn]].sort((a, b) => {
                   if (a.is_primary_contact && !b.is_primary_contact) return -1;
                   if (!a.is_primary_contact && b.is_primary_contact) return 1;
                   return 0;
