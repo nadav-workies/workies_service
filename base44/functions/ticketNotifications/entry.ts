@@ -250,11 +250,13 @@ Deno.serve(async (req) => {
   // ── feedback_request ──────────────────────────────────────────
   if (action === 'feedback_request') {
     const setting = await getSetting(base44, 'user_service_feedback_request');
+    // Prefer customer_email (from synced tenant data), fall back to created_by
+    const recipientEmail = ticket.customer_email || ticket.created_by || '';
     if (!setting?.enabled) {
       await logSkipped(base44, { key: 'user_service_feedback_request', ticket, reason: setting ? 'disabled' : 'NotificationSetting missing', recipientType: 'user' });
       results.feedback_request = false;
-    } else if (!ticket.created_by) {
-      await logSkipped(base44, { key: 'user_service_feedback_request', ticket, reason: 'no created_by email', recipientType: 'user' });
+    } else if (!recipientEmail) {
+      await logSkipped(base44, { key: 'user_service_feedback_request', ticket, reason: 'no recipient email (customer_email or created_by)', recipientType: 'user' });
       results.feedback_request = false;
     } else {
       const ticketWithFeedback = await ensureFeedbackFields(base44, ticket, req);
@@ -264,7 +266,7 @@ Deno.serve(async (req) => {
       } else {
         const subject = renderTemplate(setting.subject_template, ticketWithFeedback);
         const body = renderTemplate(setting.body_template, ticketWithFeedback);
-        const sent = await sendAndLog(base44, { key: 'user_service_feedback_request', toEmail: ticketWithFeedback.created_by, subject, bodyHtml: buildHtml(body), ticket: ticketWithFeedback, recipientType: 'user' });
+        const sent = await sendAndLog(base44, { key: 'user_service_feedback_request', toEmail: recipientEmail, subject, bodyHtml: buildHtml(body), ticket: ticketWithFeedback, recipientType: 'user' });
         if (sent) await base44.asServiceRole.entities.ServiceTicket.update(ticket.id, { feedback_request_sent: true, feedback_request_sent_at: new Date().toISOString() });
         results.feedback_request = sent;
       }

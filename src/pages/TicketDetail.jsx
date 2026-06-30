@@ -15,7 +15,7 @@ import { StatusBadge, PriorityBadge, SlaBadge } from "@/components/tickets/Ticke
 import { isManagerOrAdmin } from "@/lib/slaUtils";
 import { getTimeRemainingLabel, getDeadlineMs, getOpenedAtMs, isTicketSlaBreached as isTicketBreached } from "@/lib/slaAgent.js";
 import { format } from "date-fns";
-import { ArrowRight, User, Phone, MapPin, Clock, Shield, MessageSquare, Loader2, CheckCircle, AlertTriangle, Star, ExternalLink, Send } from "lucide-react";
+import { ArrowRight, User, Phone, MapPin, Clock, Shield, MessageSquare, Loader2, CheckCircle, AlertTriangle, Star, ExternalLink, Send, Building2, RefreshCw, Mail } from "lucide-react";
 import FeedbackModal from "@/components/tickets/FeedbackModal";
 import AttachmentUploader from "@/components/tickets/AttachmentUploader";
 import SlaExclusionDialog from "@/components/tickets/SlaExclusionDialog";
@@ -50,6 +50,15 @@ export default function TicketDetail() {
     queryFn: () => base44.entities.ServiceTicket.filter({ id }),
     select: d => d[0],
   });
+
+  // Fetch current tenant data for the ticket's room
+  const { data: roomTenants = [] } = useQuery({
+    queryKey: ['ticket-room-tenants', ticket?.room_number],
+    queryFn: () => base44.entities.RoomTenant.filter({ room_number: String(ticket.room_number), matched_room: true }, '-created_date', 10),
+    enabled: !!ticket?.room_number && isMgr,
+    staleTime: 60000,
+  });
+  const currentTenant = roomTenants.find(t => t.is_primary_contact) || roomTenants[0] || null;
 
   const isMgr = isManagerOrAdmin(user);
   const isOwner = user && ticket && (ticket.created_by_id === user.id || ticket.created_by === user.email);
@@ -179,7 +188,12 @@ export default function TicketDetail() {
 
   const handleSendFeedbackSurvey = async () => {
     setFeedbackSending(true);
-    await base44.functions.invoke('ticketNotifications', { action: 'feedback_request', ticket });
+    // Use the current tenant's email if available (from RoomTenant), otherwise fall back to ticket creator
+    const recipientEmail = currentTenant?.email || ticket.created_by || "";
+    await base44.functions.invoke('ticketNotifications', {
+      action: 'feedback_request',
+      ticket: { ...ticket, customer_email: recipientEmail, customer_name: currentTenant?.customer_name || ticket.customer_name },
+    });
     queryClient.invalidateQueries({ queryKey: ['ticket', id] });
     setFeedbackSending(false);
     setFeedbackSent(true);
@@ -263,6 +277,57 @@ export default function TicketDetail() {
               )}
             </CardContent>
           </Card>
+
+          {/* Current tenant info (from import) */}
+          {isMgr && currentTenant && (
+            <Card className="border-blue-200 bg-blue-50/30">
+              <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-1.5"><Building2 className="w-3.5 h-3.5" />דייר נוכחי בחדר</CardTitle></CardHeader>
+              <CardContent className="space-y-1.5">
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <p className="text-[10px] text-muted-foreground">שם לקוח</p>
+                    <p className="font-medium">{currentTenant.customer_name}</p>
+                  </div>
+                  {currentTenant.company_id && (
+                    <div>
+                      <p className="text-[10px] text-muted-foreground">ח.פ</p>
+                      <p className="font-medium" dir="ltr">{currentTenant.company_id}</p>
+                    </div>
+                  )}
+                  {currentTenant.phone && (
+                    <div>
+                      <p className="text-[10px] text-muted-foreground">טלפון</p>
+                      <p className="font-medium" dir="ltr">{currentTenant.phone}</p>
+                    </div>
+                  )}
+                  {currentTenant.email && (
+                    <div>
+                      <p className="text-[10px] text-muted-foreground">אימייל</p>
+                      <p className="font-medium text-xs truncate" dir="ltr">{currentTenant.email}</p>
+                    </div>
+                  )}
+                </div>
+                {(currentTenant.customer_name !== ticket.customer_name || currentTenant.phone !== ticket.phone) && (
+                  <div className="pt-1.5 border-t">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs h-7 gap-1 text-blue-600"
+                      onClick={() => {
+                        updateMutation.mutate({
+                          updates: { customer_name: currentTenant.customer_name, phone: currentTenant.phone },
+                          historyEntry: addHistory("עדכון פרטי לקוח ממאגר הדיירים"),
+                        });
+                      }}
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      סנכרן פרטי לקוח מהמאגר
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* SLA */}
           <Card className={isBreach ? "border-red-300 bg-red-50/50" : ""}>
@@ -413,24 +478,24 @@ export default function TicketDetail() {
                     <span className="text-lg font-bold text-primary">{ticket.feedback_rating}/10</span>
                     <span className="text-xs text-muted-foreground">{ticket.feedback_comment || 'ללא הערה'}</span>
                   </div>
-                ) : (isOwner || isMgr) && !ticket.feedback_rating ? (
+                ) : isOwner && !ticket.feedback_rating ? (
                   <Button variant="outline" size="sm" className="w-full gap-2" onClick={() => setFeedbackOpen(true)}>
                     <Star className="w-3.5 h-3.5" />דרג את השירות
                   </Button>
                 ) : null}
 
-                {/* Send feedback survey — manager only */}
+                {/* Send rating request by email — manager only */}
                 {isMgr && (
                   <div className="pt-1 border-t">
                     {ticket.feedback_request_sent || feedbackSent ? (
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
                         <CheckCircle className="w-3.5 h-3.5 text-green-500" />
-                        סקר נשלח ללקוח{ticket.feedback_request_sent_at ? ` · ${format(new Date(ticket.feedback_request_sent_at), "dd/MM HH:mm")}` : ""}
+                        בקשת דירוג נשלחה ללקוח{ticket.feedback_request_sent_at ? ` · ${format(new Date(ticket.feedback_request_sent_at), "dd/MM HH:mm")}` : ""}
                       </p>
                     ) : (
-                      <Button variant="outline" size="sm" className="w-full gap-2 text-xs" onClick={handleSendFeedbackSurvey} disabled={feedbackSending}>
-                        {feedbackSending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                        שלח סקר ללקוח
+                      <Button size="sm" className="w-full gap-2 text-xs" onClick={handleSendFeedbackSurvey} disabled={feedbackSending}>
+                        {feedbackSending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Mail className="w-3.5 h-3.5" />}
+                        שלח בקשה לדירוג במייל
                       </Button>
                     )}
                   </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -135,6 +135,26 @@ export default function NewTicket() {
   const [offHoursMsg, setOffHoursMsg] = useState(null);
   const isMgr = isManagerOrAdmin(user);
   const update = (key, value) => setForm(f => ({ ...f, [key]: value }));
+
+  // Fetch tenant data for the selected room (manager mode)
+  const { data: roomTenants = [] } = useQuery({
+    queryKey: ['room-tenants-newticket', form.room_number],
+    queryFn: () => base44.entities.RoomTenant.filter({ room_number: String(form.room_number), matched_room: true }, '-created_date', 10),
+    enabled: isMgr && !!form.room_number,
+    staleTime: 60000,
+  });
+
+  // Auto-fill customer details from tenant data when room changes (manager only)
+  useEffect(() => {
+    if (!isMgr || !form.room_number || roomTenants.length === 0) return;
+    const tenant = roomTenants.find(t => t.is_primary_contact) || roomTenants[0];
+    if (!tenant) return;
+    setForm(f => ({
+      ...f,
+      customer_name: f.customer_name || tenant.customer_name || "",
+      phone: f.phone || tenant.phone || "",
+    }));
+  }, [form.room_number, roomTenants, isMgr]);
 
   const handleQuickSelect = (qt) => {
     setSelectedQuickId(qt.id);
@@ -277,16 +297,16 @@ export default function NewTicket() {
 
             {/* Manager fields */}
             {isMgr && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label>שם הלקוח</Label>
-                  <Input value={form.customer_name} onChange={e => update("customer_name", e.target.value)} placeholder="שם מלא" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>טלפון</Label>
-                  <Input value={form.phone} onChange={e => update("phone", e.target.value)} placeholder="050-0000000" type="tel" dir="ltr" />
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>שם הלקוח {roomTenants.length > 0 && <span className="text-[10px] text-muted-foreground">(מולא אוטומטית מהדייר)</span>}</Label>
+                <Input value={form.customer_name} onChange={e => update("customer_name", e.target.value)} placeholder="שם מלא" />
               </div>
+              <div className="space-y-1.5">
+                <Label>טלפון {roomTenants.length > 0 && <span className="text-[10px] text-muted-foreground">(מולא אוטומטית מהדייר)</span>}</Label>
+                <Input value={form.phone} onChange={e => update("phone", e.target.value)} placeholder="050-0000000" type="tel" dir="ltr" />
+              </div>
+            </div>
             )}
 
             <div className="space-y-1.5">

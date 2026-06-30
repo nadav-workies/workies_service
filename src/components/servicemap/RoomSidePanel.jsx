@@ -1,7 +1,9 @@
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, Plus, AlertTriangle, Clock } from 'lucide-react';
+import { X, Plus, AlertTriangle, Clock, Building2, User, Phone, Mail } from 'lucide-react';
 import { STATUS_COLORS, PRIORITY_COLORS, getSlaStatus, getTimeRemainingLabel } from '@/lib/slaUtils';
 import { ROOM_STATUS_COLORS } from '@/lib/roomServiceStatus';
 
@@ -9,6 +11,14 @@ export default function RoomSidePanel({ room, roomStatus, onClose }) {
   const navigate = useNavigate();
   const { openCount, urgentCount, breachedCount, tickets } = roomStatus;
   const colors = ROOM_STATUS_COLORS[roomStatus.status];
+
+  const { data: tenants = [] } = useQuery({
+    queryKey: ['room-tenants-panel', room.room_number],
+    queryFn: () => base44.entities.RoomTenant.filter({ room_number: String(room.room_number), matched_room: true }, '-created_date', 20),
+    staleTime: 60000,
+  });
+
+  const primaryTenant = tenants.find(t => t.is_primary_contact) || tenants[0];
 
   const handleOpenTicket = () => {
     const params = new URLSearchParams({
@@ -40,6 +50,38 @@ export default function RoomSidePanel({ room, roomStatus, onClose }) {
         <StatBox label="דחופות" value={urgentCount} color="orange" />
         <StatBox label="חריגות" value={breachedCount} color="red" />
       </div>
+
+      {/* Tenant info */}
+      {primaryTenant && (
+        <div className="p-4 border-b space-y-1.5 bg-muted/30">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+            <Building2 className="w-3.5 h-3.5" />
+            דייר בחדר
+          </div>
+          <div className="flex items-center gap-1.5 text-sm font-medium">
+            <User className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+            {primaryTenant.customer_name}
+          </div>
+          {primaryTenant.company_id && (
+            <p className="text-xs text-muted-foreground pr-5">ח.פ: {primaryTenant.company_id}</p>
+          )}
+          {primaryTenant.phone && (
+            <a href={`tel:${primaryTenant.phone}`} className="flex items-center gap-1.5 text-xs text-primary hover:underline" dir="ltr">
+              <Phone className="w-3.5 h-3.5 shrink-0" />
+              {primaryTenant.phone}
+            </a>
+          )}
+          {primaryTenant.email && (
+            <a href={`mailto:${primaryTenant.email}`} className="flex items-center gap-1.5 text-xs text-primary hover:underline truncate" dir="ltr">
+              <Mail className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">{primaryTenant.email}</span>
+            </a>
+          )}
+          {primaryTenant.desk_count && (
+            <p className="text-xs text-muted-foreground pr-5">{primaryTenant.desk_count} עמדות</p>
+          )}
+        </div>
+      )}
 
       {/* Tickets list */}
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
