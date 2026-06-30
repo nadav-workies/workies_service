@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Mail, Phone, Star, Building2, CheckCircle, Search, Pencil, Send, X } from "lucide-react";
+import { Loader2, Mail, Phone, Star, Building2, CheckCircle, Search, Pencil, Send, X, UserCheck, Clock, UserPlus } from "lucide-react";
 import { WORKIES_ROOMS } from "@/lib/workiesRooms";
 import EditTenantDialog from "@/components/users/EditTenantDialog";
 
@@ -17,11 +17,35 @@ export default function TenantsSection() {
   const [bulkInviting, setBulkInviting] = useState(false);
   const [bulkResult, setBulkResult] = useState(null);
   const [editingTenant, setEditingTenant] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const { data: tenants = [], isLoading } = useQuery({
     queryKey: ["room-tenants"],
     queryFn: () => base44.entities.RoomTenant.list("-created_date", 2000),
   });
+
+  const { data: users = [] } = useQuery({
+    queryKey: ["users-for-tenants"],
+    queryFn: () => base44.entities.User.list("-created_date", 500),
+  });
+
+  // Build a set of registered user emails (lowercase) for cross-referencing
+  const registeredEmails = new Set(
+    users.map(u => (u.email || "").toLowerCase()).filter(Boolean)
+  );
+
+  // Classify each tenant: "registered" | "invited" | "pending"
+  const getTenantStatus = (t) => {
+    if (t.email && registeredEmails.has(t.email.toLowerCase())) return "registered";
+    if (t.invite_sent) return "invited";
+    return "pending";
+  };
+
+  const statusCounts = tenants.reduce((acc, t) => {
+    const s = getTenantStatus(t);
+    acc[s] = (acc[s] || 0) + 1;
+    return acc;
+  }, { registered: 0, invited: 0, pending: 0 });
 
   const handleInvite = async (tenant) => {
     setInvitingId(tenant.id);
@@ -100,14 +124,14 @@ export default function TenantsSection() {
   });
 
   const filteredRooms = roomNumbersWithTenants.filter(rn => {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return tenantsByRoom[rn].some(t =>
-      (t.customer_name || "").toLowerCase().includes(q) ||
-      (t.email || "").toLowerCase().includes(q) ||
-      (t.company_id || "").toLowerCase().includes(q) ||
-      (t.room_code || "").toLowerCase().includes(q)
+    const matchesSearch = !search || tenantsByRoom[rn].some(t =>
+      (t.customer_name || "").toLowerCase().includes(search.toLowerCase()) ||
+      (t.email || "").toLowerCase().includes(search.toLowerCase()) ||
+      (t.company_id || "").toLowerCase().includes(search.toLowerCase()) ||
+      (t.room_code || "").toLowerCase().includes(search.toLowerCase())
     );
+    const matchesStatus = statusFilter === "all" || tenantsByRoom[rn].some(t => getTenantStatus(t) === statusFilter);
+    return matchesSearch && matchesStatus;
   });
 
   if (isLoading) {
@@ -137,6 +161,25 @@ export default function TenantsSection() {
                 className="pr-8 pl-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-1 focus:ring-ring w-64"
               />
             </div>
+          </div>
+
+          {/* Status filter tabs */}
+          <div className="flex gap-1 flex-wrap mt-2">
+            {[
+              { key: "all", label: `הכל (${tenants.length})` },
+              { key: "registered", label: `רשום במערכת (${statusCounts.registered})`, icon: UserCheck, color: "text-emerald-600" },
+              { key: "invited", label: `הוזמן (${statusCounts.invited})`, icon: Clock, color: "text-amber-600" },
+              { key: "pending", label: `ממתין להזמנה (${statusCounts.pending})`, icon: UserPlus, color: "text-orange-600" },
+            ].map(opt => (
+              <button
+                key={opt.key}
+                onClick={() => setStatusFilter(opt.key)}
+                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs border transition-colors ${statusFilter === opt.key ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}
+              >
+                {opt.icon && <opt.icon className="w-3 h-3" />}
+                {opt.label}
+              </button>
+            ))}
           </div>
 
           {/* Bulk invite bar */}
@@ -207,9 +250,13 @@ export default function TenantsSection() {
                     <div className="divide-y">
                       {roomTenants.map(t => {
                         const isSelected = selected.has(t.id);
-                        const canSelect = t.email && !t.invite_sent;
+                        const tenantStatus = getTenantStatus(t);
+                        const isRegistered = tenantStatus === "registered";
+                        const isInvited = tenantStatus === "invited";
+                        const isPending = tenantStatus === "pending";
+                        const canSelect = t.email && !isRegistered;
                         return (
-                          <div key={t.id} className={`flex items-center justify-between gap-3 px-3 py-2 hover:bg-muted/20 flex-wrap ${isSelected ? "bg-primary/5" : ""}`}>
+                          <div key={t.id} className={`flex items-center justify-between gap-3 px-3 py-2 hover:bg-muted/20 flex-wrap ${isSelected ? "bg-primary/5" : ""} ${isRegistered ? "border-r-2 border-emerald-400" : isPending ? "border-r-2 border-orange-400" : ""}`}>
                             <div className="flex items-center gap-2 flex-1 min-w-0">
                               {canSelect && (
                                 <input
@@ -226,8 +273,25 @@ export default function TenantsSection() {
                                   {t.is_primary_contact && <span className="text-[10px] text-amber-600 font-medium">מרכזי</span>}
                                   {t.contact_role && <span className="text-xs text-muted-foreground">· {t.contact_role}</span>}
                                   {t.company_id && <span className="text-xs text-muted-foreground" dir="ltr">({t.company_id})</span>}
+                                  {/* Registration status badge */}
+                                  {isRegistered ? (
+                                    <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-emerald-100 text-emerald-700">
+                                      <UserCheck className="w-3 h-3" />
+                                      רשום במערכת
+                                    </span>
+                                  ) : isInvited ? (
+                                    <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-amber-100 text-amber-700">
+                                      <Clock className="w-3 h-3" />
+                                      הוזמן — ממתין לרישום
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-orange-100 text-orange-700">
+                                      <UserPlus className="w-3 h-3" />
+                                      ממתין להזמנה
+                                    </span>
+                                  )}
                                   {t.customer_status && (
-                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${t.customer_status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600"}`}>
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${t.customer_status === "active" ? "bg-emerald-50 text-emerald-600" : "bg-gray-100 text-gray-600"}`}>
                                       {t.customer_status}
                                     </span>
                                   )}
@@ -238,9 +302,9 @@ export default function TenantsSection() {
                                   {t.desk_count != null && <span>עמדות: {t.desk_count}</span>}
                                   {t.room_code && <span className="text-muted-foreground/70" dir="ltr">קוד: {t.room_code}</span>}
                                 </div>
-                                {t.invite_sent && (
-                                  <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-medium">
-                                    <CheckCircle className="w-3 h-3" />
+                                {t.invite_sent && !isRegistered && (
+                                  <div className="flex items-center gap-1 text-[10px] text-amber-600 font-medium">
+                                    <Clock className="w-3 h-3" />
                                     הוזמן{t.invite_sent_at ? ` · ${new Date(t.invite_sent_at).toLocaleDateString("he-IL")}` : ""}
                                     {t.invite_sent_by ? ` · ע״י ${t.invite_sent_by}` : ""}
                                   </div>
@@ -265,16 +329,21 @@ export default function TenantsSection() {
                               >
                                 <Pencil className="w-3.5 h-3.5" />
                               </button>
-                              {t.invite_sent ? (
+                              {isRegistered ? (
                                 <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-medium px-2">
-                                  <CheckCircle className="w-3.5 h-3.5" />
+                                  <UserCheck className="w-3.5 h-3.5" />
+                                  רשום
+                                </span>
+                              ) : isInvited ? (
+                                <span className="inline-flex items-center gap-1 text-xs text-amber-600 font-medium px-2">
+                                  <Clock className="w-3.5 h-3.5" />
                                   הוזמן
                                 </span>
                               ) : t.email ? (
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="h-7 text-xs gap-1.5"
+                                  className="h-7 text-xs gap-1.5 border-orange-300 text-orange-700 hover:bg-orange-50"
                                   onClick={() => handleInvite(t)}
                                   disabled={invitingId === t.id}
                                 >
