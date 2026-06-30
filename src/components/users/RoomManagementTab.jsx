@@ -170,8 +170,8 @@ export default function RoomManagementTab({ currentUser }) {
   // KPI counts
   const totalRooms = WORKIES_ROOMS.length;
   const activeRoomsCount = roomRows.filter(r => r.room_status === "active").length;
-  const roomsWithUsersCount = roomRows.filter(r => r.tenants_count > 0 || r.users_count > 0).length;
-  const inactiveFourMonthsCount = roomRows.filter(r => r.room_status === "inactive_4_months").length;
+  const registeredRoomsCount = roomRows.filter(r => r.users_count > 0).length;
+  const notRegisteredRoomsCount = roomRows.filter(r => r.users_count === 0 && r.tenants_count > 0).length;
   const emptyRoomsCount = roomRows.filter(r => r.room_status === "empty").length;
 
   const q = roomSearch.trim().toLowerCase();
@@ -186,8 +186,8 @@ export default function RoomManagementTab({ currentUser }) {
     const matchesFilter =
       roomFilter === "all" ||
       (roomFilter === "active" && room.room_status === "active") ||
-      (roomFilter === "with_users" && (room.tenants_count > 0 || room.users_count > 0)) ||
-      (roomFilter === "inactive_4_months" && room.room_status === "inactive_4_months") ||
+      (roomFilter === "registered" && room.users_count > 0) ||
+      (roomFilter === "not_registered" && room.users_count === 0 && room.tenants_count > 0) ||
       (roomFilter === "empty" && room.room_status === "empty");
 
     return matchesSearch && matchesFilter;
@@ -241,17 +241,17 @@ export default function RoomManagementTab({ currentUser }) {
 
   const kpiCards = [
     { icon: Building2, label: "חדרים מזוהים", value: totalRooms, filterKey: "all" },
+    { icon: UserCheck, label: "חדרים רשומים", value: registeredRoomsCount, filterKey: "registered" },
+    { icon: AlertTriangle, label: "חדרים לא רשומים", value: notRegisteredRoomsCount, filterKey: "not_registered" },
     { icon: Building2, label: "חדרים פעילים", value: activeRoomsCount, filterKey: "active" },
-    { icon: UserCheck, label: "חדרים עם משתמשים", value: roomsWithUsersCount, filterKey: "with_users" },
-    { icon: AlertTriangle, label: "ללא פעילות 4 חודשים", value: inactiveFourMonthsCount, filterKey: "inactive_4_months" },
     { icon: Archive, label: "חדרים ריקים", value: emptyRoomsCount, filterKey: "empty" },
   ];
 
   const filterOptions = [
     { key: "all", label: "הכל" },
+    { key: "registered", label: "רשומים" },
+    { key: "not_registered", label: "לא רשומים" },
     { key: "active", label: "פעילים" },
-    { key: "with_users", label: "עם משתמשים" },
-    { key: "inactive_4_months", label: "ללא פעילות 4 חודשים" },
     { key: "empty", label: "חדרים ריקים" },
   ];
 
@@ -312,6 +312,7 @@ export default function RoomManagementTab({ currentUser }) {
                   <th className="p-2 font-semibold">קוד משרד</th>
                   <th className="p-2 font-semibold">אזור</th>
                   <th className="p-2 font-semibold">סטטוס חדר</th>
+                  <th className="p-2 font-semibold text-center">סטטוס רישום</th>
                   <th className="p-2 font-semibold text-center">לקוחות / דיירים</th>
                   <th className="p-2 font-semibold text-center">משתמשים רשומים</th>
                   <th className="p-2 font-semibold text-center">קריאות 4 חודשים</th>
@@ -333,6 +334,20 @@ export default function RoomManagementTab({ currentUser }) {
                           <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ROOM_STATUS_COLORS[room.room_status]}`}>
                             {ROOM_STATUS_LABELS[room.room_status]}
                           </span>
+                        </td>
+                        <td className="p-2 text-center">
+                          {room.users_count > 0 ? (
+                            <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-emerald-100 text-emerald-700">
+                              <UserCheck className="w-3 h-3" />
+                              רשום
+                            </span>
+                          ) : room.tenants_count > 0 ? (
+                            <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-orange-100 text-orange-700">
+                              לא רשום
+                            </span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
                         </td>
                         <td className="p-2 text-center">{room.tenants_count || "—"}</td>
                         <td className="p-2 text-center">{room.users_count || "—"}</td>
@@ -388,7 +403,7 @@ export default function RoomManagementTab({ currentUser }) {
                       </tr>
                       {isExpanded && expandType === "tenants" && (
                         <tr className="border-b bg-muted/20">
-                          <td colSpan={9} className="p-3">
+                          <td colSpan={10} className="p-3">
                             <div className="space-y-1">
                               <p className="text-xs font-semibold mb-2">דיירים בחדר {room.room_label} ({room.room_tenants.length})</p>
                               {room.room_tenants.map(t => (
@@ -415,7 +430,7 @@ export default function RoomManagementTab({ currentUser }) {
                       )}
                       {isExpanded && expandType === "tickets" && (
                         <tr className="border-b bg-muted/20">
-                          <td colSpan={9} className="p-3">
+                          <td colSpan={10} className="p-3">
                             <div className="space-y-1">
                               <p className="text-xs font-semibold mb-2">קריאות החדר {room.room_label} ({room.all_tickets.length})</p>
                               {room.all_tickets.map(t => (
@@ -445,7 +460,7 @@ export default function RoomManagementTab({ currentUser }) {
                 })}
                 {filteredRooms.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="p-8 text-center text-muted-foreground">לא נמצאו חדרים</td>
+                    <td colSpan={10} className="p-8 text-center text-muted-foreground">לא נמצאו חדרים</td>
                   </tr>
                 )}
               </tbody>

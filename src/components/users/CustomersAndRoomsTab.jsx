@@ -62,9 +62,19 @@ export default function CustomersAndRoomsTab() {
     users.map(u => normalizeEmail(u.email)).filter(Boolean)
   );
 
+  // Also match by room number — users who registered with a different email
+  // than the one in the tenant import still count as "registered" if their
+  // default_room_number matches the tenant's room_number.
+  const registeredRoomNumbers = new Set(
+    users.map(u => String(u.default_room_number || u.room_number || "").trim())
+      .filter(Boolean)
+  );
+
   const getTenantStatus = (t) => {
     const email = normalizeEmail(t.email);
     if (email && registeredEmails.has(email)) return "registered";
+    const rn = String(t.room_number || "").trim();
+    if (rn && registeredRoomNumbers.has(rn)) return "registered";
     if (t.invite_sent === true) return "invited";
     return "pending";
   };
