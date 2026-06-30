@@ -112,50 +112,40 @@ function normalizeDate(val: any): string {
   return s;
 }
 
-// Normalize a column header for fuzzy matching: trim, lowercase, collapse spaces
+// Clean a header string: strip BOM, RTL/LTR marks, NBSP, collapse whitespace
+function cleanHeader(value: any): string {
+  return String(value ?? "")
+    .replace(/^\uFEFF/, "")
+    .replace(/[\u200E\u200F\u202A-\u202E]/g, "")
+    .replace(/\u00A0/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
 function normalizeKey(key: any): string {
-  return String(key || "").trim().toLowerCase().replace(/\s+/g, " ");
+  return cleanHeader(key).toLowerCase();
 }
 
 // Read a value from a row by trying multiple possible column names (aliases).
-// Matching is normalized (trim + lowercase + collapse spaces) so trailing spaces
-// or case differences don't break the lookup.
+// Exact normalized match only (no fuzzy contains) — rows are built manually
+// from cleaned headers so keys are deterministic.
 function getValue(row: any, aliases: string[]): any {
-  // Build a list of normalized keys -> values (first occurrence wins)
-  const normEntries: { normKey: string; value: any }[] = [];
-  const seen = new Set<string>();
-  for (const key of Object.keys(row)) {
-    const nk = normalizeKey(key);
-    if (nk && !seen.has(nk)) {
-      seen.add(nk);
-      normEntries.push({ normKey: nk, value: row[key] });
-    }
-  }
+  const entries = Object.keys(row).map(key => ({
+    key,
+    normKey: normalizeKey(key),
+    value: row[key]
+  }));
 
-  // First pass: exact normalized match
   for (const alias of aliases) {
-    const na = normalizeKey(alias);
-    for (const entry of normEntries) {
-      if (entry.normKey === na) {
-        const val = entry.value;
-        if (val !== undefined && val !== null && String(val).trim() !== "") {
-          return val;
-        }
-      }
-    }
-  }
-
-  // Second pass: contains match (for Hebrew headers with extra words)
-  for (const alias of aliases) {
-    const na = normalizeKey(alias);
-    if (na.length < 4) continue; // skip short aliases to avoid false matches
-    for (const entry of normEntries) {
-      if (entry.normKey.includes(na) || na.includes(entry.normKey)) {
-        const val = entry.value;
-        if (val !== undefined && val !== null && String(val).trim() !== "") {
-          return val;
-        }
-      }
+    const normAlias = normalizeKey(alias);
+    const exact = entries.find(e => e.normKey === normAlias);
+    if (
+      exact &&
+      exact.value !== undefined &&
+      exact.value !== null &&
+      String(exact.value).trim() !== ""
+    ) {
+      return exact.value;
     }
   }
 
@@ -196,16 +186,40 @@ Deno.serve(async (req) => {
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
 
-    // Get headers (first row)
-    const headerRows: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', blankrows: false });
-    const detectedHeaders: string[] = headerRows.length > 0
-      ? headerRows[0].map((h: any) => String(h ?? '').trim())
-      : [];
+    // Read the entire sheet as a matrix (array of arrays).
+    // We build row objects manually by index so that Hebrew header keys
+    // are never mangled by sheet_to_json's key-derivation logic.
+    const matrix: any[][] = XLSX.utils.sheet_to_json(sheet, {
+      header: 1,
+      defval: "",
+      raw: false,
+      blankrows: false
+    });
 
-    // Get rows as objects keyed by column header name
-    const rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false, blankrows: false });
+    if (!matrix || matrix.length < 2) {
+      return Response.json(
+        { error: "No data rows found in file", detected_headers: [] },
+        { status: 400 }
+      );
+    }
+
+    const detectedHeaders: string[] = matrix[0].map((h: any) => cleanHeader(h));
+
+    const rows: any[] = matrix
+      .slice(1)
+      .filter((row: any[]) => row.some(cell => String(cell ?? "").trim() !== ""))
+      .map((row: any[]) => {
+        const obj: Record<string, any> = {};
+        detectedHeaders.forEach((header, index) => {
+          if (!header) return;
+          obj[header] = row[index] ?? "";
+        });
+        return obj;
+      });
 
     console.log("Detected tenant import headers:", JSON.stringify(detectedHeaders));
+    console.log("First parsed row keys:", JSON.stringify(Object.keys(rows[0] || {})));
+    console.log("First parsed row raw:", JSON.stringify(rows[0] || {}));
 
     if (rows.length === 0) {
       return Response.json({ error: 'No rows found in file', detected_headers: detectedHeaders }, { status: 400 });
@@ -217,21 +231,34 @@ Deno.serve(async (req) => {
 
     for (const row of rows) {
       // Read columns by alias — supports both Hebrew and English header names
-      const customerName = toStr(getValue(row, ["שם הלקוח", "שם לקוח", "שם החברה", "שם חברה", "שם העסק", "שם עסק", "לקוח", "חברה", "Name", "Customer Name", "customer_name", "company_name", "business_name", "client_name"]));
-      const companyId = toStr(getValue(row, ["חפ/עמ", "ח.פ", "חפ", "ח.פ.", "ח.פ / עמ", "ח.פ/עמ", "מספר ח.פ.", "מספר ח.פ", "עוסק מורשה", "מזהה", "ת.ז", "תז", "company", "company_id", "id_number", "מספר עוסק", "Company", "Company ID"]));
-      const email = toStr(getValue(row, ["email", "Email", "E-mail", "e-mail", "אימייל", "מייל", "דואר אלקטרוני"])).toLowerCase();
-      const phone = normalizePhone(getValue(row, ["phone-number", "phone number", "Phone", "Phone Number", "טלפון", "נייד", "ניידן", "סלולרי", "phone", "mobile", "tel", "טל"]));
-      const roomSourceLabel = toStr(getValue(row, ["שם משרד פיקספייס", "שם משרד", "שם המשרד", "שם חדר", "שם החדר", "Offices", "Office", "office", "office_name", "room_name", "משרד", "חדר"]));
-      const roomCodeRaw = normalizeRoomCode(getValue(row, ["קוד משרד", "קוד חדר", "מספר משרד", "מספר חדר", "קוד", "room_code", "office_code", "room_number", "office_number", "Office Code", "Room Code", "קוד משרד פיקספייס"]));
-      const deskCount = toNum(getValue(row, ["עמדות מושכרות", "עמדות", "מספר עמדות", "Number of desks", "desk_count", "desks", "Desks"]));
-      const securityAmount = toNum(getValue(row, ["Security", "פיקדון", "ביטחונות", "בטחונות", "security_amount", "deposit"]));
-      const paymentMethod = toStr(getValue(row, ["שיטת תשלום", "אמצעי תשלום", "תשלום", "payment_method", "Payment Method", "payment"]));
-      const address = toStr(getValue(row, ["address", "כתובת", "Address", "כתובת משרד"]));
-      const leaseStart = normalizeDate(getValue(row, ["תאריך הצטרפות וורקיז", "תאריך הצטרפות", "Date Joined", "lease_start_date", "start_date", "תאריך תחילת הסכם"]));
-      const industry = toStr(getValue(row, ["תחום", "תחום עיסוק", "Industry", "industry", "sector", "ענף"]));
-      const customerStatus = toStr(getValue(row, ["סטאטוס לקוח", "סטטוס לקוח", "סטאטוס", "סטטוס", "Status", "status", "customer_status", "סטטוס התאמה"])).toLowerCase();
-      const autoChargeDay = toNum(getValue(row, ["Auto Charge Day", "יום חיוב אוטומטי", "auto_charge_day", "יום חיוב"]));
+      const customerName = toStr(getValue(row, ["שם הלקוח", "שם לקוח", "שם החברה", "שם חברה", "Name", "Customer Name", "customer_name"]));
+      const companyId = toStr(getValue(row, ["חפ/עמ", "ח.פ", "חפ", "ח.פ.", "ח.פ / עמ", "company", "company_id"]));
+      const email = toStr(getValue(row, ["email", "Email", "אימייל", "מייל"])).toLowerCase();
+      const phone = normalizePhone(getValue(row, ["phone-number", "phone number", "Phone", "טלפון", "נייד", "phone"]));
+      const roomSourceLabel = toStr(getValue(row, ["שם משרד פיקספייס", "שם משרד", "Offices", "office"]));
+      const roomCodeRaw = normalizeRoomCode(getValue(row, ["קוד משרד", "קוד", "room_code", "office_code"]));
+      const deskCount = toNum(getValue(row, ["כמות עמדות מושכרת ללקוח", "עמדות מושכרות", "עמדות", "Number of desks", "desk_count"]));
+      const securityAmount = toNum(getValue(row, ["Security", "פיקדון", "ביטחונות", "security_amount", "deposit"]));
+      const paymentMethod = toStr(getValue(row, ["שיטת תשלום", "payment_method"]));
+      const address = toStr(getValue(row, ["address", "כתובת"]));
+      const leaseStart = normalizeDate(getValue(row, ["תאריך הצטרפות וורקיז", "Date Joined", "lease_start_date"]));
+      const industry = toStr(getValue(row, ["תחום", "Industry", "industry"]));
+      const customerStatus = toStr(getValue(row, ["סטאטוס לקוח", "סטטוס לקוח", "Status", "customer_status"])).toLowerCase();
+      const autoChargeDay = toNum(getValue(row, ["Auto Charge Day", "יום חיוב אוטומטי", "auto_charge_day"]));
       const contactName = customerName;
+
+      if (previewRows.length === 0) {
+        console.log("First mapped tenant row:", JSON.stringify({
+          customerName,
+          companyId,
+          email,
+          phone,
+          roomSourceLabel,
+          roomCodeRaw,
+          deskCount,
+          customerStatus
+        }));
+      }
 
       // Determine match status
       let matchStatus = "";
