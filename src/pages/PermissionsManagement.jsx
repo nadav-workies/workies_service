@@ -5,7 +5,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Shield, Save } from "lucide-react";
+import { Loader2, Shield, Save, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { canManagePermissions } from "@/lib/permissions";
 
 const ROLE_LABELS = {
@@ -19,6 +20,8 @@ export default function PermissionsManagement() {
   const [editingRoles, setEditingRoles] = useState({});
   const [savingId, setSavingId] = useState(null);
   const [error, setError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -36,6 +39,17 @@ export default function PermissionsManagement() {
   });
 
   const adminCount = users.filter(u => u.role === "admin").length;
+
+  const filteredUsers = users.filter(u => {
+    if (roleFilter !== "all" && u.role !== roleFilter) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const name = (u.full_name || "").toLowerCase();
+      const email = (u.email || "").toLowerCase();
+      if (!name.includes(q) && !email.includes(q)) return false;
+    }
+    return true;
+  });
 
   const handleSave = async (userId) => {
     const newRole = editingRoles[userId];
@@ -97,6 +111,34 @@ export default function PermissionsManagement() {
         </div>
       )}
 
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="חיפוש לפי שם או אימייל..."
+            className="pr-9 h-9"
+          />
+        </div>
+        <div className="flex gap-1 flex-wrap">
+          {[
+            { key: "all", label: `הכל (${users.length})` },
+            { key: "admin", label: `מנהלי מערכת (${users.filter(u => u.role === "admin").length})` },
+            { key: "manager", label: `מנהלים (${users.filter(u => u.role === "manager").length})` },
+            { key: "user", label: `משתמשים (${users.filter(u => u.role === "user").length})` },
+          ].map(opt => (
+            <button
+              key={opt.key}
+              onClick={() => setRoleFilter(opt.key)}
+              className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${roleFilter === opt.key ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -111,7 +153,7 @@ export default function PermissionsManagement() {
                 </tr>
               </thead>
               <tbody>
-                {users.map(u => {
+                {filteredUsers.map(u => {
                   const isLastAdmin = u.role === "admin" && adminCount <= 1;
                   const selectValue = editingRoles[u.id] !== undefined ? editingRoles[u.id] : u.role;
                   const hasChanged = editingRoles[u.id] !== undefined && editingRoles[u.id] !== u.role;
@@ -169,7 +211,7 @@ export default function PermissionsManagement() {
                     </tr>
                   );
                 })}
-                {users.length === 0 && (
+                {filteredUsers.length === 0 && (
                   <tr>
                     <td colSpan={5} className="p-8 text-center text-muted-foreground">לא נמצאו משתמשים</td>
                   </tr>
