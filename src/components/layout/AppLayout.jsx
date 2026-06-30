@@ -1,10 +1,10 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { LayoutDashboard, Ticket, AlertTriangle, Plus, Settings, Users, LogOut, Menu, X, Bell, MapPin, Star, Archive, Sparkles } from "lucide-react";
+import { LayoutDashboard, Ticket, AlertTriangle, Plus, Settings, Users, LogOut, Menu, X, Bell, MapPin, Star, Archive, Sparkles, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { isManagerOrAdmin } from "@/lib/slaUtils";
+import { isAdmin, isManagerOrAdmin, canManagePermissions, canManageCustomers } from "@/lib/permissions";
 
 export default function AppLayout() {
   const location = useLocation();
@@ -16,8 +16,8 @@ export default function AppLayout() {
     base44.auth.me().then(setUser).catch(() => {});
   }, []);
 
-  const isAdmin = user?.role === 'admin';
-  const isMgrOrAdmin = isManagerOrAdmin(user);
+  const adminRole = isAdmin(user);
+  const mgrOrAdmin = isManagerOrAdmin(user);
 
   const navItems = [
   { label: "דשבורד", path: "/", icon: LayoutDashboard },
@@ -27,13 +27,14 @@ export default function AppLayout() {
   { label: "חורגות SLA", path: "/sla-report", icon: AlertTriangle, managerOnly: true },
   { label: "סקרי שירות", path: "/survey-responses", icon: Star, managerOnly: true },
   { label: "בקרת ניקיון", path: "/cleaning-report", icon: Sparkles, managerOnly: true },
-  { label: "הגדרות SLA", path: "/sla-settings", icon: Settings, managerOnly: true },
+  { label: "הגדרות SLA", path: "/sla-settings", icon: Settings, adminOnly: true },
   { label: "הגדרות התראות", path: "/notification-settings", icon: Bell, adminOnly: true },
-  { label: "ניהול משתמשים", path: "/users", icon: Users, managerOnly: true },
+  { label: "ניהול לקוחות", path: "/users", icon: Users, managerOnly: true },
+  { label: "ניהול הרשאות", path: "/permissions", icon: Shield, adminOnly: true },
   { label: "איפוס נתוני ניסיון", path: "/reset-test-data", icon: Archive, adminOnly: true }].
   filter((item) => {
-    if (item.adminOnly && !isAdmin) return false;
-    if (item.managerOnly && !isMgrOrAdmin) return false;
+    if (item.adminOnly && !adminRole) return false;
+    if (item.managerOnly && !mgrOrAdmin) return false;
     return true;
   });
 

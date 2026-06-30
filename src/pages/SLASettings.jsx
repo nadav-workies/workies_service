@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Settings, Info } from "lucide-react";
-import { isManagerOrAdmin, PRIORITY_COLORS } from "@/lib/slaUtils";
+import { PRIORITY_COLORS } from "@/lib/slaUtils";
+import { canManageSlaSettings } from "@/lib/permissions";
 import { QUICK_TICKET_LIST } from "@/lib/quickTickets";
 import { cn } from "@/lib/utils";
 
@@ -29,7 +30,7 @@ export default function SLASettings() {
   }, []);
 
   if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
-  if (!isManagerOrAdmin(user)) return <div className="text-center py-20 text-muted-foreground">אין הרשאה לצפות בדף זה</div>;
+  if (!canManageSlaSettings(user)) return <div className="text-center py-20 text-muted-foreground">אין הרשאה לצפות בדף זה</div>;
 
   return (
     <div className="space-y-5" dir="rtl">

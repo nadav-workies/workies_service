@@ -11,7 +11,7 @@ import ImportTenantsDialog from "@/components/users/ImportTenantsDialog";
 import TenantsSection from "@/components/users/TenantsSection";
 import RoomTenantsCell from "@/components/users/RoomTenantsCell";
 import AddTenantDialog from "@/components/users/AddTenantDialog";
-import { isManagerOrAdmin } from "@/lib/slaUtils";
+import { isManagerOrAdmin, canManageCustomers } from "@/lib/permissions";
 import { WORKIES_ROOMS } from "@/lib/workiesRooms";
 import { format } from "date-fns";
 import DateRangeFilter from "@/components/dashboard/DateRangeFilter";
@@ -82,7 +82,7 @@ export default function UsersManagement() {
   useEffect(() => {
     base44.auth.me().then(u => {
       setCurrentUser(u);
-      if (!u || (u.role !== 'admin' && u.role !== 'manager')) navigate("/");
+      if (!u || !canManageCustomers(u)) navigate("/");
     }).catch(() => navigate("/"));
   }, []);
 
@@ -290,9 +290,9 @@ export default function UsersManagement() {
         <div>
           <h1 className="text-xl font-bold flex items-center gap-2">
             <Users className="w-5 h-5" />
-            ניהול משתמשים וחדרים
+            ניהול לקוחות
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">{users.length} משתמשים · {totalRooms} חדרים מזוהים</p>
+          <p className="text-sm text-muted-foreground mt-1">{users.length} לקוחות · {totalRooms} חדרים מזוהים</p>
         </div>
         {isAdmin && (
           <div className="flex gap-2">
