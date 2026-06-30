@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
 
     // Invite the user to the system
     try {
-      await base44.asServiceRole.users.inviteUser(tenant.email, "user");
+      await base44.users.inviteUser(tenant.email, "user");
     } catch (err) {
       // If already invited/registered, continue — still mark as sent
       if (!/already|exists|registered/i.test(err.message)) {
