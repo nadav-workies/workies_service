@@ -52,7 +52,7 @@ export default function PrintingPackageForm({ user, onBack }) {
         is_printing_package_request: true,
         exclude_from_sla: true,
         printing_package_id: pkg.id,
-        printing_package_name: pkg.name,
+        printing_package_name: pkg.title || `${pkg.credit_value} קרדיטים`,
         printing_package_payment_amount: pkg.payment_amount,
         printing_package_credit_value: pkg.credit_value,
         printing_package_bw_pages: pkg.bw_pages,
@@ -65,7 +65,7 @@ export default function PrintingPackageForm({ user, onBack }) {
         room_label: roomLabel,
         phone,
         email,
-        issue_description: `בקשת חבילת הדפסה: ${pkg.name} (${pkg.payment_amount} ₪)`,
+        issue_description: `בקשה לטעינת ${pkg.title || pkg.credit_value + ' קרדיטים'} (₪${pkg.payment_amount} כולל מע״מ)`,
         area: "אחר",
         priority: "רגילה",
         status: initialStatus,
@@ -149,19 +149,22 @@ export default function PrintingPackageForm({ user, onBack }) {
                     )}
                   >
                     <div className="flex items-center justify-between">
-                      <p className="font-bold text-lg">{pkg.payment_amount} ₪</p>
+                      <p className="font-bold text-lg">{pkg.title || `${pkg.credit_value} קרדיטים`}</p>
                       {isSelected && <CheckCircle2 className="w-4 h-4 text-primary" />}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      שווי לפני מע״מ: ₪{pkg.credit_value.toFixed(1)}
+                    <p className="text-xs mt-1 font-medium text-foreground">
+                      עלות לתשלום: ₪{pkg.payment_amount} כולל מע״מ
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      שווי קרדיטים: ₪{pkg.credit_value} לפני מע״מ
                     </p>
                     <div className="mt-2 space-y-0.5">
                       <p className="text-[11px] text-muted-foreground">
-                        שחור-לבן: {pkg.bw_pages} דפים
+                        עד {pkg.bw_pages.toLocaleString()} הדפסות שחור־לבן
                       </p>
                       {pkg.color_pages > 0 && (
                         <p className="text-[11px] text-muted-foreground">
-                          צבעוני: {pkg.color_pages} דפים
+                          עד {pkg.color_pages.toLocaleString()} הדפסות צבעוניות
                         </p>
                       )}
                     </div>
