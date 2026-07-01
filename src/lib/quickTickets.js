@@ -1,4 +1,5 @@
 export const QUICK_TICKET_LIST = [
+  { id: "printing_package_update", ticket_type: "עדכון חבילת הדפסה", sla_label: "ללא SLA", sla_minutes: null, area: "אחר", priority: "רגילה", examples: "בקשה לטעינת חבילת הדפסות", is_printing_package_request: true, highlighted: true },
   { id: 1, ticket_type: "תחזוקת חדר", sla_label: "עד 30 דקות", sla_minutes: 30, area: "משרד / חדר לקוח", priority: "גבוהה", examples: "תלייה, צביעה, פתיחת דלת, תיקון חדר" },
   { id: 2, ticket_type: "מזגן SOS", sla_label: "עד 30 דקות", sla_minutes: 30, area: "מיזוג", priority: "קריטית", examples: "מזגן לא עובד / תקלה משביתה" },
   { id: 4, ticket_type: "שירותים", sla_label: "עד 10 דקות", sla_minutes: 10, area: "שירותים", priority: "קריטית", examples: "מים, סוללה, דלת, נייר, סבון" },

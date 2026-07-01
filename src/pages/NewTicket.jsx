@@ -15,6 +15,7 @@ import { calculateSlaDeadlineWithinServiceHours, isWithinServiceHours } from "@/
 import { QUICK_TICKET_LIST } from "@/lib/quickTickets";
 import { WORKIES_ROOMS, WORKIES_PUBLIC_AREAS } from "@/lib/workiesRooms";
 import QuickTicketSelector from "@/components/tickets/QuickTicketSelector";
+import PrintingPackageForm from "@/components/tickets/PrintingPackageForm";
 
 const PRIORITIES = ["רגילה","בינונית","גבוהה","קריטית"];
 const PRIORITY_BUTTON_COLORS = {
@@ -85,6 +86,7 @@ export default function NewTicket() {
   const queryClient = useQueryClient();
   const [user, setUser] = useState(null);
   const [selectedQuickId, setSelectedQuickId] = useState(null);
+  const [showPrintingForm, setShowPrintingForm] = useState(false);
   const [form, setForm] = useState({
     customer_name: "",
     phone: "",
@@ -157,6 +159,11 @@ export default function NewTicket() {
   }, [form.room_number, roomTenants, isMgr]);
 
   const handleQuickSelect = (qt) => {
+    if (qt.is_printing_package_request === true || qt.id === "printing_package_update") {
+      setShowPrintingForm(true);
+      setSelectedQuickId(null);
+      return;
+    }
     setSelectedQuickId(qt.id);
     setForm(f => ({
       ...f,
@@ -250,6 +257,15 @@ export default function NewTicket() {
     : null;
 
   const isValid = form.issue_description && form.area && (form.room_number || form.public_area_key || isMgr);
+
+  if (showPrintingForm) {
+    return (
+      <PrintingPackageForm
+        user={user}
+        onBack={() => setShowPrintingForm(false)}
+      />
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto" dir="rtl">
