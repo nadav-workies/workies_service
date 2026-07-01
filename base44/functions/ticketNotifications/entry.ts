@@ -172,6 +172,74 @@ Deno.serve(async (req) => {
 
   // ── ticket_created ────────────────────────────────────────────
   if (action === 'ticket_created') {
+    // 0. Printing package request — specialized manager email
+    if (ticket.is_printing_package_request === true || ticket.request_type === 'printing_package_update') {
+      const allUsers = await base44.asServiceRole.entities.User.list();
+      const managers = allUsers.filter(u => u.role === 'admin' || u.role === 'manager');
+      const billingLabel = ticket.printing_billing_method === 'monthly_account'
+        ? 'הוספה לחשבון השכירות החודשי'
+        : 'תשלום ידני מול הלקוח';
+      const roomDisplay = ticket.room_label || ticket.room_number || 'לא משויך לחדר';
+      const customerNotes = ticket.printing_customer_notes || ticket.notes || 'אין';
+      const openedAt = ticket.opened_at ? new Date(ticket.opened_at).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' }) : '';
+
+      const ppSubject = `בקשה חדשה לטעינת חבילת הדפסה — ${ticket.customer_name || ''}`;
+      const ppBody = `<h2>בקשה חדשה לטעינת חבילת הדפסה</h2>
+<p>נפתחה בקשה חדשה במערכת השירות של Workies.</p>
+<h3>פרטי לקוח</h3>
+<ul>
+  <li><strong>שם לקוח:</strong> ${ticket.customer_name || ''}</li>
+  <li><strong>מייל:</strong> ${ticket.email || ticket.created_by || ''}</li>
+  <li><strong>טלפון:</strong> ${ticket.phone || ''}</li>
+  <li><strong>חדר:</strong> ${roomDisplay}</li>
+</ul>
+<h3>פרטי החבילה</h3>
+<ul>
+  <li><strong>חבילה:</strong> ${ticket.printing_package_name || ''}</li>
+  <li><strong>עלות לתשלום:</strong> ₪${ticket.printing_package_payment_amount || ''} כולל מע״מ</li>
+  <li><strong>קרדיטים:</strong> ${ticket.printing_package_credit_value || ''}</li>
+  <li><strong>שחור־לבן:</strong> עד ${ticket.printing_package_bw_pages || ''} עמודים</li>
+  <li><strong>צבעוני:</strong> עד ${ticket.printing_package_color_pages || ''} עמודים</li>
+</ul>
+<h3>אופן חיוב</h3>
+<p>${billingLabel}</p>
+<h3>הערות הלקוח</h3>
+<p>${customerNotes}</p>
+<p>
+  <strong>מספר קריאה:</strong> ${ticket.ticket_number || ''}<br/>
+  <strong>סטטוס פתיחה:</strong> ${ticket.status || ''}<br/>
+  <strong>מועד פתיחה:</strong> ${openedAt}
+</p>
+<p>יש להמשיך טיפול מול שירות / גבייה ולעדכן את הקריאה בהתאם.</p>`;
+
+      let ppSent = false;
+      for (const mgr of managers) {
+        if (!mgr.email) continue;
+        const sent = await sendAndLog(base44, {
+          key: 'manager_printing_package_request',
+          toEmail: mgr.email,
+          subject: ppSubject,
+          bodyHtml: buildHtml(ppBody),
+          ticket,
+          recipientType: 'managers',
+        });
+        if (sent) ppSent = true;
+      }
+      results.printing_package_manager_email = ppSent;
+
+      // Also send user confirmation email
+      const userSetting = await getSetting(base44, 'user_ticket_created');
+      if (userSetting?.enabled && ticket.created_by) {
+        const subject = renderTemplate(userSetting.subject_template, ticket);
+        const body = renderTemplate(userSetting.body_template, ticket);
+        const sent = await sendAndLog(base44, { key: 'user_ticket_created', toEmail: ticket.created_by, subject, bodyHtml: buildHtml(body), ticket, recipientType: 'user' });
+        if (sent) await base44.asServiceRole.entities.ServiceTicket.update(ticket.id, { user_created_email_sent: true });
+        results.user_created = sent;
+      }
+
+      return Response.json({ ok: true, action, results });
+    }
+
     // 1. User email
     const userSetting = await getSetting(base44, 'user_ticket_created');
     if (userSetting?.enabled && ticket.created_by) {

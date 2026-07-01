@@ -38,12 +38,29 @@ export default function PrintingPackageForm({ user, onBack }) {
       const openedAtDate = new Date();
       const ticketNumber = generateTicketNumber();
       const customerName = tenant?.customer_name || user?.full_name || "";
-      const roomNumber = user?.default_room_number || tenant?.room_number || "";
-      const roomLabel = user?.default_room_label || tenant?.room_label || "";
+      const roomNumber = user?.default_room_number || user?.room_number || tenant?.room_number || "";
+      const roomCode = user?.room_code || tenant?.room_code || "";
+      const roomLabel = user?.default_room_label || tenant?.room_label || roomCode || roomNumber || "";
       const phone = tenant?.phone || "";
       const email = tenant?.email || user?.email || "";
 
       const initialStatus = billingMethod === "monthly_account" ? "ממתין לחיוב" : "ממתין לתשלום";
+      const billingLabel = billingMethod === "monthly_account"
+        ? "הוספה לחשבון השכירות החודשי"
+        : "תשלום ידני מול הלקוח";
+      const roomDisplay = roomLabel || roomNumber || roomCode || "לא משויך לחדר";
+
+      const requestSummary = `בקשה לטעינת חבילת הדפסה
+
+לקוח: ${customerName}
+מייל: ${email}
+טלפון: ${phone}
+חדר: ${roomDisplay}
+חבילה: ${pkg.title || pkg.credit_value + ' קרדיטים'}
+עלות לתשלום: ₪${pkg.payment_amount} כולל מע״מ
+קרדיטים: ${pkg.credit_value}
+אופן חיוב: ${billingLabel}
+הערות לקוח: ${notes || "אין"}`;
 
       const ticket = await base44.entities.ServiceTicket.create({
         ticket_number: ticketNumber,
@@ -61,11 +78,15 @@ export default function PrintingPackageForm({ user, onBack }) {
         printing_customer_acknowledged: true,
         printing_customer_notes: notes || "",
         customer_name: customerName,
-        room_number: String(roomNumber),
-        room_label: roomLabel,
+        room_number: String(roomNumber) || null,
+        room_label: roomLabel || null,
+        room_area: tenant?.room_area || user?.default_room_area || "",
+        location_type: (roomNumber || roomCode) ? "room" : "none",
         phone,
         email,
-        issue_description: `בקשה לטעינת ${pkg.title || pkg.credit_value + ' קרדיטים'} (₪${pkg.payment_amount} כולל מע״מ)`,
+        issue_description: requestSummary,
+        internal_notes: roomCode ? `קוד משרד: ${roomCode}` : "",
+        notes: notes || "",
         area: "אחר",
         priority: "רגילה",
         status: initialStatus,
@@ -86,7 +107,7 @@ export default function PrintingPackageForm({ user, onBack }) {
           date: openedAtDate.toISOString(),
           action: "בקשת חבילת הדפסה נפתחה",
           user: user?.full_name || "מערכת",
-          note: pkg.name,
+          note: pkg.title || `${pkg.credit_value} קרדיטים`,
         }],
       });
 
@@ -154,9 +175,6 @@ export default function PrintingPackageForm({ user, onBack }) {
                     </div>
                     <p className="text-xs mt-1 font-medium text-foreground">
                       עלות לתשלום: ₪{pkg.payment_amount} כולל מע״מ
-                    </p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      שווי קרדיטים: ₪{pkg.credit_value} לפני מע״מ
                     </p>
                     <div className="mt-2 space-y-0.5">
                       <p className="text-[11px] text-muted-foreground">
