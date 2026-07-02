@@ -95,8 +95,16 @@ export default function TicketDetail() {
       return;
     }
 
+    const isPrintingCompletion = ticket.is_printing_package_request === true && newStatus === "טופלה";
     updateMutation.mutate({ updates: { status: newStatus }, historyEntry: addHistory(`סטטוס שונה ל: ${newStatus}`) });
-    base44.functions.invoke('ticketNotifications', { action: 'status_changed', ticket: { ...ticket, status: newStatus }, newStatus, oldStatus: ticket.status }).catch(() => {});
+    if (isPrintingCompletion) {
+      base44.functions.invoke('ticketNotifications', {
+        action: 'printing_package_completed',
+        ticket: { ...ticket, status: newStatus, closed_at: new Date().toISOString() }
+      }).catch(() => {});
+    } else {
+      base44.functions.invoke('ticketNotifications', { action: 'status_changed', ticket: { ...ticket, status: newStatus }, newStatus, oldStatus: ticket.status }).catch(() => {});
+    }
   };
 
   const handleStartTreatmentWithDeadline = () => {
@@ -169,9 +177,13 @@ export default function TicketDetail() {
       updates: closedTicket,
       historyEntry: addHistory(isPrinting ? "קריאה הושלמה" : "קריאה נסגרה", closeForm.resolution_summary)
     });
-    base44.functions.invoke('ticketNotifications', { action: 'status_changed', ticket: closedTicket, newStatus: closeStatus, oldStatus: ticket.status }).catch(() => {});
-    // Send feedback request email (skip for printing — they get specialized emails)
-    if (!isPrinting) {
+    if (isPrinting) {
+      base44.functions.invoke('ticketNotifications', {
+        action: 'printing_package_completed',
+        ticket: closedTicket
+      }).catch(() => {});
+    } else {
+      base44.functions.invoke('ticketNotifications', { action: 'status_changed', ticket: closedTicket, newStatus: closeStatus, oldStatus: ticket.status }).catch(() => {});
       base44.functions.invoke('ticketNotifications', { action: 'feedback_request', ticket: closedTicket }).catch(() => {});
     }
     setCloseDialog(false);

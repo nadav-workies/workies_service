@@ -512,6 +512,69 @@ Deno.serve(async (req) => {
     }
   }
 
+  // ── printing_package_completed ──────────────────────────────────
+  if (action === 'printing_package_completed') {
+    const COMPLETION_STATUSES = ['הושלם', 'טופלה', 'נסגרה'];
+
+    if (ticket.is_printing_package_request !== true) {
+      return Response.json({ ok: true, action, skipped: true, reason: 'not_printing_package' });
+    }
+    if (!COMPLETION_STATUSES.includes(ticket.status)) {
+      return Response.json({ ok: true, action, skipped: true, reason: 'status_not_completion' });
+    }
+    if (ticket.printing_collections_email_sent === true) {
+      return Response.json({ ok: true, action, skipped: true, reason: 'collections_email_already_sent' });
+    }
+
+    const nowIso = new Date().toISOString();
+    const followupDueAt = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
+
+    // 1. Customer completion email (if not already sent)
+    if (!ticket.printing_customer_completed_email_sent) {
+      const customerEmail = ticket.email || ticket.created_by || '';
+      if (customerEmail) {
+        const { subject, body } = buildPrintingCustomerCompletedEmail(ticket);
+        await sendAndLog(base44, {
+          key: 'printing_customer_completed',
+          toEmail: customerEmail,
+          subject,
+          bodyHtml: buildHtml(body),
+          ticket,
+          recipientType: 'user',
+        });
+      }
+    }
+
+    // 2. Collections email
+    const collectionsRecipients = await getCollectionsRecipients(base44);
+    const { subject: colSubject, body: colBody } = buildPrintingCollectionsEmail(ticket);
+    let colSent = false;
+    for (const rcpt of collectionsRecipients) {
+      if (!rcpt.email) continue;
+      const sent = await sendAndLog(base44, {
+        key: 'printing_collections',
+        toEmail: rcpt.email,
+        subject: colSubject,
+        bodyHtml: buildHtml(colBody),
+        ticket,
+        recipientType: 'managers',
+      });
+      if (sent) colSent = true;
+    }
+
+    // 3. Update ticket flags + schedule followup
+    await base44.asServiceRole.entities.ServiceTicket.update(ticket.id, {
+      printing_customer_completed_email_sent: true,
+      printing_collections_email_sent: colSent,
+      printing_collections_email_sent_at: colSent ? nowIso : null,
+      printing_collections_followup_due_at: followupDueAt,
+      printing_collections_followup_sent: false,
+    });
+
+    results.printing_collections_sent = colSent;
+    return Response.json({ ok: true, action, results });
+  }
+
   // ── feedback_request ──────────────────────────────────────────
   if (action === 'feedback_request') {
     const setting = await getSetting(base44, 'user_service_feedback_request');
