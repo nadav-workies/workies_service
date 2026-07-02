@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Shield, Save, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { canManagePermissions } from "@/lib/permissions";
+import { INTERNAL_ROLES, getInternalRoleLabel, getDepartmentLabel } from "@/lib/internalRoles";
 
 const ROLE_LABELS = {
   admin: "מנהל מערכת",
@@ -18,6 +19,7 @@ const ROLE_LABELS = {
 export default function PermissionsManagement() {
   const [currentUser, setCurrentUser] = useState(null);
   const [editingRoles, setEditingRoles] = useState({});
+  const [editingInternal, setEditingInternal] = useState({});
   const [savingId, setSavingId] = useState(null);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -39,6 +41,7 @@ export default function PermissionsManagement() {
   });
 
   const adminCount = users.filter(u => u.role === "admin").length;
+  const isAdmin = currentUser?.role === "admin";
 
   const filteredUsers = users.filter(u => {
     if (roleFilter !== "all" && u.role !== roleFilter) return false;
@@ -51,7 +54,7 @@ export default function PermissionsManagement() {
     return true;
   });
 
-  const handleSave = async (userId) => {
+  const handleSaveRole = async (userId) => {
     const newRole = editingRoles[userId];
     if (!newRole) return;
     setSavingId(userId);
@@ -76,8 +79,43 @@ export default function PermissionsManagement() {
     }
   };
 
-  const handleCancel = (userId) => {
+  const handleSaveInternal = async (userId) => {
+    const edits = editingInternal[userId];
+    if (!edits) return;
+    setSavingId(userId);
+    setError("");
+    try {
+      const res = await base44.functions.invoke("updateUserRole", {
+        target_user_id: userId,
+        internal_role: edits.internal_role !== undefined ? edits.internal_role : undefined,
+        alert_flags: edits.alert_flags,
+      });
+      const data = res.data || res;
+      if (!data.ok) throw new Error(data.error || "שגיאה בעדכון תפקיד פנימי");
+      setEditingInternal(prev => {
+        const next = { ...prev };
+        delete next[userId];
+        return next;
+      });
+      queryClient.invalidateQueries({ queryKey: ["permissions-users"] });
+    } catch (err) {
+      setError(err.message || "שגיאה בעדכון תפקיד פנימי");
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const handleCancelRole = (userId) => {
     setEditingRoles(prev => {
+      const next = { ...prev };
+      delete next[userId];
+      return next;
+    });
+    setError("");
+  };
+
+  const handleCancelInternal = (userId) => {
+    setEditingInternal(prev => {
       const next = { ...prev };
       delete next[userId];
       return next;
@@ -94,7 +132,7 @@ export default function PermissionsManagement() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6" dir="rtl">
+    <div className="max-w-5xl mx-auto space-y-6" dir="rtl">
       <div>
         <h1 className="text-xl font-bold flex items-center gap-2">
           <Shield className="w-5 h-5" />
@@ -147,8 +185,9 @@ export default function PermissionsManagement() {
                 <tr className="border-b bg-muted/40">
                   <th className="p-3 font-semibold">שם</th>
                   <th className="p-3 font-semibold">אימייל</th>
-                  <th className="p-3 font-semibold">תפקיד נוכחי</th>
-                  <th className="p-3 font-semibold">שינוי תפקיד</th>
+                  <th className="p-3 font-semibold">הרשאת מערכת</th>
+                  <th className="p-3 font-semibold">תפקיד פנימי</th>
+                  <th className="p-3 font-semibold">מחלקה</th>
                   <th className="p-3 font-semibold w-[120px]">פעולה</th>
                 </tr>
               </thead>
@@ -156,23 +195,28 @@ export default function PermissionsManagement() {
                 {filteredUsers.map(u => {
                   const isLastAdmin = u.role === "admin" && adminCount <= 1;
                   const selectValue = editingRoles[u.id] !== undefined ? editingRoles[u.id] : u.role;
-                  const hasChanged = editingRoles[u.id] !== undefined && editingRoles[u.id] !== u.role;
+                  const hasRoleChanged = editingRoles[u.id] !== undefined && editingRoles[u.id] !== u.role;
+
+                  const internalEdits = editingInternal[u.id] || {};
+                  const currentInternalRole = internalEdits.internal_role !== undefined ? internalEdits.internal_role : (u.internal_role || "");
+                  const hasInternalEdits = !!editingInternal[u.id];
+
                   return (
-                    <tr key={u.id} className="border-b hover:bg-muted/30">
+                    <tr key={u.id} className="border-b hover:bg-muted/30 align-top">
                       <td className="p-3 font-medium">{u.full_name || "—"}</td>
                       <td className="p-3 text-xs" dir="ltr">{u.email || "—"}</td>
+
+                      {/* הרשאת מערכת */}
                       <td className="p-3">
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-muted font-medium">
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-muted font-medium block mb-1">
                           {ROLE_LABELS[u.role] || u.role}
                         </span>
-                      </td>
-                      <td className="p-3">
                         <Select
                           value={selectValue}
                           onValueChange={(v) => setEditingRoles(prev => ({ ...prev, [u.id]: v }))}
                           disabled={isLastAdmin}
                         >
-                          <SelectTrigger className="h-8 text-xs w-[150px]">
+                          <SelectTrigger className="h-8 text-xs w-[140px]">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -185,35 +229,151 @@ export default function PermissionsManagement() {
                           <p className="text-[10px] text-amber-600 mt-0.5">אדמין יחיד — לא ניתן לשנות</p>
                         )}
                       </td>
+
+                      {/* תפקיד פנימי */}
                       <td className="p-3">
-                        {hasChanged && (
-                          <div className="flex gap-1">
-                            <Button
-                              size="sm"
-                              className="h-7 text-xs gap-1"
-                              onClick={() => handleSave(u.id)}
-                              disabled={savingId === u.id}
-                            >
-                              {savingId === u.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
-                              שמור
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 text-xs"
-                              onClick={() => handleCancel(u.id)}
-                            >
-                              ביטול
-                            </Button>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium block mb-1">
+                          {u.internal_role ? getInternalRoleLabel(u.internal_role) : "—"}
+                        </span>
+                        {isAdmin ? (
+                          <Select
+                            value={currentInternalRole || "none"}
+                            onValueChange={(v) => setEditingInternal(prev => ({
+                              ...prev,
+                              [u.id]: {
+                                ...(prev[u.id] || {}),
+                                internal_role: v === "none" ? "" : v,
+                              }
+                            }))}
+                          >
+                            <SelectTrigger className="h-8 text-xs w-[150px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">— ללא —</SelectItem>
+                              {INTERNAL_ROLES.map(r => (
+                                <SelectItem key={r.key} value={r.key}>{r.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <p className="text-[10px] text-muted-foreground">עריכה לאדמין בלבד</p>
+                        )}
+                      </td>
+
+                      {/* מחלקה + דגלי התראות */}
+                      <td className="p-3">
+                        <span className="text-xs block mb-1.5">{u.department ? getDepartmentLabel(u.department) : "—"}</span>
+                        {isAdmin && (
+                          <div className="space-y-1">
+                            <label className="flex items-center gap-1.5 text-[10px] cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={internalEdits.can_receive_service_alerts ?? u.can_receive_service_alerts ?? false}
+                                onChange={e => setEditingInternal(prev => ({
+                                  ...prev,
+                                  [u.id]: {
+                                    ...(prev[u.id] || {}),
+                                    alert_flags: {
+                                      ...(prev[u.id]?.alert_flags || {}),
+                                      can_receive_service_alerts: e.target.checked
+                                    }
+                                  }
+                                }))}
+                              />
+                              התראות שירות
+                            </label>
+                            <label className="flex items-center gap-1.5 text-[10px] cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={internalEdits.can_receive_collections_alerts ?? u.can_receive_collections_alerts ?? false}
+                                onChange={e => setEditingInternal(prev => ({
+                                  ...prev,
+                                  [u.id]: {
+                                    ...(prev[u.id] || {}),
+                                    alert_flags: {
+                                      ...(prev[u.id]?.alert_flags || {}),
+                                      can_receive_collections_alerts: e.target.checked
+                                    }
+                                  }
+                                }))}
+                              />
+                              התראות גבייה
+                            </label>
+                            <label className="flex items-center gap-1.5 text-[10px] cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={internalEdits.can_receive_operations_alerts ?? u.can_receive_operations_alerts ?? false}
+                                onChange={e => setEditingInternal(prev => ({
+                                  ...prev,
+                                  [u.id]: {
+                                    ...(prev[u.id] || {}),
+                                    alert_flags: {
+                                      ...(prev[u.id]?.alert_flags || {}),
+                                      can_receive_operations_alerts: e.target.checked
+                                    }
+                                  }
+                                }))}
+                              />
+                              התראות תפעול
+                            </label>
                           </div>
                         )}
+                      </td>
+
+                      {/* פעולות */}
+                      <td className="p-3">
+                        <div className="flex flex-col gap-1">
+                          {hasRoleChanged && (
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                className="h-7 text-xs gap-1"
+                                onClick={() => handleSaveRole(u.id)}
+                                disabled={savingId === u.id}
+                              >
+                                {savingId === u.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                                הרשאה
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs"
+                                onClick={() => handleCancelRole(u.id)}
+                              >
+                                ביטול
+                              </Button>
+                            </div>
+                          )}
+                          {hasInternalEdits && (
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                className="h-7 text-xs gap-1"
+                                onClick={() => handleSaveInternal(u.id)}
+                                disabled={savingId === u.id}
+                              >
+                                {savingId === u.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                                תפקיד פנימי
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs"
+                                onClick={() => handleCancelInternal(u.id)}
+                              >
+                                ביטול
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
                 })}
                 {filteredUsers.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-muted-foreground">לא נמצאו משתמשים</td>
+                    <td colSpan={6} className="p-8 text-center text-muted-foreground">לא נמצאו משתמשים</td>
                   </tr>
                 )}
               </tbody>
@@ -221,6 +381,12 @@ export default function PermissionsManagement() {
           </div>
         </CardContent>
       </Card>
+
+      <div className="text-xs text-muted-foreground bg-muted/40 rounded-lg px-4 py-3">
+        <p className="font-medium mb-1">הבחנה חשובה:</p>
+        <p><strong>הרשאת מערכת</strong> (role) — קובעת הרשאות טכניות: admin / manager / user.</p>
+        <p><strong>תפקיד פנימי</strong> (internal_role) — תחום אחריות ארגוני בלבד. אינו משפיע על הרשאות מערכת.</p>
+      </div>
     </div>
   );
 }
