@@ -8,7 +8,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowRight, Loader2, Send, Printer, CheckCircle2 } from "lucide-react";
 import { PRINTING_PACKAGES, hasActiveOffice } from "@/lib/printingPackages";
 import { generateTicketNumber } from "@/lib/slaUtils";
+import {
+  calculateSlaDeadlineWithinServiceHours,
+  isWithinServiceHours,
+} from "@/lib/slaAgent";
+import { calculateSlaWarningAtMs } from "@/lib/slaUtils";
 import { cn } from "@/lib/utils";
+
+const PRINTING_SLA_MINUTES = 5;
 
 export default function PrintingPackageForm({ user, onBack }) {
   const navigate = useNavigate();
@@ -17,6 +24,7 @@ export default function PrintingPackageForm({ user, onBack }) {
   const [addToMonthlyAccount, setAddToMonthlyAccount] = useState(true);
   const [acknowledged, setAcknowledged] = useState(false);
   const [notes, setNotes] = useState("");
+  const [submittedTicket, setSubmittedTicket] = useState(null);
 
   const { data: roomTenants = [] } = useQuery({
     queryKey: ['printing-tenants', user?.default_room_number],
@@ -44,11 +52,18 @@ export default function PrintingPackageForm({ user, onBack }) {
       const phone = tenant?.phone || "";
       const email = tenant?.email || user?.email || "";
 
-      const initialStatus = billingMethod === "monthly_account" ? "ממתין לחיוב" : "ממתין לתשלום";
+      const initialStatus = "ממתין לטעינת חבילת הדפסה";
       const billingLabel = billingMethod === "monthly_account"
         ? "הוספה לחשבון השכירות החודשי"
         : "תשלום ידני מול הלקוח";
       const roomDisplay = roomLabel || roomNumber || roomCode || "לא משויך לחדר";
+
+      // ─── SLA calculation: 5 minutes within service hours ───
+      const slaMin = PRINTING_SLA_MINUTES;
+      const { slaStart, slaDeadline } = calculateSlaDeadlineWithinServiceHours(openedAtDate, slaMin);
+      const slaStartAtMs = slaStart.getTime();
+      const slaDeadlineMs = slaDeadline.getTime();
+      const slaWarningAtMs = calculateSlaWarningAtMs(slaStartAtMs, slaMin);
 
       const requestSummary = `בקשה לטעינת חבילת הדפסה
 
@@ -67,7 +82,8 @@ export default function PrintingPackageForm({ user, onBack }) {
         ticket_type: "עדכון חבילת הדפסה",
         request_type: "printing_package_update",
         is_printing_package_request: true,
-        exclude_from_sla: true,
+        exclude_from_sla: false,
+        no_sla: false,
         printing_package_id: pkg.id,
         printing_package_name: pkg.title || `${pkg.credit_value} קרדיטים`,
         printing_package_payment_amount: pkg.payment_amount,
@@ -88,12 +104,18 @@ export default function PrintingPackageForm({ user, onBack }) {
         internal_notes: roomCode ? `קוד משרד: ${roomCode}` : "",
         notes: notes || "",
         area: "אחר",
-        priority: "רגילה",
+        priority: "קריטית",
         status: initialStatus,
         opened_at: openedAtDate.toISOString(),
         opened_at_ms: openedAtDate.getTime(),
-        sla_minutes: null,
-        sla_label: "ללא SLA",
+        sla_minutes: slaMin,
+        sla_label: "5 דקות",
+        sla_start_at: slaStart.toISOString(),
+        sla_start_at_ms: slaStartAtMs,
+        sla_deadline: slaDeadline.toISOString(),
+        sla_deadline_ms: slaDeadlineMs,
+        sla_warning_at: new Date(slaWarningAtMs).toISOString(),
+        sla_warning_at_ms: slaWarningAtMs,
         sla_breached: false,
         exclude_from_metrics: false,
         customer_response_sent: false,
@@ -118,14 +140,43 @@ export default function PrintingPackageForm({ user, onBack }) {
 
       return ticket;
     },
-    onSuccess: () => {
+    onSuccess: (ticket) => {
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
       queryClient.invalidateQueries({ queryKey: ['my-tickets'] });
-      navigate("/");
+      setSubmittedTicket(ticket);
     },
   });
 
   const canSubmit = selectedPackage && acknowledged && !mutation.isPending;
+
+  // ─── Success screen ───
+  if (submittedTicket) {
+    return (
+      <div className="max-w-2xl mx-auto" dir="rtl">
+        <Card className="border-green-200 bg-green-50/50">
+          <CardContent className="pt-8 pb-8 text-center space-y-4">
+            <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+              <CheckCircle2 className="w-8 h-8 text-green-600" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-lg font-bold text-green-800">בקשתך נמצאת בטיפול בשירות</h2>
+              <p className="text-sm text-muted-foreground">
+                בדקות הקרובות יתווספו הקרדיטים לחשבונך.
+              </p>
+            </div>
+            <div className="inline-flex items-center gap-2 bg-white border border-green-200 rounded-lg px-4 py-2">
+              <span className="text-xs text-muted-foreground">מספר קריאה:</span>
+              <span className="font-mono font-bold text-sm text-green-800">{submittedTicket.ticket_number}</span>
+            </div>
+            <div className="flex gap-2 justify-center pt-2">
+              <Button onClick={() => navigate("/")}>חזרה לדשבורד</Button>
+              <Button variant="outline" onClick={() => navigate(`/tickets/${submittedTicket.id}`)}>צפה בקריאה</Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto" dir="rtl">

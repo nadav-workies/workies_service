@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge, PriorityBadge } from "./TicketStatusBadge";
 import LiveSlaBadge from "./LiveSlaBadge";
+import PrintingBadge, { getPrintingHighlightClass } from "./PrintingBadge";
 import { format } from "date-fns";
 import { ChevronLeft } from "lucide-react";
 
@@ -38,10 +39,13 @@ export default function TicketTable({ tickets }) {
             {tickets.map(ticket => (
               <TableRow
                 key={ticket.id}
-                className="cursor-pointer hover:bg-muted/30 transition-colors"
+                className={`cursor-pointer hover:bg-muted/30 transition-colors ${getPrintingHighlightClass(ticket)}`}
                 onClick={() => navigate(`/tickets/${ticket.id}`)}
               >
-                <TableCell className="font-mono text-xs">{ticket.ticket_number}</TableCell>
+                <TableCell className="font-mono text-xs">
+                  {ticket.ticket_number}
+                  {ticket.is_printing_package_request && <PrintingBadge ticket={ticket} className="mt-0.5" />}
+                </TableCell>
                 <TableCell className="font-medium text-sm">{ticket.customer_name}</TableCell>
                 <TableCell className="text-sm">{ticket.room_number}</TableCell>
                 <TableCell className="text-sm max-w-[180px]">

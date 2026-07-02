@@ -135,7 +135,7 @@ export function getClosedAtMs(ticket) {
 ───────────────────────────────────────────────────── */
 
 export function isTicketClosed(ticket) {
-  return ticket?.status === "נסגרה";
+  return ticket?.status === "נסגרה" || ticket?.status === "הושלם";
 }
 
 export function isTicketLive(ticket) {
@@ -152,7 +152,15 @@ export function isTicketOpen(ticket) {
 }
 
 export function isSlaExcluded(ticket) {
-  return ticket?.sla_excluded === true;
+  return Boolean(
+    ticket &&
+    (
+      ticket.sla_excluded === true ||
+      ticket.exclude_from_sla === true ||
+      ticket.is_test_data === true ||
+      ticket.archived === true
+    )
+  );
 }
 
 /* ─────────────────────────────────────────────────────

@@ -119,6 +119,11 @@ export const STATUS_COLORS = {
   'ממתינה': 'bg-amber-100 text-amber-700',
   'טופלה': 'bg-emerald-100 text-emerald-700',
   'נסגרה': 'bg-green-100 text-green-800',
+  'הושלם': 'bg-green-100 text-green-800',
+  'בוטל': 'bg-slate-200 text-slate-500',
+  'ממתין לטעינת חבילת הדפסה': 'bg-orange-100 text-orange-700',
+  'ממתין לחיוב': 'bg-amber-100 text-amber-700',
+  'ממתין לתשלום': 'bg-amber-100 text-amber-700',
 };
 
 export function isManagerOrAdmin(user) {

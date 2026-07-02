@@ -1,5 +1,6 @@
 import { ROOM_STATUS_COLORS } from '@/lib/roomServiceStatus';
 import LiveSlaBadge from '@/components/tickets/LiveSlaBadge';
+import PrintingBadge from '@/components/tickets/PrintingBadge';
 
 export default function RoomCell({ room, roomStatus, isSelected, onClick }) {
   const { status, openCount, mostUrgentTicket } = roomStatus;
@@ -39,6 +40,13 @@ export default function RoomCell({ room, roomStatus, isSelected, onClick }) {
       {mostUrgentTicket && (
         <div className="mt-0.5 scale-[0.82] origin-right">
           <LiveSlaBadge ticket={mostUrgentTicket} compact />
+        </div>
+      )}
+
+      {/* תג חבילת הדפסה דחופה */}
+      {mostUrgentTicket?.is_printing_package_request && (
+        <div className="absolute bottom-0 left-0 right-0">
+          <PrintingBadge ticket={mostUrgentTicket} />
         </div>
       )}
     </button>

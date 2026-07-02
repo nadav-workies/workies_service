@@ -23,7 +23,7 @@ export function PriorityBadge({ priority }) {
 // SlaBadge מקבל ticket מלא — לא slaDeadline בלבד
 export function SlaBadge({ ticket, status }) {
   const resolvedStatus = status || ticket?.status;
-  if (resolvedStatus === 'נסגרה') return <span className="text-xs text-muted-foreground">נסגרה</span>;
+  if (resolvedStatus === 'נסגרה' || resolvedStatus === 'הושלם' || resolvedStatus === 'בוטל') return <span className="text-xs text-muted-foreground">{resolvedStatus}</span>;
   if (!ticket) return <span className="text-xs text-muted-foreground">—</span>;
 
   const deadlineMs = getDeadlineMs(ticket);

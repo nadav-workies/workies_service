@@ -81,6 +81,41 @@ async function sendAndLog(base44, { key, toEmail, subject, bodyHtml, ticket, rec
   }
 }
 
+// ─── Get printing recipients (managers + internal roles) ─────────
+async function getPrintingRecipients(base44) {
+  const allUsers = await base44.asServiceRole.entities.User.list();
+  const recipients = allUsers.filter(u =>
+    u.role === 'admin' ||
+    u.role === 'manager' ||
+    u.internal_role === 'service_manager' ||
+    u.internal_role === 'collections_manager' ||
+    u.internal_role === 'operations_manager'
+  );
+  return recipients.filter(u => u.email);
+}
+
+async function getCollectionsRecipients(base44) {
+  const allUsers = await base44.asServiceRole.entities.User.list();
+  const collections = allUsers.filter(u =>
+    u.internal_role === 'collections_manager' ||
+    u.email === 'finance@workies.co.il'
+  );
+  if (collections.length > 0) return collections.filter(u => u.email);
+  // Fallback to admins/managers
+  return allUsers.filter(u => (u.role === 'admin' || u.role === 'manager') && u.email);
+}
+
+async function getServiceFollowupRecipients(base44) {
+  const allUsers = await base44.asServiceRole.entities.User.list();
+  const service = allUsers.filter(u =>
+    u.internal_role === 'service_manager' ||
+    u.email === 'office@workies.co.il'
+  );
+  if (service.length > 0) return service.filter(u => u.email);
+  // Fallback to managers
+  return allUsers.filter(u => u.role === 'manager' && u.email);
+}
+
 // ─── Feedback token + link ────────────────────────────────────────
 function getAppBaseUrl(req) {
   const origin = req.headers.get('origin');
@@ -143,6 +178,125 @@ async function ensureDefaultSurveyTemplate(base44) {
   }
 }
 
+// ─── Printing package email builders ──────────────────────────────
+
+function buildPrintingManagerCreatedEmail(ticket) {
+  const billingLabel = ticket.printing_billing_method === 'monthly_account'
+    ? 'הוספה לחשבון השכירות החודשי'
+    : 'תשלום ידני מול הלקוח';
+  const roomDisplay = ticket.room_label || ticket.room_number || 'לא משויך לחדר';
+  const openedAt = ticket.opened_at ? new Date(ticket.opened_at).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' }) : '';
+
+  const subject = `דחוף: בקשת עדכון חבילת הדפסה — SLA 5 דקות`;
+  const body = `<h2>דחוף: בקשת עדכון חבילת הדפסה</h2>
+<p>נפתחה בקשה חדשה לעדכון חבילת הדפסה.<br/>יש לטפל בבקשה בתוך 5 דקות.</p>
+<h3>פרטי לקוח</h3>
+<ul>
+  <li><strong>שם לקוח:</strong> ${ticket.customer_name || ''}</li>
+  <li><strong>מייל:</strong> ${ticket.email || ticket.created_by || ''}</li>
+  <li><strong>טלפון:</strong> ${ticket.phone || ''}</li>
+  <li><strong>חדר:</strong> ${roomDisplay}</li>
+</ul>
+<h3>פרטי החבילה</h3>
+<ul>
+  <li><strong>חבילה:</strong> ${ticket.printing_package_name || ''}</li>
+  <li><strong>קרדיטים:</strong> ${ticket.printing_package_credit_value || ''}</li>
+  <li><strong>עלות:</strong> ₪${ticket.printing_package_payment_amount || ''} כולל מע״מ</li>
+  <li><strong>אופן חיוב:</strong> ${billingLabel}</li>
+</ul>
+<h3>הנחיות פעולה</h3>
+<ol>
+  <li>להיכנס למערכת השירות.</li>
+  <li>לפתוח / לעדכן את הקרדיטים ללקוח במערכת ההדפסות.</li>
+  <li>לאחר טעינת הקרדיטים — לסגור את הקריאה כ"הושלם".</li>
+  <li>המערכת תשלח מייל אוטומטי לגבייה לאחר סגירת הקריאה.</li>
+</ol>
+<p>
+  <strong>מספר קריאה:</strong> ${ticket.ticket_number || ''}<br/>
+  <strong>SLA:</strong> 5 דקות<br/>
+  <strong>מועד פתיחה:</strong> ${openedAt}
+</p>`;
+  return { subject, body };
+}
+
+function buildPrintingCustomerCreatedEmail(ticket) {
+  const roomDisplay = ticket.room_label || ticket.room_number || 'לא משויך לחדר';
+  const subject = `בקשתך לעדכון חבילת הדפסה התקבלה`;
+  const body = `<h2>בקשתך לעדכון חבילת הדפסה התקבלה</h2>
+<p>שלום ${ticket.customer_name || ''},</p>
+<p>בקשתך נמצאת בטיפול בשירות.<br/>בדקות הקרובות יתווספו הקרדיטים לחשבונך.</p>
+<h3>פרטי הבקשה</h3>
+<ul>
+  <li><strong>חבילה:</strong> ${ticket.printing_package_name || ''}</li>
+  <li><strong>עלות לתשלום:</strong> ₪${ticket.printing_package_payment_amount || ''} כולל מע״ב</li>
+  <li><strong>קרדיטים:</strong> ${ticket.printing_package_credit_value || ''}</li>
+  <li><strong>חדר:</strong> ${roomDisplay}</li>
+  <li><strong>מספר קריאה:</strong> ${ticket.ticket_number || ''}</li>
+</ul>
+<p>צוות Workies</p>`;
+  return { subject, body };
+}
+
+function buildPrintingCustomerCompletedEmail(ticket) {
+  const subject = `חבילת ההדפסה עודכנה בהצלחה`;
+  const body = `<h2>חבילת ההדפסה עודכנה בהצלחה</h2>
+<p>שלום ${ticket.customer_name || ''},</p>
+<p>הקרדיטים שביקשת נוספו לחשבונך.<br/>ניתן להתחיל להשתמש בחבילת ההדפסה.</p>
+<ul>
+  <li><strong>חבילה:</strong> ${ticket.printing_package_name || ''}</li>
+  <li><strong>קרדיטים:</strong> ${ticket.printing_package_credit_value || ''}</li>
+  <li><strong>מספר קריאה:</strong> ${ticket.ticket_number || ''}</li>
+</ul>
+<p>צוות Workies</p>`;
+  return { subject, body };
+}
+
+function buildPrintingCollectionsEmail(ticket) {
+  const billingLabel = ticket.printing_billing_method === 'monthly_account'
+    ? 'הוספה לחשבון השכירות החודשי'
+    : 'תשלום ידני מול הלקוח';
+  const roomDisplay = ticket.room_label || ticket.room_number || 'לא משויך לחדר';
+  const closedAt = ticket.closed_at ? new Date(ticket.closed_at).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' }) : '';
+
+  const subject = `נדרש חיוב לקוח — חבילת הדפסה עודכנה`;
+  const body = `<h2>נדרש חיוב לקוח עבור חבילת הדפסה</h2>
+<p>חבילת הדפסה עודכנה ללקוח במערכת השירות.<br/>יש לוודא פתיחת חיוב / גבייה בהתאם.</p>
+<h3>פרטי לקוח</h3>
+<ul>
+  <li><strong>שם לקוח:</strong> ${ticket.customer_name || ''}</li>
+  <li><strong>מייל:</strong> ${ticket.email || ticket.created_by || ''}</li>
+  <li><strong>טלפון:</strong> ${ticket.phone || ''}</li>
+  <li><strong>חדר:</strong> ${roomDisplay}</li>
+</ul>
+<h3>פרטי חיוב</h3>
+<ul>
+  <li><strong>חבילה:</strong> ${ticket.printing_package_name || ''}</li>
+  <li><strong>קרדיטים:</strong> ${ticket.printing_package_credit_value || ''}</li>
+  <li><strong>עלות לתשלום:</strong> ₪${ticket.printing_package_payment_amount || ''} כולל מע״ב</li>
+  <li><strong>אופן חיוב:</strong> ${billingLabel}</li>
+</ul>
+<p>
+  <strong>מספר קריאה:</strong> ${ticket.ticket_number || ''}<br/>
+  <strong>מועד סגירה:</strong> ${closedAt}
+</p>`;
+  return { subject, body };
+}
+
+function buildPrintingFollowupEmail(ticket) {
+  const roomDisplay = ticket.room_label || ticket.room_number || 'לא משויך לחדר';
+  const subject = `תזכורת: לוודא פתיחת גבייה עבור חבילת הדפסה`;
+  const body = `<h2>תזכורת שירות — בדיקת גבייה</h2>
+<p>אתמול נסגרה קריאה לעדכון חבילת הדפסה.<br/>יש לוודא שהקריאה נפתחה / טופלה מול הגבייה.</p>
+<ul>
+  <li><strong>לקוח:</strong> ${ticket.customer_name || ''}</li>
+  <li><strong>חדר:</strong> ${roomDisplay}</li>
+  <li><strong>חבילה:</strong> ${ticket.printing_package_name || ''}</li>
+  <li><strong>עלות:</strong> ₪${ticket.printing_package_payment_amount || ''} כולל מע״ב</li>
+  <li><strong>מספר קריאה:</strong> ${ticket.ticket_number || ''}</li>
+</ul>`;
+  return { subject, body };
+}
+
 // ─── Main handler ─────────────────────────────────────────────────
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
@@ -172,70 +326,50 @@ Deno.serve(async (req) => {
 
   // ── ticket_created ────────────────────────────────────────────
   if (action === 'ticket_created') {
-    // 0. Printing package request — specialized manager email
+    // 0. Printing package request — specialized emails
     if (ticket.is_printing_package_request === true || ticket.request_type === 'printing_package_update') {
-      const allUsers = await base44.asServiceRole.entities.User.list();
-      const managers = allUsers.filter(u => u.role === 'admin' || u.role === 'manager');
-      const billingLabel = ticket.printing_billing_method === 'monthly_account'
-        ? 'הוספה לחשבון השכירות החודשי'
-        : 'תשלום ידני מול הלקוח';
-      const roomDisplay = ticket.room_label || ticket.room_number || 'לא משויך לחדר';
-      const customerNotes = ticket.printing_customer_notes || ticket.notes || 'אין';
-      const openedAt = ticket.opened_at ? new Date(ticket.opened_at).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' }) : '';
+      // Manager email with action instructions
+      const managers = await getPrintingRecipients(base44);
+      const { subject: ppSubject, body: ppBody } = buildPrintingManagerCreatedEmail(ticket);
 
-      const ppSubject = `בקשה חדשה לטעינת חבילת הדפסה — ${ticket.customer_name || ''}`;
-      const ppBody = `<h2>בקשה חדשה לטעינת חבילת הדפסה</h2>
-<p>נפתחה בקשה חדשה במערכת השירות של Workies.</p>
-<h3>פרטי לקוח</h3>
-<ul>
-  <li><strong>שם לקוח:</strong> ${ticket.customer_name || ''}</li>
-  <li><strong>מייל:</strong> ${ticket.email || ticket.created_by || ''}</li>
-  <li><strong>טלפון:</strong> ${ticket.phone || ''}</li>
-  <li><strong>חדר:</strong> ${roomDisplay}</li>
-</ul>
-<h3>פרטי החבילה</h3>
-<ul>
-  <li><strong>חבילה:</strong> ${ticket.printing_package_name || ''}</li>
-  <li><strong>עלות לתשלום:</strong> ₪${ticket.printing_package_payment_amount || ''} כולל מע״מ</li>
-  <li><strong>קרדיטים:</strong> ${ticket.printing_package_credit_value || ''}</li>
-  <li><strong>שחור־לבן:</strong> עד ${ticket.printing_package_bw_pages || ''} עמודים</li>
-  <li><strong>צבעוני:</strong> עד ${ticket.printing_package_color_pages || ''} עמודים</li>
-</ul>
-<h3>אופן חיוב</h3>
-<p>${billingLabel}</p>
-<h3>הערות הלקוח</h3>
-<p>${customerNotes}</p>
-<p>
-  <strong>מספר קריאה:</strong> ${ticket.ticket_number || ''}<br/>
-  <strong>סטטוס פתיחה:</strong> ${ticket.status || ''}<br/>
-  <strong>מועד פתיחה:</strong> ${openedAt}
-</p>
-<p>יש להמשיך טיפול מול שירות / גבייה ולעדכן את הקריאה בהתאם.</p>`;
-
-      let ppSent = false;
+      let mgrSent = false;
       for (const mgr of managers) {
         if (!mgr.email) continue;
         const sent = await sendAndLog(base44, {
-          key: 'manager_printing_package_request',
+          key: 'printing_manager_created',
           toEmail: mgr.email,
           subject: ppSubject,
           bodyHtml: buildHtml(ppBody),
           ticket,
           recipientType: 'managers',
         });
-        if (sent) ppSent = true;
+        if (sent) mgrSent = true;
       }
-      results.printing_package_manager_email = ppSent;
+      results.printing_manager_created = mgrSent;
 
-      // Also send user confirmation email
-      const userSetting = await getSetting(base44, 'user_ticket_created');
-      if (userSetting?.enabled && ticket.created_by) {
-        const subject = renderTemplate(userSetting.subject_template, ticket);
-        const body = renderTemplate(userSetting.body_template, ticket);
-        const sent = await sendAndLog(base44, { key: 'user_ticket_created', toEmail: ticket.created_by, subject, bodyHtml: buildHtml(body), ticket, recipientType: 'user' });
-        if (sent) await base44.asServiceRole.entities.ServiceTicket.update(ticket.id, { user_created_email_sent: true });
-        results.user_created = sent;
+      // Customer confirmation email
+      const customerEmail = ticket.email || ticket.created_by || '';
+      if (customerEmail) {
+        const { subject: custSubject, body: custBody } = buildPrintingCustomerCreatedEmail(ticket);
+        const custSent = await sendAndLog(base44, {
+          key: 'printing_customer_created',
+          toEmail: customerEmail,
+          subject: custSubject,
+          bodyHtml: buildHtml(custBody),
+          ticket,
+          recipientType: 'user',
+        });
+        results.printing_customer_created = custSent;
+      } else {
+        results.printing_customer_created = false;
       }
+
+      // Update ticket flags
+      await base44.asServiceRole.entities.ServiceTicket.update(ticket.id, {
+        printing_manager_created_email_sent: mgrSent,
+        printing_customer_created_email_sent: !!results.printing_customer_created,
+        manager_alert_sent: mgrSent,
+      });
 
       return Response.json({ ok: true, action, results });
     }
@@ -292,13 +426,76 @@ Deno.serve(async (req) => {
   }
 
   // ── status_changed ────────────────────────────────────────────
-  if (action === 'status_changed' && ticket.created_by) {
+  if (action === 'status_changed') {
+    const isPrintingClosed = ticket.is_printing_package_request === true &&
+      (newStatus === 'הושלם' || newStatus === 'נסגרה');
+
+    // Printing package closed — specialized emails
+    if (isPrintingClosed && !ticket.printing_customer_completed_email_sent) {
+      const nowIso = new Date().toISOString();
+      const followupDueAt = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
+
+      // 1. Customer completion email
+      const customerEmail = ticket.email || ticket.created_by || '';
+      if (customerEmail) {
+        const { subject, body } = buildPrintingCustomerCompletedEmail(ticket);
+        await sendAndLog(base44, {
+          key: 'printing_customer_completed',
+          toEmail: customerEmail,
+          subject,
+          bodyHtml: buildHtml(body),
+          ticket,
+          recipientType: 'user',
+        });
+      }
+
+      // 2. Collections email
+      const collectionsRecipients = await getCollectionsRecipients(base44);
+      const { subject: colSubject, body: colBody } = buildPrintingCollectionsEmail(ticket);
+      let colSent = false;
+      for (const rcpt of collectionsRecipients) {
+        if (!rcpt.email) continue;
+        const sent = await sendAndLog(base44, {
+          key: 'printing_collections',
+          toEmail: rcpt.email,
+          subject: colSubject,
+          bodyHtml: buildHtml(colBody),
+          ticket,
+          recipientType: 'managers',
+        });
+        if (sent) colSent = true;
+      }
+
+      // 3. Update ticket flags + schedule followup
+      await base44.asServiceRole.entities.ServiceTicket.update(ticket.id, {
+        printing_customer_completed_email_sent: true,
+        printing_collections_email_sent: colSent,
+        printing_collections_email_sent_at: colSent ? nowIso : null,
+        printing_collections_followup_due_at: followupDueAt,
+        printing_collections_followup_sent: false,
+      });
+
+      results.printing_closed = true;
+      results.printing_collections_sent = colSent;
+      return Response.json({ ok: true, action, results });
+    }
+
+    // Skip generic status emails for printing tickets
+    if (isPrintingClosed) {
+      return Response.json({ ok: true, action, results });
+    }
+
+    if (!ticket.created_by) {
+      return Response.json({ ok: true, action, results });
+    }
+
     const keyMap = {
       'שויכה לטיפול': 'user_ticket_assigned',
       'בטיפול': 'user_ticket_status_in_progress',
       'ממתינה': 'user_ticket_waiting',
       'טופלה': 'user_ticket_resolved',
       'נסגרה': 'user_ticket_closed',
+      'הושלם': 'user_ticket_closed',
     };
     const key = keyMap[newStatus];
     if (key) {
@@ -319,7 +516,7 @@ Deno.serve(async (req) => {
   if (action === 'feedback_request') {
     const setting = await getSetting(base44, 'user_service_feedback_request');
     // Prefer customer_email (from synced tenant data), fall back to created_by
-    const recipientEmail = ticket.customer_email || ticket.created_by || '';
+    const recipientEmail = ticket.customer_email || ticket.email || ticket.created_by || '';
     if (!setting?.enabled) {
       await logSkipped(base44, { key: 'user_service_feedback_request', ticket, reason: setting ? 'disabled' : 'NotificationSetting missing', recipientType: 'user' });
       results.feedback_request = false;
@@ -381,10 +578,12 @@ Deno.serve(async (req) => {
   // ── check_post_closure ────────────────────────────────────────
   if (action === 'check_post_closure') {
     const closedTickets = await base44.asServiceRole.entities.ServiceTicket.filter({ status: 'נסגרה' });
+    const completedTickets = await base44.asServiceRole.entities.ServiceTicket.filter({ status: 'הושלם' });
+    const allClosedTickets = [...closedTickets, ...completedTickets];
     const nowMs = now.getTime();
     const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
     let googleSent = 0;
-    for (const t of closedTickets) {
+    for (const t of allClosedTickets) {
       if (!t.closed_at || t.google_review_request_sent || !t.created_by) continue;
       if (t.requires_manager_followup || t.google_review_blocked_reason) continue;
       const closedMs = new Date(t.closed_at).getTime();
@@ -400,6 +599,37 @@ Deno.serve(async (req) => {
       }
     }
     results.google_reviews_sent = googleSent;
+
+    // ── Printing followup reminders ──
+    const printingTickets = await base44.asServiceRole.entities.ServiceTicket.filter({ is_printing_package_request: true });
+    let followupSent = 0;
+    const followupRecipients = await getServiceFollowupRecipients(base44);
+
+    for (const t of printingTickets) {
+      if (!t.printing_collections_followup_due_at || t.printing_collections_followup_sent) continue;
+      const dueMs = new Date(t.printing_collections_followup_due_at).getTime();
+      if (nowMs < dueMs) continue;
+
+      const { subject, body } = buildPrintingFollowupEmail(t);
+      let sent = false;
+      for (const rcpt of followupRecipients) {
+        if (!rcpt.email) continue;
+        const ok = await sendAndLog(base44, {
+          key: 'printing_collections_followup',
+          toEmail: rcpt.email,
+          subject,
+          bodyHtml: buildHtml(body),
+          ticket: t,
+          recipientType: 'managers',
+        });
+        if (ok) sent = true;
+      }
+      if (sent) {
+        await base44.asServiceRole.entities.ServiceTicket.update(t.id, { printing_collections_followup_sent: true });
+        followupSent++;
+      }
+    }
+    results.printing_followups_sent = followupSent;
   }
 
   // ── check_sla ─────────────────────────────────────────────────
@@ -411,6 +641,9 @@ Deno.serve(async (req) => {
     const nowMs = now.getTime();
 
     for (const t of openTickets) {
+      // Skip closed-ish statuses
+      if (t.status === 'הושלם' || t.status === 'בוטל') continue;
+
       const warningAtMs = t.sla_warning_at_ms ? Number(t.sla_warning_at_ms) : (t.sla_warning_at ? new Date(t.sla_warning_at).getTime() : null);
       const deadlineMs = t.sla_deadline_ms ? Number(t.sla_deadline_ms) : (t.sla_deadline ? new Date(t.sla_deadline).getTime() : null);
 

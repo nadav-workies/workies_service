@@ -15,10 +15,11 @@ import { StatusBadge, PriorityBadge, SlaBadge } from "@/components/tickets/Ticke
 import { isManagerOrAdmin } from "@/lib/slaUtils";
 import { getTimeRemainingLabel, getDeadlineMs, getOpenedAtMs, isTicketSlaBreached as isTicketBreached } from "@/lib/slaAgent.js";
 import { format } from "date-fns";
-import { ArrowRight, User, Phone, MapPin, Clock, Shield, MessageSquare, Loader2, CheckCircle, AlertTriangle, Star, ExternalLink, Send, Building2, RefreshCw, Mail } from "lucide-react";
+import { ArrowRight, User, Phone, MapPin, Clock, Shield, MessageSquare, Loader2, CheckCircle, AlertTriangle, Star, ExternalLink, Send, Building2, RefreshCw, Mail, Printer } from "lucide-react";
 import FeedbackModal from "@/components/tickets/FeedbackModal";
 import AttachmentUploader from "@/components/tickets/AttachmentUploader";
 import SlaExclusionDialog from "@/components/tickets/SlaExclusionDialog";
+import PrintingBadge from "@/components/tickets/PrintingBadge";
 
 const STATUSES = ["פתוחה","שויכה לטיפול","בטיפול","ממתינה","טופלה","נסגרה"];
 const BREACH_REASONS = ["ממתין לספק","חוסר בחלקים","לא אותר הלקוח","טיפול נדחה","תקלה מורכבת","עומס תפעולי","אחר"];
@@ -152,9 +153,11 @@ export default function TicketDetail() {
     const currentBreach = isTicketBreached(ticket);
     if (currentBreach && !closeForm.sla_breach_reason) return;
     const isBreach = currentBreach;
+    const isPrinting = ticket.is_printing_package_request === true;
+    const closeStatus = isPrinting ? "הושלם" : "נסגרה";
     const closedTicket = {
       ...ticket,
-      status: "נסגרה",
+      status: closeStatus,
       resolution_summary: closeForm.resolution_summary,
       customer_response_sent: true,
       closed_at: now.toISOString(),
@@ -164,11 +167,13 @@ export default function TicketDetail() {
     };
     updateMutation.mutate({
       updates: closedTicket,
-      historyEntry: addHistory("קריאה נסגרה", closeForm.resolution_summary)
+      historyEntry: addHistory(isPrinting ? "קריאה הושלמה" : "קריאה נסגרה", closeForm.resolution_summary)
     });
-    base44.functions.invoke('ticketNotifications', { action: 'status_changed', ticket: closedTicket, newStatus: 'נסגרה', oldStatus: ticket.status }).catch(() => {});
-    // Send feedback request email
-    base44.functions.invoke('ticketNotifications', { action: 'feedback_request', ticket: closedTicket }).catch(() => {});
+    base44.functions.invoke('ticketNotifications', { action: 'status_changed', ticket: closedTicket, newStatus: closeStatus, oldStatus: ticket.status }).catch(() => {});
+    // Send feedback request email (skip for printing — they get specialized emails)
+    if (!isPrinting) {
+      base44.functions.invoke('ticketNotifications', { action: 'feedback_request', ticket: closedTicket }).catch(() => {});
+    }
     setCloseDialog(false);
   };
 
@@ -202,7 +207,7 @@ export default function TicketDetail() {
   if (isLoading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
   if (!ticket || !canView) return <div className="text-center py-20 text-muted-foreground">הקריאה לא נמצאה או שאין לך הרשאה לצפות בה</div>;
 
-  const isClosed = ticket.status === "נסגרה";
+  const isClosed = ticket.status === "נסגרה" || ticket.status === "הושלם" || ticket.status === "בוטל";
   const isBreach = isTicketBreached(ticket);
   const sla = getTimeRemainingLabel(ticket);
   const slaDeadlineMs = getDeadlineMs(ticket);
@@ -221,8 +226,12 @@ export default function TicketDetail() {
             <h1 className="text-lg font-bold">{ticket.ticket_number}</h1>
             <StatusBadge status={ticket.status} />
             <PriorityBadge priority={ticket.priority} />
+            <PrintingBadge ticket={ticket} />
           </div>
-          <p className="text-muted-foreground text-sm mt-0.5">{ticket.ticket_type || ticket.issue_description}</p>
+          <p className="text-muted-foreground text-sm mt-0.5 flex items-center gap-1.5">
+            {ticket.is_printing_package_request && <Printer className="w-3.5 h-3.5 text-primary" />}
+            {ticket.ticket_type || ticket.issue_description}
+          </p>
         </div>
         {isMgr && !isClosed && (
           <Select onValueChange={handleStatusChange}>

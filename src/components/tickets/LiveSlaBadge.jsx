@@ -15,7 +15,7 @@ export default function LiveSlaBadge({ ticket, compact = false }) {
   const [nowMs, setNowMs] = useState(Date.now());
 
   useEffect(() => {
-    if (!ticket || ticket.status === 'נסגרה') return;
+    if (!ticket || ticket.status === 'נסגרה' || ticket.status === 'הושלם' || ticket.status === 'בוטל') return;
     const interval = setInterval(() => setNowMs(Date.now()), 10000);
     return () => clearInterval(interval);
   }, [ticket?.id, ticket?.status]);

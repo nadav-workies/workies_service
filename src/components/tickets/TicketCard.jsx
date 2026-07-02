@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge, PriorityBadge, SlaBadge } from "./TicketStatusBadge";
+import PrintingBadge, { getPrintingHighlightClass } from "./PrintingBadge";
 import { format } from "date-fns";
 import { MapPin, Clock, ChevronLeft } from "lucide-react";
 
@@ -8,7 +9,7 @@ export default function TicketCard({ ticket }) {
   const navigate = useNavigate();
   return (
     <Card
-      className="cursor-pointer hover:shadow-md transition-all active:scale-[0.99]"
+      className={`cursor-pointer hover:shadow-md transition-all active:scale-[0.99] ${getPrintingHighlightClass(ticket)}`}
       onClick={() => navigate(`/tickets/${ticket.id}`)}
     >
       <CardContent className="p-4">
@@ -18,6 +19,7 @@ export default function TicketCard({ ticket }) {
               <span className="font-mono text-xs text-muted-foreground">{ticket.ticket_number}</span>
               <StatusBadge status={ticket.status} />
               <PriorityBadge priority={ticket.priority} />
+              <PrintingBadge ticket={ticket} />
             </div>
             <p className="font-semibold text-sm truncate">{ticket.customer_name}</p>
             <p className="text-sm text-muted-foreground truncate">{ticket.issue_description}</p>

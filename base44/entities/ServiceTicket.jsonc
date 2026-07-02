@@ -54,6 +54,10 @@
       "type": "string",
       "description": "\u05d8\u05dc\u05e4\u05d5\u05df"
     },
+    "email": {
+      "type": "string",
+      "description": "\u05d0\u05d9\u05de\u05d9\u05d9\u05dc \u05dc\u05e7\u05d5\u05d7"
+    },
     "issue_description": {
       "type": "string",
       "description": "\u05de\u05d4\u05d5\u05ea \u05d4\u05ea\u05e7\u05dc\u05d4"
@@ -94,7 +98,12 @@
         "\u05d1\u05d8\u05d9\u05e4\u05d5\u05dc",
         "\u05de\u05de\u05ea\u05d9\u05e0\u05d4",
         "\u05d8\u05d5\u05e4\u05dc\u05d4",
-        "\u05e0\u05e1\u05d2\u05e8\u05d4"
+        "\u05e0\u05e1\u05d2\u05e8\u05d4",
+        "\u05d4\u05d5\u05e9\u05dc\u05dd",
+        "\u05d1\u05d5\u05d8\u05dc",
+        "\u05de\u05de\u05ea\u05d9\u05df \u05dc\u05d8\u05e2\u05d9\u05e0\u05ea \u05d7\u05d1\u05d9\u05dc\u05ea \u05d4\u05d3\u05e4\u05e1\u05d4",
+        "\u05de\u05de\u05ea\u05d9\u05df \u05dc\u05d7\u05d9\u05d5\u05d1",
+        "\u05de\u05de\u05ea\u05d9\u05df \u05dc\u05ea\u05e9\u05dc\u05d5\u05dd"
       ],
       "default": "\u05e4\u05ea\u05d5\u05d7\u05d4",
       "description": "\u05e1\u05d8\u05d8\u05d5\u05e1"
@@ -267,6 +276,97 @@
       "type": "boolean",
       "default": false,
       "description": "\u05d4\u05d0\u05dd \u05dc\u05d4\u05d7\u05e8\u05d9\u05d2 \u05d0\u05ea \u05d4\u05e7\u05e8\u05d9\u05d0\u05d4 \u05de\u05db\u05dc \u05de\u05d3\u05d9\u05d3\u05d4"
+    },
+    "no_sla": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05d4\u05d0\u05dd \u05dc\u05e7\u05e8\u05d9\u05d0\u05d4 \u05d0\u05d9\u05df SLA"
+    },
+    "exclude_from_sla": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05d4\u05d0\u05dd \u05dc\u05d4\u05d7\u05e8\u05d9\u05d2 \u05deSLA"
+    },
+    "is_printing_package_request": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05d4\u05d0\u05dd \u05d6\u05d5 \u05e7\u05e8\u05d9\u05d0\u05ea \u05e2\u05d3\u05db\u05d5\u05df \u05d7\u05d1\u05d9\u05dc\u05ea \u05d4\u05d3\u05e4\u05e1\u05d4"
+    },
+    "request_type": {
+      "type": "string",
+      "description": "\u05e1\u05d5\u05d2 \u05d1\u05e7\u05e9\u05d4"
+    },
+    "printing_package_id": {
+      "type": "string",
+      "description": "\u05de\u05d6\u05d4\u05d4 \u05d7\u05d1\u05d9\u05dc\u05ea \u05d4\u05d3\u05e4\u05e1\u05d4"
+    },
+    "printing_package_name": {
+      "type": "string",
+      "description": "\u05e9\u05dd \u05d7\u05d1\u05d9\u05dc\u05ea \u05d4\u05d3\u05e4\u05e1\u05d4"
+    },
+    "printing_package_payment_amount": {
+      "type": "number",
+      "description": "\u05e2\u05dc\u05d5\u05ea \u05d7\u05d1\u05d9\u05dc\u05ea \u05d4\u05d3\u05e4\u05e1\u05d4 \u05db\u05d5\u05dc\u05dc \u05de\u05e2\u05f4\u05de"
+    },
+    "printing_package_credit_value": {
+      "type": "number",
+      "description": "\u05de\u05e1\u05e4\u05e8 \u05e7\u05e8\u05d3\u05d9\u05d8\u05d9\u05dd \u05d1\u05d7\u05d1\u05d9\u05dc\u05d4"
+    },
+    "printing_package_bw_pages": {
+      "type": "number",
+      "description": "\u05de\u05e1\u05e4\u05e8 \u05e2\u05de\u05d5\u05d3\u05d9 \u05e9\u05d7\u05d5\u05e8\u05be\u05dc\u05d1\u05df"
+    },
+    "printing_package_color_pages": {
+      "type": "number",
+      "description": "\u05de\u05e1\u05e4\u05e8 \u05e2\u05de\u05d5\u05d3\u05d9 \u05e6\u05d1\u05e2"
+    },
+    "printing_billing_method": {
+      "type": "string",
+      "description": "\u05d0\u05d5\u05e4\u05df \u05d7\u05d9\u05d5\u05d1 \u05d7\u05d1\u05d9\u05dc\u05ea \u05d4\u05d3\u05e4\u05e1\u05d4"
+    },
+    "printing_customer_acknowledged": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05d4\u05d0\u05dd \u05d4\u05dc\u05e7\u05d5\u05d7 \u05d0\u05d9\u05e9\u05e8 \u05d0\u05ea \u05d4\u05d1\u05e7\u05e9\u05d4"
+    },
+    "printing_customer_notes": {
+      "type": "string",
+      "description": "\u05d4\u05e2\u05e8\u05d5\u05ea \u05dc\u05e7\u05d5\u05d7 \u05dc\u05d1\u05e7\u05e9\u05ea \u05d4\u05d3\u05e4\u05e1\u05d4"
+    },
+    "printing_customer_created_email_sent": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05d4\u05d0\u05dd \u05e0\u05e9\u05dc\u05d7 \u05de\u05d9\u05d9\u05dc \u05d0\u05d9\u05e9\u05d5\u05e8 \u05e4\u05ea\u05d9\u05d7\u05d4 \u05dc\u05dc\u05e7\u05d5\u05d7"
+    },
+    "printing_manager_created_email_sent": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05d4\u05d0\u05dd \u05e0\u05e9\u05dc\u05d7 \u05de\u05d9\u05d9\u05dc \u05e4\u05ea\u05d9\u05d7\u05d4 \u05dc\u05de\u05e0\u05d4\u05dc\u05d9\u05dd"
+    },
+    "printing_customer_completed_email_sent": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05d4\u05d0\u05dd \u05e0\u05e9\u05dc\u05d7 \u05de\u05d9\u05d9\u05dc \u05e1\u05d9\u05d5\u05dd \u05dc\u05dc\u05e7\u05d5\u05d7"
+    },
+    "printing_collections_email_sent": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05d4\u05d0\u05dd \u05e0\u05e9\u05dc\u05d7 \u05de\u05d9\u05d9\u05dc \u05dc\u05d2\u05d1\u05d9\u05d9\u05d4"
+    },
+    "printing_collections_email_sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u05de\u05d5\u05e2\u05d3 \u05e9\u05dc\u05d9\u05d7\u05ea \u05de\u05d9\u05d9\u05dc \u05dc\u05d2\u05d1\u05d9\u05d9\u05d4"
+    },
+    "printing_collections_followup_due_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u05de\u05d5\u05e2\u05d3 \u05ea\u05d6\u05db\u05d5\u05e8\u05ea \u05d2\u05d1\u05d9\u05d9\u05d4"
+    },
+    "printing_collections_followup_sent": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05d4\u05d0\u05dd \u05e0\u05e9\u05dc\u05d7\u05d4 \u05ea\u05d6\u05db\u05d5\u05e8\u05ea \u05d2\u05d1\u05d9\u05d9\u05d4"
     },
     "sla_warning_sent": {
       "type": "boolean",
