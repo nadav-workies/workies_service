@@ -51,6 +51,10 @@ export default function TicketDetail() {
     select: d => d[0],
   });
 
+  const isMgr = isManagerOrAdmin(user);
+  const isOwner = user && ticket && (ticket.created_by_id === user.id || ticket.created_by === user.email);
+  const canView = isMgr || isOwner;
+
   // Fetch current tenant data for the ticket's room
   const { data: roomTenants = [] } = useQuery({
     queryKey: ['ticket-room-tenants', ticket?.room_number],
@@ -59,10 +63,6 @@ export default function TicketDetail() {
     staleTime: 60000,
   });
   const currentTenant = roomTenants.find(t => t.is_primary_contact) || roomTenants[0] || null;
-
-  const isMgr = isManagerOrAdmin(user);
-  const isOwner = user && ticket && (ticket.created_by_id === user.id || ticket.created_by === user.email);
-  const canView = isMgr || isOwner;
 
   const updateMutation = useMutation({
     mutationFn: ({ updates, historyEntry }) => {
