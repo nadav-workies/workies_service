@@ -5,8 +5,10 @@ import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowRight, Loader2, Send, Printer, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Loader2, Send, Printer, CheckCircle2, Building2, MapPin } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PRINTING_PACKAGES, hasActiveOffice } from "@/lib/printingPackages";
+import { WORKIES_ROOMS } from "@/lib/workiesRooms";
 import { generateTicketNumber } from "@/lib/slaUtils";
 import {
   calculateSlaDeadlineWithinServiceHours,
@@ -24,20 +26,33 @@ export default function PrintingPackageForm({ user, onBack }) {
   const [addToMonthlyAccount, setAddToMonthlyAccount] = useState(true);
   const [acknowledged, setAcknowledged] = useState(false);
   const [notes, setNotes] = useState("");
+  const [manualRoomNumber, setManualRoomNumber] = useState("");
   const [submittedTicket, setSubmittedTicket] = useState(null);
 
-  const { data: roomTenants = [] } = useQuery({
-    queryKey: ['printing-tenants', user?.default_room_number],
+  const autoRoomNumber = user?.default_room_number || user?.room_number || "";
+
+  const { data: roomTenants = [], isLoading: tenantsLoading } = useQuery({
+    queryKey: ['printing-tenants', autoRoomNumber],
     queryFn: () => base44.entities.RoomTenant.filter(
-      { room_number: String(user?.default_room_number), matched_room: true },
+      { room_number: String(autoRoomNumber), matched_room: true },
       '-created_date', 10
     ),
-    enabled: !!user?.default_room_number,
+    enabled: !!autoRoomNumber,
     staleTime: 60000,
   });
 
   const tenant = roomTenants[0] || null;
   const hasOffice = hasActiveOffice(user, tenant);
+
+  // ─── Room resolution: auto-detected or manually selected ───
+  const resolvedRoomNumber = autoRoomNumber || manualRoomNumber;
+  const resolvedRoom = WORKIES_ROOMS.find(r => r.room_number === String(resolvedRoomNumber)) || null;
+  const resolvedRoomLabel = resolvedRoom?.room_label
+    || user?.default_room_label
+    || tenant?.room_label
+    || "";
+  const roomAutoIdentified = !!autoRoomNumber;
+  const roomSelectionNeeded = !roomAutoIdentified;
   const billingMethod = hasOffice && addToMonthlyAccount ? "monthly_account" : "manual_payment";
 
   const mutation = useMutation({
@@ -46,9 +61,9 @@ export default function PrintingPackageForm({ user, onBack }) {
       const openedAtDate = new Date();
       const ticketNumber = generateTicketNumber();
       const customerName = tenant?.customer_name || user?.full_name || "";
-      const roomNumber = user?.default_room_number || user?.room_number || tenant?.room_number || "";
+      const roomNumber = resolvedRoomNumber;
       const roomCode = user?.room_code || tenant?.room_code || "";
-      const roomLabel = user?.default_room_label || tenant?.room_label || roomCode || roomNumber || "";
+      const roomLabel = resolvedRoomLabel || roomCode || roomNumber || "";
       const phone = tenant?.phone || "";
       const email = tenant?.email || user?.email || "";
 
@@ -147,7 +162,7 @@ export default function PrintingPackageForm({ user, onBack }) {
     },
   });
 
-  const canSubmit = selectedPackage && acknowledged && !mutation.isPending;
+  const canSubmit = selectedPackage && acknowledged && !!resolvedRoomNumber && !mutation.isPending;
 
   // ─── Success screen ───
   if (submittedTicket) {
@@ -197,6 +212,54 @@ export default function PrintingPackageForm({ user, onBack }) {
             <p className="text-sm text-muted-foreground">
               בחר חבילת הדפסות לטעינה. הבקשה תועבר לטיפול שירות / גבייה.
             </p>
+          </CardContent>
+        </Card>
+
+        {/* ─── Room association: auto-detected or manual selection ─── */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <Building2 className="w-4 h-4" />
+              חדר / משרד מבקש השירות
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {roomAutoIdentified ? (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-green-50 border border-green-200">
+                <MapPin className="w-4 h-4 text-green-600 shrink-0" />
+                <div className="text-sm">
+                  <span className="font-semibold text-green-800">
+                    {resolvedRoomLabel || resolvedRoomNumber}
+                  </span>
+                  <span className="text-green-600 text-xs mr-2">— זוהה אוטומטית</span>
+                </div>
+              </div>
+            ) : roomSelectionNeeded ? (
+              <div className="space-y-2">
+                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2.5">
+                  לא זוהה חדר אוטומטית. נדרש לבחור חדר מהרשימה כדי לשייך את הבקשה.
+                </p>
+                <Select value={manualRoomNumber} onValueChange={setManualRoomNumber}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="בחר חדר / משרד מהרשימה..." />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {WORKIES_ROOMS.map(room => (
+                      <SelectItem key={room.room_number} value={room.room_number}>
+                        {room.room_number} — {room.room_label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {manualRoomNumber && resolvedRoom && (
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 text-sm">
+                    <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                    <span className="font-medium">{resolvedRoom.room_label}</span>
+                    <span className="text-xs text-muted-foreground">({resolvedRoom.room_area})</span>
+                  </div>
+                )}
+              </div>
+            ) : null}
           </CardContent>
         </Card>
 
