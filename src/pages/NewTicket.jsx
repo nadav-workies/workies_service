@@ -30,6 +30,10 @@ function RoomSelector({ value, onChange, forcePublicMode }) {
   const [search, setSearch] = useState("");
   const [mode, setMode] = useState(forcePublicMode ? "public" : "room"); // "room" | "public"
 
+  useEffect(() => {
+    if (forcePublicMode) setMode("public");
+  }, [forcePublicMode]);
+
   const filteredRooms = WORKIES_ROOMS.filter(r =>
     r.room_number.includes(search) || r.room_label.toLowerCase().includes(search.toLowerCase())
   );
