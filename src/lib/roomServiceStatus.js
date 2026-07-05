@@ -39,6 +39,28 @@ export function getRoomServiceStatus(roomNumber, tickets = []) {
   return { status, openCount: roomTickets.length, urgentCount, breachedCount, tickets: roomTickets, mostUrgentTicket, slaDisplay };
 }
 
+export function getPublicAreaServiceStatus(areaKey, tickets = []) {
+  const areaTickets = tickets.filter(
+    t => isTicketLive(t) && String(t.public_area_key) === String(areaKey)
+  );
+
+  if (areaTickets.length === 0) {
+    return { status: 'clear', openCount: 0, urgentCount: 0, breachedCount: 0, tickets: [], mostUrgentTicket: null, slaDisplay: null };
+  }
+
+  const mostUrgentTicket = getMostUrgentTicket(areaTickets);
+  const slaDisplay = getLiveSlaDisplay(mostUrgentTicket);
+  const breachedCount = areaTickets.filter(t => isTicketSlaBreached(t)).length;
+  const urgentCount = areaTickets.filter(t => t.priority === 'קריטית' || t.priority === 'גבוהה').length;
+
+  let status = 'open';
+  if (slaDisplay.status === 'breached') status = 'breached';
+  else if (slaDisplay.status === 'critical') status = 'critical';
+  else if (slaDisplay.status === 'warning') status = 'warning';
+
+  return { status, openCount: areaTickets.length, urgentCount, breachedCount, tickets: areaTickets, mostUrgentTicket, slaDisplay };
+}
+
 export const ROOM_STATUS_COLORS = {
   clear:    { bg: '#dcfce7', border: '#86efac', text: '#166534', label: 'תקין' },
   open:     { bg: '#dbeafe', border: '#60a5fa', text: '#1d4ed8', label: 'קריאה פתוחה' },

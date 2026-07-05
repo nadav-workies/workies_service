@@ -14,6 +14,7 @@ import { generateTicketNumber, calculateSlaWarningAtMs, PRIORITY_SLA_MINUTES, is
 import { calculateSlaDeadlineWithinServiceHours, isWithinServiceHours } from "@/lib/slaAgent";
 import { QUICK_TICKET_LIST } from "@/lib/quickTickets";
 import { WORKIES_ROOMS, WORKIES_PUBLIC_AREAS } from "@/lib/workiesRooms";
+import { AlertTriangle } from "lucide-react";
 import QuickTicketSelector from "@/components/tickets/QuickTicketSelector";
 import PrintingPackageForm from "@/components/tickets/PrintingPackageForm";
 
@@ -25,9 +26,9 @@ const PRIORITY_BUTTON_COLORS = {
   'רגילה': 'bg-blue-500 text-white border-blue-500',
 };
 
-function RoomSelector({ value, onChange }) {
+function RoomSelector({ value, onChange, forcePublicMode }) {
   const [search, setSearch] = useState("");
-  const [mode, setMode] = useState("room"); // "room" | "public"
+  const [mode, setMode] = useState(forcePublicMode ? "public" : "room"); // "room" | "public"
 
   const filteredRooms = WORKIES_ROOMS.filter(r =>
     r.room_number.includes(search) || r.room_label.toLowerCase().includes(search.toLowerCase())
@@ -35,18 +36,20 @@ function RoomSelector({ value, onChange }) {
 
   return (
     <div className="space-y-2">
-      <div className="flex gap-2">
-        <button type="button" onClick={() => setMode("room")}
-          className={`text-xs px-3 py-1 rounded-full border transition-all ${mode === "room" ? "bg-primary text-primary-foreground border-primary" : "border-border hover:border-primary"}`}>
-          חדר / משרד
-        </button>
-        <button type="button" onClick={() => setMode("public")}
-          className={`text-xs px-3 py-1 rounded-full border transition-all ${mode === "public" ? "bg-primary text-primary-foreground border-primary" : "border-border hover:border-primary"}`}>
-          אזור ציבורי
-        </button>
-      </div>
+      {!forcePublicMode && (
+        <div className="flex gap-2">
+          <button type="button" onClick={() => setMode("room")}
+            className={`text-xs px-3 py-1 rounded-full border transition-all ${mode === "room" ? "bg-primary text-primary-foreground border-primary" : "border-border hover:border-primary"}`}>
+            חדר / משרד
+          </button>
+          <button type="button" onClick={() => setMode("public")}
+            className={`text-xs px-3 py-1 rounded-full border transition-all ${mode === "public" ? "bg-primary text-primary-foreground border-primary" : "border-border hover:border-primary"}`}>
+            אזור ציבורי
+          </button>
+        </div>
+      )}
 
-      {mode === "room" && (
+      {mode === "room" && !forcePublicMode && (
         <div className="space-y-1.5">
           <div className="relative">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -55,7 +58,7 @@ function RoomSelector({ value, onChange }) {
           <div className="max-h-40 overflow-y-auto border rounded-lg p-1 bg-card">
             {filteredRooms.slice(0, 30).map(room => (
               <button key={room.room_number} type="button"
-                onClick={() => onChange({ room_number: room.room_number, room_label: room.room_label, room_area: room.room_area, public_area_key: null, public_area_label: null })}
+                onClick={() => onChange({ room_number: room.room_number, room_label: room.room_label, room_area: room.room_area, public_area_key: null, public_area_label: null, location_type: 'room' })}
                 className={`w-full flex items-center justify-between px-3 py-1.5 rounded-md text-right transition-colors text-sm ${value?.room_number === room.room_number ? "bg-primary/10 font-medium" : "hover:bg-muted"}`}>
                 <span>{room.room_label}</span>
                 <span className="text-xs text-muted-foreground font-mono">{room.room_number}</span>
@@ -70,7 +73,7 @@ function RoomSelector({ value, onChange }) {
         <div className="grid grid-cols-2 gap-1.5">
           {WORKIES_PUBLIC_AREAS.map(area => (
             <button key={area.area_key} type="button"
-              onClick={() => onChange({ room_number: null, room_label: null, room_area: area.room_area, public_area_key: area.area_key, public_area_label: area.area_label })}
+              onClick={() => onChange({ room_number: null, room_label: null, room_area: area.room_area, public_area_key: area.area_key, public_area_label: area.area_label, location_type: 'public_area' })}
               className={`px-3 py-2 rounded-lg border text-sm text-right transition-all ${value?.public_area_key === area.area_key ? "border-primary bg-primary/10 font-medium" : "border-border hover:border-primary"}`}>
               {area.area_label}
             </button>
@@ -87,6 +90,7 @@ export default function NewTicket() {
   const [user, setUser] = useState(null);
   const [selectedQuickId, setSelectedQuickId] = useState(null);
   const [showPrintingForm, setShowPrintingForm] = useState(false);
+  const [publicFaultType, setPublicFaultType] = useState("");
   const [form, setForm] = useState({
     customer_name: "",
     phone: "",
@@ -104,6 +108,8 @@ export default function NewTicket() {
     room_area: null,
     public_area_key: null,
     public_area_label: null,
+    public_area_near_room: "",
+    public_area_location: "",
   });
 
   useEffect(() => {
@@ -120,10 +126,22 @@ export default function NewTicket() {
       }));
     }
 
+    // Pre-fill from public area URL params
+    const urlPublicAreaKey = urlParams.get('public_area_key');
+    if (urlPublicAreaKey) {
+      setForm(f => ({
+        ...f,
+        public_area_key: urlPublicAreaKey,
+        public_area_label: urlParams.get('public_area_label') || '',
+        room_area: urlParams.get('room_area') || '',
+        location_type: 'public_area',
+      }));
+    }
+
     base44.auth.me().then(u => {
       setUser(u);
       // Auto-fill room from user profile (only if not already set via URL)
-      if (!urlRoom && u?.default_location_type === "room" && u?.default_room_number) {
+      if (!urlRoom && !urlPublicAreaKey && u?.default_location_type === "room" && u?.default_room_number) {
         setForm(f => ({
           ...f,
           room_number: u.default_room_number,
@@ -165,6 +183,7 @@ export default function NewTicket() {
       return;
     }
     setSelectedQuickId(qt.id);
+    setPublicFaultType("");
     setForm(f => ({
       ...f,
       ticket_type: qt.ticket_type,
@@ -173,10 +192,12 @@ export default function NewTicket() {
       priority: qt.priority,
       sla_minutes: qt.sla_minutes,
       sla_label: qt.sla_label,
-      issue_description: f.issue_description || qt.examples,
+      issue_description: qt.is_public_area_fault ? "" : (f.issue_description || qt.examples),
       // ניקיון חדר — מילוי אוטומטי של פרטי לקוח מהפרופיל (עריכים בטופס)
       ...(qt.ticket_type === "ניקיון חדר" && !f.customer_name ? { customer_name: user?.full_name || "" } : {}),
       ...(qt.ticket_type === "ניקיון חדר" && !f.phone ? { phone: user?.phone || "" } : {}),
+      // מפגע באזור ציבורי — נקה מיקום חדר קודם
+      ...(qt.is_public_area_fault ? { room_number: null, room_label: null } : {}),
     }));
   };
 
@@ -215,9 +236,25 @@ export default function NewTicket() {
       // For regular users, use their own name if no customer_name given
       const customerName = data.customer_name || user?.full_name || "";
 
+      // Build public area label with near-room / location info
+      let publicAreaLabel = data.public_area_label;
+      if (data.public_area_key && data.public_area_near_room) {
+       publicAreaLabel = `${data.public_area_label} (ליד חדר ${data.public_area_near_room})`;
+      } else if (data.public_area_key && data.public_area_location) {
+       publicAreaLabel = `${data.public_area_label} - ${data.public_area_location}`;
+      }
+
+      // Prepend fault type to issue description for public area faults
+      const issueDesc = publicFaultType
+       ? `${publicFaultType} - ${data.issue_description || ""}`.trim()
+       : data.issue_description;
+
       const ticket = await base44.entities.ServiceTicket.create({
-        ...data,
-        customer_name: customerName,
+       ...data,
+       issue_description: issueDesc,
+       public_area_label: publicAreaLabel,
+       request_type: publicFaultType || undefined,
+       customer_name: customerName,
         ticket_number: ticketNumber,
         opened_at: openedAtDate.toISOString(),
         opened_at_ms: openedAtMs,
@@ -259,7 +296,15 @@ export default function NewTicket() {
     ? form.public_area_label
     : null;
 
-  const isValid = form.issue_description && form.area && (form.room_number || form.public_area_key || isMgr);
+  const selectedPublicArea = WORKIES_PUBLIC_AREAS.find(a => a.area_key === form.public_area_key);
+  const needsNearRoom = selectedPublicArea?.requires_near_room;
+  const needsLocation = selectedPublicArea?.requires_location;
+  const isPublicFault = form.ticket_type === "מפגע באזור ציבורי";
+
+  const isValid = form.issue_description && form.area && (form.room_number || form.public_area_key || isMgr)
+    && (!isPublicFault || !!publicFaultType)
+    && (!needsNearRoom || !!form.public_area_near_room)
+    && (!needsLocation || !!form.public_area_location);
 
   if (showPrintingForm) {
     return (
@@ -291,6 +336,25 @@ export default function NewTicket() {
           </CardHeader>
           <CardContent className="space-y-4">
 
+            {/* Fault type sub-selection for public area fault */}
+            {isPublicFault && (
+              <div className="space-y-1.5">
+                <Label className="flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 text-orange-500" />
+                  סוג המפגע *
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {QUICK_TICKET_LIST.find(q => q.id === 11)?.fault_types?.map(ft => (
+                    <button key={ft} type="button"
+                      onClick={() => setPublicFaultType(ft)}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${publicFaultType === ft ? 'bg-orange-500 text-white border-orange-500' : 'bg-card border-border hover:border-orange-400'}`}>
+                      {ft}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Location */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
@@ -308,11 +372,27 @@ export default function NewTicket() {
                   </Button>
                 </div>
               )}
-              {/* Show selector if: manager, or user without default room, or user chose to change */}
-              {(isMgr || !user?.default_location_type || user?.default_location_type === "none" || user?.default_location_type !== "room" || !form.room_number) && (
-                <RoomSelector value={form} onChange={handleLocationChange} />
+              {/* Show selector if: manager, public area fault, user without default room, or user chose to change */}
+              {(isMgr || isPublicFault || !user?.default_location_type || user?.default_location_type === "none" || user?.default_location_type !== "room" || !form.room_number) && (
+                <RoomSelector value={form} onChange={handleLocationChange} forcePublicMode={isPublicFault} />
               )}
             </div>
+
+            {/* Near room field for corridors */}
+            {needsNearRoom && (
+              <div className="space-y-1.5">
+                <Label>ליד איזה חדר נמצא המעבר? *</Label>
+                <Input value={form.public_area_near_room} onChange={e => update("public_area_near_room", e.target.value)} placeholder="מספר חדר (לדוגמה: 42)" />
+              </div>
+            )}
+
+            {/* Location field for WC */}
+            {needsLocation && (
+              <div className="space-y-1.5">
+                <Label>מיקום מדויק *</Label>
+                <Input value={form.public_area_location} onChange={e => update("public_area_location", e.target.value)} placeholder="לדוגמה: קומה 1, ליד המעלית" />
+              </div>
+            )}
 
             {/* Customer details — manager (all tickets) or ניקיון חדר (all users) */}
             {(isMgr || form.ticket_type === "ניקיון חדר") && (

@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
-import { WORKIES_ROOMS } from '@/lib/workiesRooms';
-import { getRoomServiceStatus, ROOM_STATUS_COLORS } from '@/lib/roomServiceStatus';
+import { WORKIES_ROOMS, WORKIES_PUBLIC_AREAS } from '@/lib/workiesRooms';
+import { getRoomServiceStatus, getPublicAreaServiceStatus, ROOM_STATUS_COLORS } from '@/lib/roomServiceStatus';
 import RoomCell from './RoomCell';
+import PublicAreaCell from './PublicAreaCell';
 
 const AREA_GROUPS = [
   { key: 'wing_a', label: 'כנף A — 1–25',  rooms: ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25'] },
@@ -12,11 +13,19 @@ const AREA_GROUPS = [
 
 const ROOM_MAP = Object.fromEntries(WORKIES_ROOMS.map(r => [r.room_number, r]));
 
-export default function ServiceMap({ tickets, onRoomSelect, selectedRoom }) {
+export default function ServiceMap({ tickets, onRoomSelect, selectedRoom, onPublicAreaSelect, selectedPublicArea }) {
   const statusMap = useMemo(() => {
     const map = {};
     WORKIES_ROOMS.forEach(r => {
       map[r.room_number] = getRoomServiceStatus(r.room_number, tickets);
+    });
+    return map;
+  }, [tickets]);
+
+  const publicAreaStatusMap = useMemo(() => {
+    const map = {};
+    WORKIES_PUBLIC_AREAS.forEach(a => {
+      map[a.area_key] = getPublicAreaServiceStatus(a.area_key, tickets);
     });
     return map;
   }, [tickets]);
@@ -48,6 +57,29 @@ export default function ServiceMap({ tickets, onRoomSelect, selectedRoom }) {
           </div>
         </div>
       ))}
+
+      {/* Public Areas */}
+      <div>
+        <p className="text-[11px] font-semibold text-muted-foreground mb-1.5 border-b pb-0.5">אזורים ציבוריים</p>
+        <div
+          className="grid gap-1"
+          style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(72px, 1fr))' }}
+        >
+          {WORKIES_PUBLIC_AREAS.map(area => {
+            const areaStatus = publicAreaStatusMap[area.area_key] || { status: 'clear', openCount: 0, urgentCount: 0, breachedCount: 0, tickets: [], mostUrgentTicket: null, slaDisplay: null };
+            return (
+              <div key={area.area_key} style={{ height: 52 }}>
+                <PublicAreaCell
+                  area={area}
+                  areaStatus={areaStatus}
+                  isSelected={selectedPublicArea?.area_key === area.area_key}
+                  onClick={() => onPublicAreaSelect?.(area, areaStatus)}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

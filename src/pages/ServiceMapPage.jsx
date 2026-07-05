@@ -7,6 +7,7 @@ import { WORKIES_ROOMS } from '@/lib/workiesRooms';
 import ServiceMap from '@/components/servicemap/ServiceMap';
 import MapLegend from '@/components/servicemap/MapLegend';
 import RoomSidePanel from '@/components/servicemap/RoomSidePanel';
+import PublicAreaSidePanel from '@/components/servicemap/PublicAreaSidePanel';
 import { Loader2, MapPin, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -15,6 +16,8 @@ export default function ServiceMapPage() {
   const [authLoading, setAuthLoading] = useState(true);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [selectedRoomStatus, setSelectedRoomStatus] = useState(null);
+  const [selectedPublicArea, setSelectedPublicArea] = useState(null);
+  const [selectedPublicAreaStatus, setSelectedPublicAreaStatus] = useState(null);
 
   useEffect(() => {
     base44.auth.me().then(u => { setUser(u); setAuthLoading(false); }).catch(() => setAuthLoading(false));
@@ -49,12 +52,26 @@ export default function ServiceMapPage() {
   });
 
   const handleRoomSelect = (room, roomStatus) => {
+    setSelectedPublicArea(null);
+    setSelectedPublicAreaStatus(null);
     if (selectedRoom?.room_number === room.room_number) {
       setSelectedRoom(null);
       setSelectedRoomStatus(null);
     } else {
       setSelectedRoom(room);
       setSelectedRoomStatus(roomStatus);
+    }
+  };
+
+  const handlePublicAreaSelect = (area, areaStatus) => {
+    setSelectedRoom(null);
+    setSelectedRoomStatus(null);
+    if (selectedPublicArea?.area_key === area.area_key) {
+      setSelectedPublicArea(null);
+      setSelectedPublicAreaStatus(null);
+    } else {
+      setSelectedPublicArea(area);
+      setSelectedPublicAreaStatus(areaStatus);
     }
   };
 
@@ -131,10 +148,12 @@ export default function ServiceMapPage() {
             busyRooms={busyRooms}
             onRoomSelect={handleRoomSelect}
             selectedRoom={selectedRoom}
+            onPublicAreaSelect={handlePublicAreaSelect}
+            selectedPublicArea={selectedPublicArea}
           />
         </div>
 
-        {selectedRoom && selectedRoomStatus && (
+        {selectedRoom && selectedRoomStatus ? (
           <div className="w-80 shrink-0 bg-card border rounded-xl overflow-hidden sticky top-4 max-h-[80vh] flex flex-col">
             <RoomSidePanel
               room={selectedRoom}
@@ -142,7 +161,15 @@ export default function ServiceMapPage() {
               onClose={() => { setSelectedRoom(null); setSelectedRoomStatus(null); }}
             />
           </div>
-        )}
+        ) : selectedPublicArea && selectedPublicAreaStatus ? (
+          <div className="w-80 shrink-0 bg-card border rounded-xl overflow-hidden sticky top-4 max-h-[80vh] flex flex-col">
+            <PublicAreaSidePanel
+              area={selectedPublicArea}
+              areaStatus={selectedPublicAreaStatus}
+              onClose={() => { setSelectedPublicArea(null); setSelectedPublicAreaStatus(null); }}
+            />
+          </div>
+        ) : null}
       </div>
     </div>
   );

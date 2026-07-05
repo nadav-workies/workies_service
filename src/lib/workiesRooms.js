@@ -92,16 +92,20 @@ export const WORKIES_ROOMS = [
 ];
 
 export const WORKIES_PUBLIC_AREAS = [
+  { area_key: "corridor_a", area_label: "מעבר A", room_area: "מעברים", requires_near_room: true },
+  { area_key: "corridor_b", area_label: "מעבר B", room_area: "מעברים", requires_near_room: true },
+  { area_key: "corridor_c", area_label: "מעבר C", room_area: "מעברים", requires_near_room: true },
+  { area_key: "corridor_d", area_label: "מעבר D", room_area: "מעברים", requires_near_room: true },
+  { area_key: "wc", area_label: "WC", room_area: "שירותים", requires_location: true },
   { area_key: "lounge", area_label: "LOUNGE", room_area: "חללים משותפים" },
   { area_key: "traklin", area_label: "TRAKLIN", room_area: "חללים משותפים" },
   { area_key: "bar", area_label: "BAR", room_area: "בר / מטבחון" },
   { area_key: "my_bar", area_label: "MY BAR", room_area: "בר / מטבחון" },
-  { area_key: "wc", area_label: "WC", room_area: "שירותים" },
   { area_key: "entrance_hall", area_label: "ENTRANCE HALL", room_area: "חללים משותפים" },
   { area_key: "chill_room", area_label: "CHILL ROOM", room_area: "חללים משותפים" },
-  { area_key: "w1_conference", area_label: "W1 CONFERENCE ROOM", room_area: "חדרי ישיבות" },
-  { area_key: "w2_big_conference", area_label: "W2 BIG CONFERENCE ROOM", room_area: "חדרי ישיבות" },
-  { area_key: "w3_conference", area_label: "W3 CONFERENCE ROOM", room_area: "חדרי ישיבות" },
+  { area_key: "w1_conference", area_label: "W1 CONFERENCE", room_area: "חדרי ישיבות" },
+  { area_key: "w2_big_conference", area_label: "W2 BIG CONFERENCE", room_area: "חדרי ישיבות" },
+  { area_key: "w3_conference", area_label: "W3 CONFERENCE", room_area: "חדרי ישיבות" },
 ];
 
 // Location type display labels
