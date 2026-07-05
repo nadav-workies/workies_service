@@ -174,6 +174,9 @@ export default function NewTicket() {
       sla_minutes: qt.sla_minutes,
       sla_label: qt.sla_label,
       issue_description: f.issue_description || qt.examples,
+      // ניקיון חדר — מילוי אוטומטי של פרטי לקוח מהפרופיל (עריכים בטופס)
+      ...(qt.ticket_type === "ניקיון חדר" && !f.customer_name ? { customer_name: user?.full_name || "" } : {}),
+      ...(qt.ticket_type === "ניקיון חדר" && !f.phone ? { phone: user?.phone || "" } : {}),
     }));
   };
 
@@ -311,8 +314,8 @@ export default function NewTicket() {
               )}
             </div>
 
-            {/* Manager fields */}
-            {isMgr && (
+            {/* Customer details — manager (all tickets) or ניקיון חדר (all users) */}
+            {(isMgr || form.ticket_type === "ניקיון חדר") && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>שם הלקוח {roomTenants.length > 0 && <span className="text-[10px] text-muted-foreground">(מולא אוטומטית מהדייר)</span>}</Label>

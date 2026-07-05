@@ -1,6 +1,7 @@
 export const QUICK_TICKET_LIST = [
   { id: "printing_package_update", ticket_type: "עדכון חבילת הדפסה", sla_label: "5 דקות", sla_minutes: 5, area: "אחר", priority: "קריטית", examples: "בקשה לטעינת חבילת הדפסות — טיפול שירות מהיר", is_printing_package_request: true, highlighted: true },
   { id: 1, ticket_type: "תחזוקת חדר", sla_label: "עד 30 דקות", sla_minutes: 30, area: "משרד / חדר לקוח", priority: "גבוהה", examples: "תלייה, צביעה, פתיחת דלת, תיקון חדר" },
+  { id: 10, ticket_type: "ניקיון חדר", sla_label: "עד 30 דקות", sla_minutes: 30, area: "ניקיון", priority: "גבוהה", examples: "ניקיון חדר / משרד — פנייה לצוות ניקיון" },
   { id: 2, ticket_type: "מזגן SOS", sla_label: "עד 30 דקות", sla_minutes: 30, area: "מיזוג", priority: "קריטית", examples: "מזגן לא עובד / תקלה משביתה" },
   { id: 4, ticket_type: "שירותים", sla_label: "עד 10 דקות", sla_minutes: 10, area: "שירותים", priority: "קריטית", examples: "מים, סוללה, דלת, נייר, סבון" },
   { id: 5, ticket_type: "חדר ישיבות", sla_label: "עד 5 דקות", sla_minutes: 5, area: "חדר ישיבות", priority: "קריטית", examples: "HDMI, מצגת, מחשב" },
@@ -18,6 +19,7 @@ export const QUICK_TICKET_HELP = {
   "תאורה": "מיועד לתקלות תאורה בחדרים או בחללים הציבוריים: מנורה שרופה, תאורה חלשה או תקלה במתג.",
   "קודנים": "מיועד לתקלות גישה: קודן, צ׳יפ, בקר כניסה, דלת שלא נפתחת או הרשאת כניסה שלא עובדת.",
   "מכונת קפה": "מיועד לתקלות במכונת קפה: מכונה לא עובדת, חסר מים, תקלה בהפעלה או בעיה לפני שימוש.",
+  "ניקיון חדר": "מיועד לבקשת ניקיון בחדר או במשרד: ניקיון כללי, פינוי, או החזרת החדר למצב תקין.",
   "ניקיון חללים ציבוריים": "מיועד לדיווח על צורך בניקיון במסדרונות, לאונג׳, Open Space, מטבחון או חללים משותפים.",
 };
 
