@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import DateRangeFilter from "@/components/dashboard/DateRangeFilter";
 import { getLiveTickets, getLiveSurveyResponses } from "@/lib/slaAgent.js";
 import { getCurrentCalendarMonthRange, filterSurveyResponsesBySubmittedDate, filterTicketsByClosedDate } from "@/lib/dateRangeUtils";
+import RecordActionsMenu from "@/components/admin/RecordActionsMenu";
 
 function RatingBadge({ rating }) {
   if (!rating) return <span className="text-muted-foreground text-xs">—</span>;
@@ -35,12 +36,28 @@ const VIEW_FILTERS = [
   { key: "unrated", label: "לא מדורגות" },
 ];
 
+const ARCHIVE_FILTERS = [
+  { key: "active", label: "פעילים" },
+  { key: "archived", label: "מאורכבים" },
+  { key: "all", label: "הכל" },
+];
+
 export default function SurveyResponses() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [user, setUser] = useState(null);
   const [filterRating, setFilterRating]   = useState("all");
   const [filterAssigned, setFilterAssigned] = useState("all");
   const [selectedRange, setSelectedRange] = useState(() => getCurrentCalendarMonthRange());
   const [viewFilter, setViewFilter] = useState("all");
+  const [archiveFilter, setArchiveFilter] = useState("active");
+
+  useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => {});
+  }, []);
+
+  const isAdmin = user?.role === 'admin';
+  const surveyQueryKeys = ['survey-responses', 'service-feedbacks', 'tickets-for-surveys'];
 
   const { data: rawTickets = [] } = useQuery({
     queryKey: ["tickets-for-surveys"],
@@ -59,9 +76,10 @@ export default function SurveyResponses() {
 
   const isLoading = loadingResponses || loadingFeedbacks;
 
-  // Normalize ServiceFeedback to match SurveyResponse shape
+  // Normalize ServiceFeedback to match SurveyResponse shape (preserve archive fields)
   const normalizedFeedbacks = rawFeedbacks.map(f => ({
     id: f.id,
+    _entity_name: "ServiceFeedback",
     ticket_id: f.ticket_id,
     ticket_number: f.ticket_number,
     customer_name: f.customer_name || "",
@@ -72,29 +90,50 @@ export default function SurveyResponses() {
     rating: f.rating,
     comment: f.comment,
     submitted_at: f.submitted_at,
+    archived: f.archived || false,
+    exclude_from_metrics: f.exclude_from_metrics || false,
+    archive_reason: f.archive_reason || null,
+    archived_at: f.archived_at || null,
+    archived_by: f.archived_by || null,
     source: "in_app",
   }));
+
+  // Tag SurveyResponse records
+  const taggedResponses = rawResponses.map(r => ({ ...r, _entity_name: "SurveyResponse" }));
 
   const liveTickets   = getLiveTickets(rawTickets);
   const liveResponses = getLiveSurveyResponses(rawResponses);
 
-  // Merge SurveyResponse + ServiceFeedback, deduplicating by ticket_id (SurveyResponse wins)
-  const srTicketIds = new Set(liveResponses.map(r => r.ticket_id));
-  const dedupedFeedbacks = normalizedFeedbacks.filter(f => !srTicketIds.has(f.ticket_id));
-  const allResponsesRaw = [...liveResponses, ...dedupedFeedbacks];
+  // Merge ALL (tagged + normalized), deduplicating by ticket_id (SurveyResponse wins)
+  const allSrTicketIds = new Set(taggedResponses.map(r => r.ticket_id));
+  const allDedupedFeedbacks = normalizedFeedbacks.filter(f => !allSrTicketIds.has(f.ticket_id));
+  const allMerged = [...taggedResponses, ...allDedupedFeedbacks];
 
-  const responses     = filterSurveyResponsesBySubmittedDate(allResponsesRaw, selectedRange);
+  // Active-only set (for metrics — always live regardless of archive filter)
+  const liveMerged = allMerged.filter(r => !r.archived && !r.exclude_from_metrics);
+
+  // Display set based on archive filter
+  const displayBase = archiveFilter === 'archived'
+    ? allMerged.filter(r => r.archived === true)
+    : archiveFilter === 'all'
+      ? allMerged
+      : liveMerged;
+
+  const responses     = filterSurveyResponsesBySubmittedDate(displayBase, selectedRange);
   const closedTickets = filterTicketsByClosedDate(liveTickets, selectedRange);
 
-  // Rated ticket IDs across ALL time (not just selected range) — for finding unrated tickets
-  const allRatedTicketIds = new Set(allResponsesRaw.filter(r => Number(r.rating) > 0).map(r => r.ticket_id));
+  // For metrics: always use live (active) data
+  const liveResponsesForMetrics = filterSurveyResponsesBySubmittedDate(liveMerged, selectedRange);
+
+  // Rated ticket IDs across ALL time (live only) — for finding unrated tickets
+  const allRatedTicketIds = new Set(liveMerged.filter(r => Number(r.rating) > 0).map(r => r.ticket_id));
   const unratedTickets = closedTickets.filter(t => !allRatedTicketIds.has(t.id));
 
-  // Rated ticket IDs within selected period — for accurate response rate
-  const ratedTicketIdsInPeriod = new Set(responses.filter(r => Number(r.rating) > 0).map(r => r.ticket_id));
+  // Rated ticket IDs within selected period (live only) — for accurate response rate
+  const ratedTicketIdsInPeriod = new Set(liveResponsesForMetrics.filter(r => Number(r.rating) > 0).map(r => r.ticket_id));
 
-  // Aggregation
-  const responsesWithRating = responses.filter(r => Number(r.rating) > 0);
+  // Aggregation (always based on live/active data)
+  const responsesWithRating = liveResponsesForMetrics.filter(r => Number(r.rating) > 0);
   const avgRating           = responsesWithRating.length
     ? (responsesWithRating.reduce((s, r) => s + Number(r.rating), 0) / responsesWithRating.length).toFixed(1)
     : null;
@@ -103,7 +142,7 @@ export default function SurveyResponses() {
     : null;
   const lowRatingCount      = responsesWithRating.filter(r => Number(r.rating) <= 5).length;
   const highRatingCount     = responsesWithRating.filter(r => Number(r.rating) >= 9).length;
-  const responseTicketIds   = new Set(responses.map(r => r.ticket_id));
+  const responseTicketIds   = new Set(liveResponsesForMetrics.map(r => r.ticket_id));
   const requiresFollowup    = liveTickets.filter(t => responseTicketIds.has(t.id) && t.requires_manager_followup).length;
 
   // Display filter for rated responses
@@ -144,6 +183,22 @@ export default function SurveyResponses() {
           </button>
         ))}
       </div>
+
+      {/* Archive filter — admin only */}
+      {isAdmin && (
+        <div className="flex gap-1 flex-wrap items-center">
+          <span className="text-xs text-muted-foreground ml-1">תצוגה:</span>
+          {ARCHIVE_FILTERS.map(opt => (
+            <button
+              key={opt.key}
+              onClick={() => setArchiveFilter(opt.key)}
+              className={`px-3 py-1 rounded-full text-xs border transition-colors ${archiveFilter === opt.key ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Summary metrics — only for rated/all views */}
       {showRated && (
@@ -254,15 +309,19 @@ export default function SurveyResponses() {
                     <th className="text-right px-4 py-2.5 font-medium text-xs text-muted-foreground">דירוג</th>
                     <th className="text-right px-4 py-2.5 font-medium text-xs text-muted-foreground">הערה</th>
                     <th className="px-4 py-2.5"></th>
+                    {isAdmin && <th className="px-4 py-2.5"></th>}
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map(r => (
-                    <tr key={r.id} className="border-b hover:bg-muted/20 transition-colors">
+                    <tr key={r.id} className={`border-b hover:bg-muted/20 transition-colors ${r.archived ? "bg-amber-50/40" : ""}`}>
                       <td className="px-4 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
                         {r.submitted_at ? format(new Date(r.submitted_at), "dd/MM/yy HH:mm") : "—"}
                       </td>
-                      <td className="px-4 py-2.5 font-mono text-xs">{r.ticket_number}</td>
+                      <td className="px-4 py-2.5 font-mono text-xs">
+                        {r.ticket_number}
+                        {r.archived && <span className="block text-[10px] text-amber-600 font-medium">מאורכב</span>}
+                      </td>
                       <td className="px-4 py-2.5">{r.customer_name || "—"}</td>
                       <td className="px-4 py-2.5 text-xs">{r.room_label || "—"}</td>
                       <td className="px-4 py-2.5 text-xs">{r.assigned_to || "—"}</td>
@@ -273,6 +332,17 @@ export default function SurveyResponses() {
                           <ExternalLink className="w-3.5 h-3.5" />
                         </Button>
                       </td>
+                      {isAdmin && (
+                        <td className="px-4 py-2.5">
+                          <RecordActionsMenu
+                            entityName={r._entity_name}
+                            record={r}
+                            recordType="survey"
+                            user={user}
+                            queryKeys={surveyQueryKeys}
+                          />
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

@@ -171,13 +171,17 @@ export function getLiveTickets(tickets = []) {
   return tickets.filter(isTicketLive);
 }
 
-export function getLiveSurveyResponses(responses = []) {
-  return responses.filter(r =>
-    r &&
-    r.archived !== true &&
-    r.is_test_data !== true &&
-    r.exclude_from_metrics !== true
+export function isSurveyResponseLive(response) {
+  return Boolean(
+    response &&
+    response.archived !== true &&
+    response.is_test_data !== true &&
+    response.exclude_from_metrics !== true
   );
+}
+
+export function getLiveSurveyResponses(responses = []) {
+  return responses.filter(isSurveyResponseLive);
 }
 
 /* ─────────────────────────────────────────────────────

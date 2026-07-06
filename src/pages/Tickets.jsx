@@ -28,6 +28,7 @@ export default function Tickets() {
   const [user, setUser] = useState(null);
   const [userLoaded, setUserLoaded] = useState(false);
   const [filters, setFilters] = useState({ status: "הכל", priority: "הכל", sla: "הכל", search: "" });
+  const [archiveFilter, setArchiveFilter] = useState("active");
 
   // Read params from URL
   const kpiKey      = searchParams.get('kpi');
@@ -60,7 +61,11 @@ export default function Tickets() {
 
   // סינון: חיות → תקופה → KPI / filters
   const liveTickets   = getLiveTickets(rawTickets);
-  const periodTickets = isManagerOrAdmin(user) ? filterTicketsByDateRange(liveTickets, selectedRange) : liveTickets;
+  const archivedTickets = rawTickets.filter(t => t.archived === true);
+  const visibleTickets = archiveFilter === 'archived' ? archivedTickets
+    : archiveFilter === 'all' ? rawTickets.filter(t => !t.is_test_data)
+    : liveTickets;
+  const periodTickets = isManagerOrAdmin(user) ? filterTicketsByDateRange(visibleTickets, selectedRange) : visibleTickets;
   const now = new Date();
 
   const filtered = periodTickets.filter(t => {
@@ -108,6 +113,24 @@ export default function Tickets() {
         <DateRangeFilter value={selectedRange} onChange={setSelectedRange} />
       )}
 
+      {user?.role === 'admin' && !kpiFilter && (
+        <div className="flex gap-1 flex-wrap">
+          {[
+            { key: 'active', label: 'פעילות' },
+            { key: 'archived', label: 'מאורכבות' },
+            { key: 'all', label: 'הכל' },
+          ].map(opt => (
+            <button
+              key={opt.key}
+              onClick={() => setArchiveFilter(opt.key)}
+              className={`px-3 py-1 rounded-full text-xs border transition-colors ${archiveFilter === opt.key ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-muted'}`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {!kpiFilter && !statusParam && !slaParam && (
         <TicketFilters filters={filters} onChange={setFilters} />
       )}
@@ -121,7 +144,7 @@ export default function Tickets() {
       ) : (
         <>
           <div className="hidden md:block">
-            <TicketTable tickets={filtered} />
+            <TicketTable tickets={filtered} user={user} />
           </div>
           <div className="md:hidden space-y-3">
             {filtered.map(t => <TicketCard key={t.id} ticket={t} />)}

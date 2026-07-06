@@ -20,6 +20,7 @@ import FeedbackModal from "@/components/tickets/FeedbackModal";
 import AttachmentUploader from "@/components/tickets/AttachmentUploader";
 import SlaExclusionDialog from "@/components/tickets/SlaExclusionDialog";
 import PrintingBadge from "@/components/tickets/PrintingBadge";
+import RecordActionsMenu from "@/components/admin/RecordActionsMenu";
 
 const STATUSES = ["פתוחה","שויכה לטיפול","בטיפול","ממתינה","טופלה","נסגרה"];
 const BREACH_REASONS = ["ממתין לספק","חוסר בחלקים","לא אותר הלקוח","טיפול נדחה","תקלה מורכבת","עומס תפעולי","אחר"];
@@ -472,6 +473,31 @@ export default function TicketDetail() {
                     החרג ממדידת SLA
                   </Button>
                 )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Admin: Archive / Delete — admin only */}
+          {user?.role === 'admin' && (
+            <Card className={ticket.archived ? "border-amber-300 bg-amber-50/40" : ""}>
+              <CardContent className="pt-4 space-y-3">
+                {ticket.archived ? (
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-amber-700">קריאה מאורכבת — מנוטרלת ממדידה</p>
+                    {ticket.archive_reason && <p className="text-xs">סיבה: {ticket.archive_reason}</p>}
+                    {ticket.archived_by && <p className="text-xs text-muted-foreground">על ידי: {ticket.archived_by}</p>}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">פעולות ניהול נתונים</p>
+                )}
+                <RecordActionsMenu
+                  entityName="ServiceTicket"
+                  record={ticket}
+                  recordType="ticket"
+                  user={user}
+                  queryKeys={['ticket', id, 'tickets', 'tickets-sla-report', 'tickets-for-surveys']}
+                  onDeleted={() => navigate('/tickets')}
+                />
               </CardContent>
             </Card>
           )}
