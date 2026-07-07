@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import KPICards from "@/components/dashboard/KPICards";
 import TicketDistributionCards from "@/components/dashboard/TicketDistributionCards";
 import OperationalMetricsCards from "@/components/dashboard/OperationalMetricsCards";
+import BirthdayListCard from "@/components/dashboard/BirthdayListCard";
 import BirthdayPromptModal from "@/components/user/BirthdayPromptModal";
 import DateRangeFilter from "@/components/dashboard/DateRangeFilter";
 import TicketTable from "@/components/tickets/TicketTable";
@@ -167,6 +168,8 @@ function ManagerDashboard({ user }) {
       <TicketDistributionCards openTickets={openAll} nowMs={nowMs} selectedRange={selectedRange} />
 
       <OperationalMetricsCards surveyResponses={periodSurveys} />
+
+      <BirthdayListCard />
 
       {breached.length > 0 && (
         <section>
