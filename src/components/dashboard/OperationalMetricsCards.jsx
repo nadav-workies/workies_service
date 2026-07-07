@@ -3,7 +3,45 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { ClipboardList, Users, Sparkles, Star } from "lucide-react";
+import { ClipboardList, Users, Sparkles, Star, Cake } from "lucide-react";
+
+function normalizeEmail(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function getBirthdayThisWeekCount(tenants, users) {
+  const userByEmail = new Map();
+  const userByRoomNumber = new Map();
+  users.forEach(u => {
+    const email = normalizeEmail(u.email);
+    if (email) userByEmail.set(email, u);
+    const rn = String(u.default_room_number || u.room_number || "").trim();
+    if (rn) userByRoomNumber.set(rn, u);
+  });
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  let count = 0;
+  for (const t of tenants) {
+    let birthdate = t.birthdate;
+    if (!birthdate) {
+      const email = normalizeEmail(t.email);
+      if (email && userByEmail.has(email)) birthdate = userByEmail.get(email).birthdate;
+      if (!birthdate) {
+        const rn = String(t.room_number || "").trim();
+        if (rn && userByRoomNumber.has(rn)) birthdate = userByRoomNumber.get(rn).birthdate;
+      }
+    }
+    if (!birthdate) continue;
+
+    const bd = new Date(birthdate + "T00:00:00");
+    const thisYearBd = new Date(now.getFullYear(), bd.getMonth(), bd.getDate());
+    const diffDays = Math.round((thisYearBd - today) / (1000 * 60 * 60 * 24));
+    if (diffDays >= 0 && diffDays <= 7) count++;
+  }
+  return count;
+}
 
 function OpCard({ title, value, sub, icon: Icon, color, onClick }) {
   const iconBg = color?.includes("red") ? "bg-red-50"
@@ -44,6 +82,11 @@ export default function OperationalMetricsCards({ surveyResponses }) {
     queryFn: () => base44.entities.RoomTenant.list("-created_date", 2000),
   });
 
+  const { data: users = [] } = useQuery({
+    queryKey: ["users-for-birthdays"],
+    queryFn: () => base44.entities.User.list("-created_date", 500),
+  });
+
   const { data: inspections = [] } = useQuery({
     queryKey: ["cleaning-dashboard"],
     queryFn: () => base44.entities.CleaningInspection.list("-created_date", 200),
@@ -70,8 +113,10 @@ export default function OperationalMetricsCards({ surveyResponses }) {
     : Number(avgRating) >= 6 ? "text-amber-600"
     : "text-red-600";
 
+  const birthdayCount = getBirthdayThisWeekCount(tenants, users);
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
       <OpCard
         title="סקרים"
         value={surveyResponses.length}
@@ -86,6 +131,14 @@ export default function OperationalMetricsCards({ surveyResponses }) {
         sub="במערכת"
         icon={Users}
         color="text-blue-600"
+        onClick={() => navigate("/users")}
+      />
+      <OpCard
+        title="ימי הולדת השבוע"
+        value={birthdayCount}
+        sub={birthdayCount > 0 ? "ב-7 הימים הקרובים" : "אין ימי הולדת"}
+        icon={Cake}
+        color="text-pink-600"
         onClick={() => navigate("/users")}
       />
       <OpCard

@@ -134,6 +134,12 @@ export function getClosedAtMs(ticket) {
    בדיקות סטטוס
 ───────────────────────────────────────────────────── */
 
+export const TERMINAL_STATUSES = ["נסגרה", "הושלם", "בוטל"];
+
+export function isTicketTerminal(ticket) {
+  return TERMINAL_STATUSES.includes(ticket?.status);
+}
+
 export function isTicketClosed(ticket) {
   return ticket?.status === "נסגרה" || ticket?.status === "הושלם";
 }
@@ -148,7 +154,7 @@ export function isTicketLive(ticket) {
 }
 
 export function isTicketOpen(ticket) {
-  return isTicketLive(ticket) && !isTicketClosed(ticket);
+  return isTicketLive(ticket) && !isTicketTerminal(ticket);
 }
 
 export function isSlaExcluded(ticket) {

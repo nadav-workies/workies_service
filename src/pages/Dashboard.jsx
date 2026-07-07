@@ -13,7 +13,7 @@ import TicketTable from "@/components/tickets/TicketTable";
 import TicketCard from "@/components/tickets/TicketCard";
 import RoomPickerModal from "@/components/user/RoomPickerModal";
 import { isManagerOrAdmin } from "@/lib/slaUtils";
-import { isTicketSlaBreached, calculateMonthlySlaMetrics, getLiveTickets, getLiveSurveyResponses } from "@/lib/slaAgent.js";
+import { isTicketSlaBreached, calculateMonthlySlaMetrics, getLiveTickets, getLiveSurveyResponses, isTicketTerminal } from "@/lib/slaAgent.js";
 import { getTodayRange, filterTicketsByDateRange, filterSurveyResponsesBySubmittedDate } from "@/lib/dateRangeUtils";
 
 // ─── User dashboard ───────────────────────────────────────────────
@@ -29,8 +29,8 @@ function UserDashboard({ user, onUserUpdated }) {
     enabled: !!user?.id,
   });
 
-  const open = tickets.filter(t => t.status !== 'נסגרה');
-  const closed = tickets.filter(t => t.status === 'נסגרה').slice(0, 5);
+  const open = tickets.filter(t => !isTicketTerminal(t));
+  const closed = tickets.filter(t => t.status === 'נסגרה' || t.status === 'הושלם').slice(0, 5);
 
   const locationLine = user?.default_location_type === "room" && user?.default_room_label
     ? `חדר ${user.default_room_label}`
@@ -137,7 +137,8 @@ function ManagerDashboard({ user }) {
   const slaMetrics = calculateMonthlySlaMetrics(periodTickets, selectedRange, nowMs);
 
   // ─── קריאות פתוחות (בזמן אמת, ללא קשר לתקופה) ────────────────
-  const openAll   = liveTickets.filter(t => t.status !== 'נסגרה');
+  // פתוחות = כל קריאה שאינה בסטטוס סופי (נסגרה / הושלם / בוטל)
+  const openAll   = liveTickets.filter(t => !isTicketTerminal(t));
   const breached  = openAll.filter(t => isTicketSlaBreached(t, nowMs));
   const warning   = openAll.filter(t => {
     const dlMs = t.sla_deadline_ms ? Number(t.sla_deadline_ms) : (t.sla_deadline ? new Date(t.sla_deadline).getTime() : null);
@@ -145,7 +146,7 @@ function ManagerDashboard({ user }) {
     const diffMin = (dlMs - nowMs) / 60000;
     return diffMin > 0 && diffMin <= 30;
   });
-  const open      = periodTickets.filter(t => t.status !== 'נסגרה');
+  const open      = periodTickets.filter(t => !isTicketTerminal(t));
 
   return (
     <div className="space-y-5" dir="rtl">
