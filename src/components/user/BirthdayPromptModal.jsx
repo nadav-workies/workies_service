@@ -21,6 +21,27 @@ export default function BirthdayPromptModal({ user, onSaved }) {
     setError("");
     try {
       await base44.auth.updateMe({ birthdate });
+
+      // Sync birthdate to matching RoomTenant records and log the change
+      try {
+        const tenants = await base44.entities.RoomTenant.filter({ email: user?.email });
+        const now = new Date().toISOString();
+        const roomNumber = user?.default_room_number || user?.room_code || "";
+        for (const t of tenants) {
+          const historyEntry = {
+            date: now,
+            action: "עדכון תאריך לידה",
+            user: user?.email || user?.full_name || "משתמש",
+            room_number: t.room_number || t.room_code || roomNumber || "",
+            note: `תאריך לידה עודכן ל-${birthdate}`,
+          };
+          await base44.entities.RoomTenant.update(t.id, {
+            birthdate,
+            update_history: [...(t.update_history || []), historyEntry].filter(Boolean),
+          });
+        }
+      } catch {}
+
       onSaved({ birthdate });
     } catch (err) {
       setError(err.message || "שגיאה בשמירת תאריך הלידה");

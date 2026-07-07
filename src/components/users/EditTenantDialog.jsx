@@ -4,13 +4,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Pencil } from "lucide-react";
+import { Loader2, Pencil, Cake } from "lucide-react";
 
 export default function EditTenantDialog({ tenant, onClose, onSaved }) {
   const [contactName, setContactName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [role, setRole] = useState("");
+  const [birthdate, setBirthdate] = useState("");
   const [isPrimary, setIsPrimary] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -21,6 +22,7 @@ export default function EditTenantDialog({ tenant, onClose, onSaved }) {
       setEmail(tenant.email || "");
       setPhone(tenant.phone || "");
       setRole(tenant.contact_role || "");
+      setBirthdate(tenant.birthdate || "");
       setIsPrimary(tenant.is_primary_contact || false);
     }
   }, [tenant]);
@@ -40,14 +42,45 @@ export default function EditTenantDialog({ tenant, onClose, onSaved }) {
         );
       }
 
-      await base44.entities.RoomTenant.update(tenant.id, {
+      const currentUser = await base44.auth.me().catch(() => null);
+      const userLabel = currentUser?.email || currentUser?.full_name || "משתמש";
+
+      const updates = {
         contact_name: contactName,
         customer_name: contactName,
         email: email.toLowerCase().trim(),
         phone: phone.trim(),
         contact_role: role.trim(),
         is_primary_contact: isPrimary,
-      });
+      };
+
+      const historyEntries = [];
+      if (birthdate !== (tenant.birthdate || "")) {
+        updates.birthdate = birthdate || null;
+        historyEntries.push({
+          date: new Date().toISOString(),
+          action: "עדכון תאריך לידה",
+          user: userLabel,
+          room_number: tenant.room_number || tenant.room_code || "",
+          note: birthdate ? `תאריך לידה עודכן ל-${birthdate}` : "תאריך לידה נמחק",
+        });
+
+        // Sync birthdate to matching User entity by email
+        if (birthdate) {
+          try {
+            const matchingUsers = await base44.entities.User.filter({ email: email.toLowerCase().trim() });
+            if (matchingUsers.length > 0) {
+              await base44.entities.User.update(matchingUsers[0].id, { birthdate });
+            }
+          } catch {}
+        }
+      }
+
+      if (historyEntries.length > 0) {
+        updates.update_history = [...(tenant.update_history || []), ...historyEntries].filter(Boolean);
+      }
+
+      await base44.entities.RoomTenant.update(tenant.id, updates);
 
       onSaved?.();
     } catch (err) {
@@ -82,6 +115,10 @@ export default function EditTenantDialog({ tenant, onClose, onSaved }) {
           <div className="space-y-1">
             <Label className="text-xs">טלפון</Label>
             <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="050-0000000" dir="ltr" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs flex items-center gap-1"><Cake className="w-3 h-3" />תאריך לידה</Label>
+            <Input type="date" value={birthdate} onChange={e => setBirthdate(e.target.value)} max={new Date().toISOString().split("T")[0]} />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">תפקיד</Label>

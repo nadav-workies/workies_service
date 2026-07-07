@@ -99,6 +99,7 @@ export default function CustomersAndRoomsTab() {
   });
 
   const getTenantBirthdate = (t) => {
+    if (t.birthdate) return t.birthdate;
     const email = normalizeEmail(t.email);
     if (email && userByEmail.has(email)) return userByEmail.get(email).birthdate;
     const rn = String(t.room_number || "").trim();
