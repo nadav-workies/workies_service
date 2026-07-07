@@ -115,6 +115,22 @@ export default function OperationalMetricsCards({ surveyResponses }) {
 
   const birthdayCount = getBirthdayThisWeekCount(tenants, users);
 
+  // ─── לקוחות רשומים בפועל (מתאימים למשתמש במערכת לפי אימייל או מספר חדר) ──
+  const registeredEmails = new Set(
+    users.map(u => normalizeEmail(u.email)).filter(Boolean)
+  );
+  const registeredRoomNumbers = new Set(
+    users.map(u => String(u.default_room_number || u.room_number || "").trim())
+      .filter(Boolean)
+  );
+  const registeredCount = tenants.filter(t => {
+    const email = normalizeEmail(t.email);
+    if (email && registeredEmails.has(email)) return true;
+    const rn = String(t.room_number || "").trim();
+    if (rn && registeredRoomNumbers.has(rn)) return true;
+    return false;
+  }).length;
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
       <OpCard
@@ -127,8 +143,8 @@ export default function OperationalMetricsCards({ surveyResponses }) {
       />
       <OpCard
         title="לקוחות רשומים"
-        value={tenants.length}
-        sub="במערכת"
+        value={registeredCount}
+        sub={`מתוך ${tenants.length} לקוחות`}
         icon={Users}
         color="text-blue-600"
         onClick={() => navigate("/users")}
