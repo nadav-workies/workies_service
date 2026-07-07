@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Loader2, Mail, Phone, Star, Search, Pencil, Send, X,
-  UserCheck, Clock, UserPlus, Users, Activity, CheckCircle
+  UserCheck, Clock, UserPlus, Users, Activity, CheckCircle, Cake
 } from "lucide-react";
 import { WORKIES_ROOMS } from "@/lib/workiesRooms";
 import EditTenantDialog from "@/components/users/EditTenantDialog";
@@ -88,6 +88,35 @@ export default function CustomersAndRoomsTab() {
   const activeCustomersCount = tenants.filter(t =>
     String(t.customer_status || "").trim().toLowerCase() === "active"
   ).length;
+
+  const userByEmail = new Map();
+  const userByRoomNumber = new Map();
+  users.forEach(u => {
+    const email = normalizeEmail(u.email);
+    if (email) userByEmail.set(email, u);
+    const rn = String(u.default_room_number || u.room_number || "").trim();
+    if (rn) userByRoomNumber.set(rn, u);
+  });
+
+  const getTenantBirthdate = (t) => {
+    const email = normalizeEmail(t.email);
+    if (email && userByEmail.has(email)) return userByEmail.get(email).birthdate;
+    const rn = String(t.room_number || "").trim();
+    if (rn && userByRoomNumber.has(rn)) return userByRoomNumber.get(rn).birthdate;
+    return null;
+  };
+
+  const getBirthdayStatus = (birthdate) => {
+    if (!birthdate) return null;
+    const bd = new Date(birthdate + "T00:00:00");
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const thisYearBd = new Date(now.getFullYear(), bd.getMonth(), bd.getDate());
+    const diffDays = Math.round((thisYearBd - today) / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return { status: "today", label: "היום! 🎂" };
+    if (diffDays > 0 && diffDays <= 7) return { status: "soon", label: `בעוד ${diffDays} ימים` };
+    return null;
+  };
 
   const roomMap = new Map(WORKIES_ROOMS.map(r => [String(r.room_number), r]));
 
@@ -323,6 +352,7 @@ export default function CustomersAndRoomsTab() {
                     <th className="p-2 font-semibold">חדר</th>
                     <th className="p-2 font-semibold">קוד משרד</th>
                     <th className="p-2 font-semibold">עמדות</th>
+                    <th className="p-2 font-semibold whitespace-nowrap">יום הולדת</th>
                     <th className="p-2 font-semibold">סטטוס לקוח</th>
                     <th className="p-2 font-semibold">סטטוס רישום</th>
                     <th className="p-2 font-semibold">פעולות</th>
@@ -363,6 +393,30 @@ export default function CustomersAndRoomsTab() {
                         </td>
                         <td className="p-2 text-xs" dir="ltr">{t.room_code || "—"}</td>
                         <td className="p-2 text-xs text-center">{t.desk_count != null ? t.desk_count : "—"}</td>
+                        <td className="p-2 text-xs">
+                          {(() => {
+                            const bd = getTenantBirthdate(t);
+                            if (!bd) return <span className="text-muted-foreground">—</span>;
+                            const bdDate = new Date(bd + "T00:00:00");
+                            const bdStr = `${bdDate.getDate()}/${bdDate.getMonth() + 1}`;
+                            const status = getBirthdayStatus(bd);
+                            if (status?.status === "today") {
+                              return (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-primary text-primary-foreground">
+                                  <Cake className="w-3 h-3" />{bdStr} — {status.label}
+                                </span>
+                              );
+                            }
+                            if (status?.status === "soon") {
+                              return (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700">
+                                  <Cake className="w-3 h-3" />{bdStr} — {status.label}
+                                </span>
+                              );
+                            }
+                            return <span className="text-muted-foreground">{bdStr}</span>;
+                          })()}
+                        </td>
                         <td className="p-2">
                           {t.customer_status ? (
                             <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${isActiveCustomer ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600"}`}>
@@ -440,7 +494,7 @@ export default function CustomersAndRoomsTab() {
                   })}
                   {sortedTenants.length === 0 && (
                     <tr>
-                      <td colSpan={10} className="p-8 text-center text-muted-foreground">לא נמצאו תוצאות</td>
+                      <td colSpan={11} className="p-8 text-center text-muted-foreground">לא נמצאו תוצאות</td>
                     </tr>
                   )}
                 </tbody>

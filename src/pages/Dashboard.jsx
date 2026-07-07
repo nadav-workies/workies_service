@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import KPICards from "@/components/dashboard/KPICards";
 import TicketDistributionCards from "@/components/dashboard/TicketDistributionCards";
 import OperationalMetricsCards from "@/components/dashboard/OperationalMetricsCards";
+import BirthdayPromptModal from "@/components/user/BirthdayPromptModal";
 import DateRangeFilter from "@/components/dashboard/DateRangeFilter";
 import TicketTable from "@/components/tickets/TicketTable";
 import TicketCard from "@/components/tickets/TicketCard";
@@ -224,6 +225,12 @@ export default function Dashboard() {
   };
 
   if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
+
+  // Prompt for birthdate if missing (before entering the dashboard)
+  if (user && !user.birthdate) {
+    return <BirthdayPromptModal user={user} onSaved={handleUserUpdated} />;
+  }
+
   if (isManagerOrAdmin(user)) return <ManagerDashboard user={user} />;
   return <UserDashboard user={user} onUserUpdated={handleUserUpdated} />;
 }
