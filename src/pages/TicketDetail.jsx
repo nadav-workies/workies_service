@@ -21,6 +21,7 @@ import AttachmentUploader from "@/components/tickets/AttachmentUploader";
 import SlaExclusionDialog from "@/components/tickets/SlaExclusionDialog";
 import PrintingBadge from "@/components/tickets/PrintingBadge";
 import RecordActionsMenu from "@/components/admin/RecordActionsMenu";
+import TargetDateEditor from "@/components/tickets/TargetDateEditor";
 
 const STATUSES = ["פתוחה","שויכה לטיפול","בטיפול","ממתינה","טופלה","נסגרה"];
 const BREACH_REASONS = ["ממתין לספק","חוסר בחלקים","לא אותר הלקוח","טיפול נדחה","תקלה מורכבת","עומס תפעולי","אחר"];
@@ -429,8 +430,7 @@ export default function TicketDetail() {
                   )}
                   {ticket.treatment_deadline_locked && ticket.treatment_deadline && (
                     <div className="text-xs text-muted-foreground bg-muted rounded px-2 py-1.5">
-                      🔒 דדליין סיום טיפול נקבע ולא ניתן לשינוי:<br />
-                      <span className="font-medium text-foreground">{format(new Date(ticket.treatment_deadline), "dd/MM/yyyy HH:mm")}</span>
+                      🔒 דדליין סיום טיפול: {format(new Date(ticket.treatment_deadline), "dd/MM/yyyy HH:mm")}
                     </div>
                   )}
                   {ticket.status !== "טופלה" && (
@@ -443,6 +443,15 @@ export default function TicketDetail() {
                 </CardContent>
               </Card>
             </>
+          )}
+
+          {/* Target date editor — admin only */}
+          {user?.role === 'admin' && !isClosed && (
+            <TargetDateEditor
+              ticket={ticket}
+              user={user}
+              onUpdated={() => queryClient.invalidateQueries({ queryKey: ['ticket', id] })}
+            />
           )}
 
           {/* Add note — all users */}

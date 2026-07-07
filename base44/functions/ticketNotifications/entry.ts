@@ -638,6 +638,31 @@ Deno.serve(async (req) => {
     }
   }
 
+  // ── deadline_updated ──────────────────────────────────────────
+  if (action === 'deadline_updated') {
+    const customerEmail = ticket.email || ticket.created_by || '';
+    const deadlineStr = ticket.treatment_deadline
+      ? new Date(ticket.treatment_deadline).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' })
+      : '';
+    const subject = `עדכון תאריך יעד לקריאת השירות שלך | Workies`;
+    const body = `שלום ${ticket.created_by_name || ticket.customer_name || ''},\n\nעדכנו את תאריך היעד הצפוי לסיום טיפול בקריאת השירות שלך.\n\nמספר קריאה: ${ticket.ticket_number || ''}\nתאריך יעד חדש: ${deadlineStr}\n\nצוות Workies`;
+
+    if (customerEmail) {
+      const sent = await sendAndLog(base44, {
+        key: 'user_deadline_updated',
+        toEmail: customerEmail,
+        subject,
+        bodyHtml: buildHtml(body),
+        ticket,
+        recipientType: 'user',
+      });
+      results.deadline_updated = sent;
+    } else {
+      await logSkipped(base44, { key: 'user_deadline_updated', ticket, reason: 'no customer email', recipientType: 'user' });
+      results.deadline_updated = false;
+    }
+  }
+
   // ── check_post_closure ────────────────────────────────────────
   if (action === 'check_post_closure') {
     const closedTickets = await base44.asServiceRole.entities.ServiceTicket.filter({ status: 'נסגרה' });
