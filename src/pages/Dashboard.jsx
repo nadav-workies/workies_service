@@ -5,15 +5,15 @@ import { Loader2, Plus, Ticket, AlertTriangle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import KPICards from "@/components/dashboard/KPICards";
-import ServiceMetricsCards from "@/components/dashboard/ServiceMetricsCards";
+import TicketDistributionCards from "@/components/dashboard/TicketDistributionCards";
+import OperationalMetricsCards from "@/components/dashboard/OperationalMetricsCards";
 import DateRangeFilter from "@/components/dashboard/DateRangeFilter";
 import TicketTable from "@/components/tickets/TicketTable";
 import TicketCard from "@/components/tickets/TicketCard";
 import RoomPickerModal from "@/components/user/RoomPickerModal";
 import { isManagerOrAdmin } from "@/lib/slaUtils";
 import { isTicketSlaBreached, calculateMonthlySlaMetrics, getLiveTickets, getLiveSurveyResponses } from "@/lib/slaAgent.js";
-import { getTodayRange, filterTicketsByDateRange, filterSurveyResponsesBySubmittedDate, filterTicketsByClosedDate } from "@/lib/dateRangeUtils";
-import CleaningDashboardCard from "@/components/dashboard/CleaningDashboardCard";
+import { getTodayRange, filterTicketsByDateRange, filterSurveyResponsesBySubmittedDate } from "@/lib/dateRangeUtils";
 
 // ─── User dashboard ───────────────────────────────────────────────
 function UserDashboard({ user, onUserUpdated }) {
@@ -130,7 +130,6 @@ function ManagerDashboard({ user }) {
   const liveTickets     = getLiveTickets(tickets);
   const periodTickets        = filterTicketsByDateRange(liveTickets, selectedRange);
   const liveSurveys          = getLiveSurveyResponses(surveyResponses);
-  const closedTicketsInRange = filterTicketsByClosedDate(liveTickets, selectedRange);
   const periodSurveys        = filterSurveyResponsesBySubmittedDate(liveSurveys, selectedRange);
 
   // ─── מדדי SLA לפי טווח נבחר ─────────────────────────────────────
@@ -163,9 +162,9 @@ function ManagerDashboard({ user }) {
 
       <KPICards tickets={periodTickets} slaMetrics={slaMetrics} selectedRange={selectedRange} />
 
-      <ServiceMetricsCards tickets={closedTicketsInRange} surveyResponses={periodSurveys} />
+      <TicketDistributionCards openTickets={openAll} nowMs={nowMs} selectedRange={selectedRange} />
 
-      <CleaningDashboardCard />
+      <OperationalMetricsCards surveyResponses={periodSurveys} />
 
       {breached.length > 0 && (
         <section>
