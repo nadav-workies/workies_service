@@ -55,9 +55,6 @@ function UserDashboard({ user, onUserUpdated }) {
           <h1 className="text-xl font-bold">שלום, {user?.full_name?.split(' ')[0]} 👋</h1>
           {locationLine && <p className="text-xs text-muted-foreground mt-0.5">{locationLine}</p>}
         </div>
-        <Button onClick={() => navigate("/tickets/new")} className="gap-2" size="sm">
-          <Plus className="w-4 h-4" />קריאה חדשה
-        </Button>
       </div>
 
       {tickets.length === 0 ? (
@@ -156,9 +153,6 @@ function ManagerDashboard({ user }) {
           <h1 className="text-xl font-bold">דשבורד תפעול</h1>
           <p className="text-muted-foreground text-sm">תמונת מצב בזמן אמת</p>
         </div>
-        <Button onClick={() => navigate("/tickets/new")} className="gap-2" size="sm">
-          <Plus className="w-4 h-4" />קריאה חדשה
-        </Button>
       </div>
 
       <DateRangeFilter value={selectedRange} onChange={setSelectedRange} />

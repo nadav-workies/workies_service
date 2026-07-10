@@ -48,12 +48,12 @@ export default function DateRangeFilter({ value, onChange }) {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2 p-3 bg-muted/40 rounded-xl border" dir="rtl">
+    <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-2 p-3 bg-muted/40 rounded-xl border" dir="rtl">
       <CalendarRange className="w-4 h-4 text-muted-foreground shrink-0" />
 
       <div className="flex flex-col">
         <span className="text-xs font-semibold text-muted-foreground">תקופת מדידה</span>
-        <span className="text-[10px] text-muted-foreground">מחושב לפי מועד פתיחת הקריאה</span>
+        <span className="text-[10px] text-muted-foreground hidden sm:block">מחושב לפי מועד פתיחת הקריאה</span>
       </div>
 
       <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => { const r = getTodayRange(); setDateFrom(r.dateFrom); setDateTo(r.dateTo); setMonthValue(""); onChange(r); }}>
@@ -91,7 +91,7 @@ export default function DateRangeFilter({ value, onChange }) {
         החל
       </Button>
 
-      <span className="text-[11px] font-medium text-orange-600 mr-auto">
+      <span className="text-[11px] font-medium text-orange-600 sm:mr-auto">
         טווח פעיל: {currentRange.dateFrom} עד {currentRange.dateTo}
       </span>
     </div>

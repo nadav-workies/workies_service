@@ -127,19 +127,17 @@ export default function AppLayout() {
         {/* Mobile header */}
         <header className="lg:hidden h-14 bg-sidebar text-sidebar-foreground flex items-center justify-between px-4 sticky top-0 z-30">
           <div className="flex items-center gap-2">
+            <button onClick={() => setMobileOpen(true)} className="p-2 -mr-1">
+              <Menu className="w-5 h-5" />
+            </button>
             <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-xs">W</span>
             </div>
             <span className="font-semibold text-sm">Workies AIO</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Button size="sm" onClick={() => navigate("/tickets/new")} className="h-8 text-xs gap-1">
-              <Plus className="w-3.5 h-3.5" />קריאה
-            </Button>
-            <button onClick={() => setMobileOpen(true)} className="p-2">
-              <Menu className="w-5 h-5" />
-            </button>
-          </div>
+          <Button size="sm" onClick={() => navigate("/tickets/new")} className="h-8 text-xs gap-1">
+            <Plus className="w-3.5 h-3.5" />קריאה
+          </Button>
         </header>
 
         <main className="p-4 md:p-6 max-w-[1400px] mx-auto">
