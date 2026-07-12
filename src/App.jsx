@@ -25,6 +25,8 @@ import ResetTestData from '@/pages/ResetTestData';
 import CleaningReport from '@/pages/CleaningReport';
 import UsersManagement from '@/pages/UsersManagement';
 import PermissionsManagement from '@/pages/PermissionsManagement';
+import EventsManagement from '@/pages/EventsManagement';
+import EventRegistration from '@/pages/EventRegistration';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -63,9 +65,11 @@ const AuthenticatedApp = () => {
           <Route path="/cleaning-report" element={<CleaningReport />} />
           <Route path="/users" element={<UsersManagement />} />
           <Route path="/permissions" element={<PermissionsManagement />} />
+          <Route path="/events" element={<EventsManagement />} />
         </Route>
       </Route>
       <Route path="/feedback/:token" element={<FeedbackSurvey />} />
+      <Route path="/event-registration" element={<EventRegistration />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

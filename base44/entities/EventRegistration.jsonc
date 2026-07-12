@@ -1,0 +1,132 @@
+{
+  "name": "EventRegistration",
+  "type": "object",
+  "properties": {
+    "event_id": {
+      "type": "string"
+    },
+    "event_name": {
+      "type": "string"
+    },
+    "full_name": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "participants_count": {
+      "type": "number",
+      "default": 1
+    },
+    "children_count": {
+      "type": "number",
+      "default": 0
+    },
+    "is_active_tenant": {
+      "type": "boolean",
+      "default": false
+    },
+    "matched_tenant_id": {
+      "type": "string"
+    },
+    "matched_by": {
+      "type": "string",
+      "description": "email / phone / none"
+    },
+    "company_name": {
+      "type": "string"
+    },
+    "room_code": {
+      "type": "string"
+    },
+    "room_number": {
+      "type": "string"
+    },
+    "registration_status": {
+      "type": "string",
+      "enum": [
+        "registered",
+        "approved",
+        "pending_approval",
+        "cancelled",
+        "attended",
+        "no_show",
+        "waitlist"
+      ],
+      "default": "registered"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "registered_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "confirmation_email_sent": {
+      "type": "boolean",
+      "default": false
+    },
+    "manager_daily_summary_sent": {
+      "type": "boolean",
+      "default": false
+    },
+    "calendar_invite_sent": {
+      "type": "boolean",
+      "default": false
+    },
+    "source_system": {
+      "type": "string",
+      "default": "workies_events"
+    },
+    "aio_ready": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "event_id",
+    "full_name",
+    "phone",
+    "email",
+    "participants_count"
+  ],
+  "rls": {
+    "create": {},
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
