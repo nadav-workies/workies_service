@@ -22,6 +22,7 @@ import SlaExclusionDialog from "@/components/tickets/SlaExclusionDialog";
 import PrintingBadge from "@/components/tickets/PrintingBadge";
 import RecordActionsMenu from "@/components/admin/RecordActionsMenu";
 import TargetDateEditor from "@/components/tickets/TargetDateEditor";
+import { openTenantWhatsApp } from "@/lib/whatsappNotify";
 
 const STATUSES = ["פתוחה","שויכה לטיפול","בטיפול","ממתינה","טופלה","נסגרה"];
 const BREACH_REASONS = ["ממתין לספק","חוסר בחלקים","לא אותר הלקוח","טיפול נדחה","תקלה מורכבת","עומס תפעולי","אחר"];
@@ -90,6 +91,7 @@ export default function TicketDetail() {
         // דדליין כבר ננעל — שינוי סטטוס בלבד
         updateMutation.mutate({ updates: { status: "בטיפול" }, historyEntry: addHistory("סטטוס שונה ל: בטיפול") });
         base44.functions.invoke('ticketNotifications', { action: 'status_changed', ticket: { ...ticket, status: "בטיפול" }, newStatus: "בטיפול", oldStatus: ticket.status }).catch(() => {});
+        openTenantWhatsApp({ ...ticket, status: "בטיפול" }, currentTenant, "בטיפול");
         return;
       }
       setTreatmentDeadlineForm({ date: "", time: "" });
@@ -137,6 +139,7 @@ export default function TicketDetail() {
       historyEntry: addHistory("תחילת טיפול", `דדליין סיום טיפול: ${deadlineDate.toLocaleString("he-IL")}`)
     });
     base44.functions.invoke('ticketNotifications', { action: 'status_changed', ticket: { ...ticket, ...updates }, newStatus: "בטיפול", oldStatus: ticket.status }).catch(() => {});
+    openTenantWhatsApp({ ...ticket, ...updates }, currentTenant, "בטיפול");
     setTreatmentDialogOpen(false);
   };
 
@@ -184,6 +187,7 @@ export default function TicketDetail() {
         action: 'printing_package_completed',
         ticket: closedTicket
       }).catch(() => {});
+      openTenantWhatsApp(closedTicket, currentTenant, "הושלם");
     } else {
       base44.functions.invoke('ticketNotifications', { action: 'status_changed', ticket: closedTicket, newStatus: closeStatus, oldStatus: ticket.status }).catch(() => {});
       base44.functions.invoke('ticketNotifications', { action: 'feedback_request', ticket: closedTicket }).catch(() => {});
