@@ -5,6 +5,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Loader2, CalendarDays, Users } from "lucide-react";
 import EventForm from "@/components/events/EventForm";
 import RegistrationsTable from "@/components/events/RegistrationsTable";
+import ShareLinkCard from "@/components/events/ShareLinkCard";
 import { isManagerOrAdmin } from "@/lib/slaUtils";
 import { useNavigate } from "react-router-dom";
 
@@ -73,6 +74,8 @@ export default function EventsManagement() {
         <CalendarDays className="w-5 h-5" />
         <h1 className="text-xl font-bold">אירועים והרשמות</h1>
       </div>
+
+      {activeEvent && <ShareLinkCard />}
 
       <Tabs defaultValue="event">
         <TabsList>

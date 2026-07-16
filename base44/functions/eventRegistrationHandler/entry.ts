@@ -33,6 +33,12 @@ Deno.serve(async (req) => {
       const activeEvent = events[0];
       if (!activeEvent) return Response.json({ event: null });
 
+      // Close registration after event date has passed (end of event day)
+      const eventEnd = new Date(activeEvent.event_date + 'T23:59:59');
+      if (new Date() > eventEnd) {
+        return Response.json({ event: null, event_ended: true, event_name: activeEvent.event_name });
+      }
+
       const registrations = await base44.asServiceRole.entities.EventRegistration.filter({ event_id: activeEvent.id });
       const activeRegs = registrations.filter(r => r.registration_status !== 'cancelled');
       const totalParticipants = activeRegs.reduce((sum, r) => sum + (Number(r.participants_count) || 0) + (Number(r.children_count) || 0), 0);
@@ -75,6 +81,12 @@ Deno.serve(async (req) => {
       const event = events[0];
       if (!event || !event.is_active || event.status !== 'active') {
         return Response.json({ error: 'האירוע אינו פעיל או אינו קיים' }, { status: 400 });
+      }
+
+      // Block registration after event date
+      const eventEndDate = new Date(event.event_date + 'T23:59:59');
+      if (new Date() > eventEndDate) {
+        return Response.json({ error: 'ההרשמה לאירוע זה כבר נסגרה' }, { status: 400 });
       }
 
       // Capacity check
