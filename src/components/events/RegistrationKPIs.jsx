@@ -23,13 +23,13 @@ export default function RegistrationKPIs({ registrations }) {
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {items.map((item, i) => (
-        <Card key={i} className="p-3">
+        <Card key={i} className="p-3 min-w-0">
           <div className="flex items-center gap-2">
-            <item.icon className={`w-4 h-4 ${item.color}`} />
-            <div>
-              <p className="text-[10px] text-muted-foreground">{item.label}</p>
+            <item.icon className={`w-4 h-4 ${item.color} shrink-0`} />
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground truncate">{item.label}</p>
               <p className={`text-lg font-bold ${item.color}`}>{item.value}</p>
             </div>
           </div>
