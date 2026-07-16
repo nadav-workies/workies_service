@@ -74,13 +74,13 @@ export default function RegistrationsTable({ registrations, activeEvent, isLoadi
       <RegistrationKPIs registrations={registrations} />
 
       {/* Filters + search + export */}
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-col gap-3 min-w-0">
+        <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
           {FILTERS.map(f => (
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
-              className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${
+              className={`px-3 py-1.5 rounded-full text-xs border transition-colors shrink-0 ${
                 filter === f.key ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-muted'
               }`}
             >
@@ -88,8 +88,8 @@ export default function RegistrationsTable({ registrations, activeEvent, isLoadi
             </button>
           ))}
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <div className="relative flex-1 min-w-[200px]">
+        <div className="flex gap-2 flex-col sm:flex-row">
+          <div className="relative flex-1 min-w-0">
             <Search className="w-4 h-4 text-muted-foreground absolute right-3 top-1/2 -translate-y-1/2" />
             <Input
               value={search}
@@ -98,16 +98,16 @@ export default function RegistrationsTable({ registrations, activeEvent, isLoadi
               className="pr-9 text-sm"
             />
           </div>
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => exportRegistrationsToCSV(filtered, activeEvent.event_name)}>
+          <Button variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={() => exportRegistrationsToCSV(filtered, activeEvent.event_name)}>
             <Download className="w-3.5 h-3.5" />ייצוא לאקסל
           </Button>
         </div>
       </div>
 
       {/* Table */}
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden min-w-0">
         <div className="overflow-x-auto">
-          <Table>
+          <Table className="min-w-[800px]">
             <TableHeader>
               <TableRow className="bg-muted/50">
                 <TableHead className="text-right">שם</TableHead>

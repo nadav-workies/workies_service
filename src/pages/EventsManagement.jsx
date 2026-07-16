@@ -69,16 +69,16 @@ export default function EventsManagement() {
     : [];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6" dir="rtl">
-      <div className="flex items-center gap-2">
-        <CalendarDays className="w-5 h-5" />
-        <h1 className="text-xl font-bold">אירועים והרשמות</h1>
+    <div className="w-full max-w-6xl mx-auto space-y-4 px-1 overflow-x-hidden" dir="rtl">
+      <div className="flex items-center gap-2 min-w-0">
+        <CalendarDays className="w-5 h-5 shrink-0" />
+        <h1 className="text-lg sm:text-xl font-bold">אירועים והרשמות</h1>
       </div>
 
       {activeEvent && <ShareLinkCard />}
 
       <Tabs defaultValue="event">
-        <TabsList>
+        <TabsList className="w-full">
           <TabsTrigger value="event" className="gap-1.5"><CalendarDays className="w-3.5 h-3.5" />ניהול אירוע</TabsTrigger>
           <TabsTrigger value="registrations" className="gap-1.5"><Users className="w-3.5 h-3.5" />רשימת נרשמים</TabsTrigger>
         </TabsList>

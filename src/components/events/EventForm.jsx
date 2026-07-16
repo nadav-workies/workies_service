@@ -90,7 +90,7 @@ export default function EventForm({ events, activeEvent, isLoading, user, onActi
       {activeEvent && (
         <Card className="border-green-300 bg-green-50/40">
           <CardContent className="py-4 flex items-center justify-between flex-wrap gap-3">
-            <div>
+            <div className="min-w-0">
               <p className="text-xs text-green-700 font-medium">✅ אירוע פעיל כעת</p>
               <p className="font-bold">{activeEvent.event_name}</p>
               <p className="text-xs text-muted-foreground">{activeEvent.event_date} · שעת הגעה: {activeEvent.arrival_time}</p>
@@ -181,8 +181,8 @@ export default function EventForm({ events, activeEvent, isLoading, user, onActi
           ) : (
             <div className="space-y-2">
               {events.map(ev => (
-                <div key={ev.id} className="flex items-center justify-between gap-3 p-3 rounded-lg border hover:bg-muted/30 transition-colors">
-                  <div className="min-w-0">
+                <div key={ev.id} className="flex items-center justify-between gap-3 p-3 rounded-lg border hover:bg-muted/30 transition-colors min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-medium text-sm truncate">{ev.event_name}</span>
                       <StatusBadge status={ev.status} isActive={ev.is_active} />

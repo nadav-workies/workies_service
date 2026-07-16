@@ -124,7 +124,7 @@ export default function AppLayout() {
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 lg:mr-60">
+      <div className="flex-1 lg:mr-60 min-w-0 overflow-x-hidden">
         {/* Mobile header */}
         <header className="lg:hidden h-14 bg-sidebar text-sidebar-foreground flex items-center justify-between px-4 sticky top-0 z-30">
           <div className="flex items-center gap-2">
@@ -141,7 +141,7 @@ export default function AppLayout() {
           </Button>
         </header>
 
-        <main className="p-4 md:p-6 max-w-[1400px] mx-auto">
+        <main className="p-3 sm:p-4 md:p-6 max-w-[1400px] mx-auto overflow-x-hidden">
           <Outlet />
         </main>
       </div>

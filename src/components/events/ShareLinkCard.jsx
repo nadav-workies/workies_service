@@ -24,17 +24,19 @@ export default function ShareLinkCard() {
         <p className="text-xs text-muted-foreground">
           שתף את הקישור עם דיירים ואורחים. העמוד ייסגר אוטומטית אחרי תאריך האירוע.
         </p>
-        <div className="flex gap-2">
-          <Input value={url} readOnly className="bg-background font-mono text-xs" dir="ltr" />
-          <Button size="sm" onClick={copy} className="gap-1.5 shrink-0">
-            {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-            {copied ? "הועתק" : "העתק"}
-          </Button>
-          <a href={url} target="_blank" rel="noopener noreferrer">
-            <Button size="sm" variant="outline" className="gap-1.5 shrink-0 px-2.5">
-              <ExternalLink className="w-3.5 h-3.5" />
+        <div className="flex flex-col sm:flex-row gap-2 min-w-0">
+          <Input value={url} readOnly className="bg-background font-mono text-xs truncate min-w-0 w-full" dir="ltr" />
+          <div className="flex gap-2 shrink-0">
+            <Button size="sm" onClick={copy} className="gap-1.5 flex-1 sm:flex-initial">
+              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? "הועתק" : "העתק"}
             </Button>
-          </a>
+            <a href={url} target="_blank" rel="noopener noreferrer">
+              <Button size="sm" variant="outline" className="gap-1.5 px-2.5">
+                <ExternalLink className="w-3.5 h-3.5" />
+              </Button>
+            </a>
+          </div>
         </div>
       </CardContent>
     </Card>
