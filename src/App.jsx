@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
@@ -28,10 +28,14 @@ import PermissionsManagement from '@/pages/PermissionsManagement';
 import EventsManagement from '@/pages/EventsManagement';
 import EventRegistration from '@/pages/EventRegistration';
 
+const PUBLIC_ROUTES = ['/event-registration', '/feedback'];
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const location = useLocation();
+  const isPublicRoute = PUBLIC_ROUTES.some(p => location.pathname.startsWith(p));
 
-  if (isLoadingPublicSettings || isLoadingAuth) {
+  if (isLoadingPublicSettings || (isLoadingAuth && !isPublicRoute)) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
@@ -39,7 +43,7 @@ const AuthenticatedApp = () => {
     );
   }
 
-  if (authError) {
+  if (authError && !isPublicRoute) {
     if (authError.type === 'user_not_registered') return <UserNotRegisteredError />;
     if (authError.type === 'auth_required') { navigateToLogin(); return null; }
   }
