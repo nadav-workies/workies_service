@@ -1,0 +1,87 @@
+{
+  "name": "OnboardingAuditLog",
+  "type": "object",
+  "properties": {
+    "onboarding_id": {
+      "type": "string",
+      "description": "\u05de\u05d6\u05d4\u05d4 \u05de\u05e1\u05dc\u05d5\u05dc \u05d4\u05d7\u05e4\u05d9\u05e4\u05d4"
+    },
+    "employee_id": {
+      "type": "string",
+      "description": "\u05de\u05d6\u05d4\u05d4 \u05d4\u05e2\u05d5\u05d1\u05d3\u05ea"
+    },
+    "employee_name": {
+      "type": "string",
+      "description": "\u05e9\u05dd \u05d4\u05e2\u05d5\u05d1\u05d3\u05ea"
+    },
+    "stage_id": {
+      "type": "string",
+      "description": "\u05de\u05d6\u05d4\u05d4 \u05d4\u05e9\u05dc\u05d1 (\u05d0\u05dd \u05e8\u05dc\u05d5\u05d5\u05e0\u05d8\u05d9)"
+    },
+    "stage_title": {
+      "type": "string",
+      "description": "\u05db\u05d5\u05ea\u05e8\u05ea \u05d4\u05e9\u05dc\u05d1"
+    },
+    "actor_name": {
+      "type": "string",
+      "description": "\u05de\u05d9 \u05d1\u05d9\u05e6\u05e2 \u05d0\u05ea \u05d4\u05e4\u05e2\u05d5\u05dc\u05d4"
+    },
+    "action": {
+      "type": "string",
+      "description": "\u05ea\u05d9\u05d0\u05d5\u05e8 \u05d4\u05e4\u05e2\u05d5\u05dc\u05d4"
+    },
+    "old_value": {
+      "type": "string",
+      "description": "\u05e2\u05e8\u05da \u05e7\u05d5\u05d3\u05dd"
+    },
+    "new_value": {
+      "type": "string",
+      "description": "\u05e2\u05e8\u05da \u05d7\u05d3\u05e9"
+    }
+  },
+  "required": [
+    "onboarding_id",
+    "actor_name",
+    "action"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

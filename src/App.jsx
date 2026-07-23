@@ -27,6 +27,9 @@ import UsersManagement from '@/pages/UsersManagement';
 import PermissionsManagement from '@/pages/PermissionsManagement';
 import EventsManagement from '@/pages/EventsManagement';
 import EventRegistration from '@/pages/EventRegistration';
+import OnboardingManagement from '@/pages/OnboardingManagement';
+import OnboardingDetail from '@/pages/OnboardingDetail';
+import MyOnboarding from '@/pages/MyOnboarding';
 
 const PUBLIC_ROUTES = ['/event-registration', '/feedback'];
 
@@ -70,6 +73,9 @@ const AuthenticatedApp = () => {
           <Route path="/users" element={<UsersManagement />} />
           <Route path="/permissions" element={<PermissionsManagement />} />
           <Route path="/events" element={<EventsManagement />} />
+          <Route path="/onboarding" element={<OnboardingManagement />} />
+          <Route path="/onboarding/:id" element={<OnboardingDetail />} />
+          <Route path="/my-onboarding" element={<MyOnboarding />} />
         </Route>
       </Route>
       <Route path="/feedback/:token" element={<FeedbackSurvey />} />
