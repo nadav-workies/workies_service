@@ -1,0 +1,184 @@
+{
+  "name": "DailyLearningItem",
+  "type": "object",
+  "properties": {
+    "onboarding_id": {
+      "type": "string",
+      "description": "\u05de\u05d6\u05d4\u05d4 \u05de\u05e1\u05dc\u05d5\u05dc \u05d4\u05d7\u05e4\u05d9\u05e4\u05d4"
+    },
+    "daily_plan_id": {
+      "type": "string",
+      "description": "\u05de\u05d6\u05d4\u05d4 \u05ea\u05d5\u05db\u05e0\u05d9\u05ea \u05d9\u05d5\u05de\u05d9\u05ea"
+    },
+    "employee_id": {
+      "type": "string",
+      "description": "\u05de\u05d6\u05d4\u05d4 \u05d4\u05e2\u05d5\u05d1\u05d3\u05ea"
+    },
+    "employee_name": {
+      "type": "string",
+      "description": "\u05e9\u05dd \u05d4\u05e2\u05d5\u05d1\u05d3\u05ea"
+    },
+    "day_number": {
+      "type": "number",
+      "description": "\u05de\u05e1\u05e4\u05e8 \u05d9\u05d5\u05dd"
+    },
+    "original_day_number": {
+      "type": "number",
+      "description": "\u05d9\u05d5\u05dd \u05de\u05e7\u05d5\u05e8\u05d9 \u05dc\u05e4\u05e0\u05d9 \u05d4\u05e2\u05d1\u05e8\u05d4"
+    },
+    "item_type": {
+      "type": "string",
+      "enum": [
+        "lesson",
+        "video",
+        "document",
+        "link",
+        "quiz",
+        "simulation_task",
+        "live_task",
+        "mentor_session",
+        "review_meeting"
+      ],
+      "description": "\u05e1\u05d5\u05d2 \u05e4\u05e8\u05d9\u05d8"
+    },
+    "title": {
+      "type": "string",
+      "description": "\u05db\u05d5\u05ea\u05e8\u05ea"
+    },
+    "description": {
+      "type": "string",
+      "description": "\u05ea\u05d9\u05d0\u05d5\u05e8 \u05e7\u05e6\u05e8"
+    },
+    "content_md": {
+      "type": "string",
+      "description": "\u05ea\u05d5\u05db\u05df \u05de\u05dc\u05d0 \u05d1-Markdown"
+    },
+    "order_number": {
+      "type": "number",
+      "description": "\u05e1\u05d3\u05e8 \u05ea\u05e6\u05d5\u05d2\u05d4"
+    },
+    "estimated_minutes": {
+      "type": "number",
+      "default": 0,
+      "description": "\u05d6\u05de\u05df \u05de\u05e9\u05d5\u05e2\u05e8 \u05d1\u05d3\u05e7\u05d5\u05ea"
+    },
+    "mentor_name": {
+      "type": "string",
+      "description": "\u05d7\u05d5\u05e0\u05da \u05d0\u05d7\u05e8\u05d0\u05d9"
+    },
+    "is_required": {
+      "type": "boolean",
+      "default": true,
+      "description": "\u05d4\u05d0\u05dd \u05d7\u05d5\u05d1\u05d4"
+    },
+    "opens_automatically": {
+      "type": "boolean",
+      "default": true,
+      "description": "\u05d4\u05d0\u05dd \u05e0\u05e4\u05ea\u05d7 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9\u05ea"
+    },
+    "prerequisite_item_id": {
+      "type": "string",
+      "description": "\u05de\u05d6\u05d4\u05d4 \u05e4\u05e8\u05d9\u05d8 \u05e7\u05d5\u05d3\u05dd \u05e0\u05d3\u05e8\u05e9"
+    },
+    "linked_kpi_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "KPI \u05de\u05e9\u05d5\u05d9\u05da"
+    },
+    "kpi_contribution_type": {
+      "type": "string",
+      "enum": [
+        "awareness",
+        "knowledge",
+        "simulation",
+        "live_practice"
+      ],
+      "description": "\u05e1\u05d5\u05d2 \u05ea\u05e8\u05d5\u05de\u05d4 \u05dc-KPI"
+    },
+    "template_scope": {
+      "type": "string",
+      "enum": [
+        "employee_only",
+        "template"
+      ],
+      "default": "template",
+      "description": "\u05d4\u05d9\u05e7\u05e3 \u05d4\u05e9\u05d9\u05e0\u05d5\u05d9"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "locked",
+        "available",
+        "in_progress",
+        "completed",
+        "moved"
+      ],
+      "default": "locked",
+      "description": "\u05e1\u05d8\u05d8\u05d5\u05e1 \u05d4\u05e4\u05e8\u05d9\u05d8"
+    }
+  },
+  "required": [
+    "onboarding_id",
+    "daily_plan_id",
+    "employee_id",
+    "item_type",
+    "title"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.employee_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.employee_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

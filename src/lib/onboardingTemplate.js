@@ -860,67 +860,22 @@ export const ONBOARDING_TEMPLATE = {
   ],
 };
 
-// ─── Scoring Logic ────────────────────────────────────────────────
-export function calculateQuizScore(correctAnswers, totalQuestions) {
-  if (totalQuestions === 0) return 1;
-  if (correctAnswers === 0) return 1;
-  return Math.round((correctAnswers / totalQuestions) * 10);
-}
+// Scoring logic — split to src/lib/onboarding/scoring.js (Spec v1.2 Section 34)
+export { calculateQuizScore, isPassed } from "./onboarding/scoring";
 
-export function isPassed(score) {
-  return score >= 8;
-}
-
-// ─── Stage Status Labels & Colors ────────────────────────────────
-export const STAGE_STATUS_CONFIG = {
-  not_started: { label: "טרם התחיל", color: "bg-gray-100 text-gray-600", dot: "bg-gray-400" },
-  available: { label: "זמין ללמידה", color: "bg-blue-100 text-blue-700", dot: "bg-blue-500" },
-  learning: { label: "בלמידה", color: "bg-blue-100 text-blue-700", dot: "bg-blue-500" },
-  quiz_pending: { label: "ממתין למבדק", color: "bg-orange-100 text-orange-700", dot: "bg-orange-500" },
-  failed: { label: "נכשל במבדק", color: "bg-red-100 text-red-700", dot: "bg-red-500" },
-  relearning: { label: "נדרשת למידה מחדש", color: "bg-red-100 text-red-700", dot: "bg-red-500" },
-  completed: { label: "הושלם", color: "bg-green-100 text-green-700", dot: "bg-green-500" },
-  reopened: { label: "נפתח מחדש", color: "bg-orange-100 text-orange-700", dot: "bg-orange-500" },
-};
-
-export const TRACK_STATUS_CONFIG = {
-  draft: { label: "טיוטה", color: "bg-gray-100 text-gray-600" },
-  pending: { label: "ממתין להתחלה", color: "bg-blue-100 text-blue-700" },
-  active: { label: "פעיל", color: "bg-green-100 text-green-700" },
-  at_risk: { label: "בסיכון", color: "bg-red-100 text-red-700" },
-  paused: { label: "מושהה", color: "bg-orange-100 text-orange-700" },
-  completed: { label: "הושלם", color: "bg-green-100 text-green-700" },
-  closed: { label: "נסגר", color: "bg-gray-100 text-gray-600" },
-};
-
-export const CATEGORY_LABELS = {
-  hr: "משאבי אנוש",
-  service: "שירות",
-  operations: "תפעול",
-  aio: "AIO",
-  customers: "לקוחות",
-  events: "אירועים",
-  social: "סושיאל וקהילה",
-  community: "קהילה",
-  podcast: "פודקאסט",
-  review: "סיכום",
-};
-
-export const TASK_STATUS_CONFIG = {
-  pending: { label: "טרם בוצע", color: "bg-gray-100 text-gray-600" },
-  in_progress: { label: "בביצוע", color: "bg-blue-100 text-blue-700" },
-  done: { label: "בוצע", color: "bg-green-100 text-green-700" },
-  revision_required: { label: "נדרש תיקון", color: "bg-orange-100 text-orange-700" },
-};
-
-export const REVIEW_TYPE_CONFIG = {
-  daily: { label: "סיכום יומי", color: "bg-blue-100 text-blue-700" },
-  week_1: { label: "סוף שבוע ראשון", color: "bg-indigo-100 text-indigo-700" },
-  week_2: { label: "סוף שבוע שני", color: "bg-purple-100 text-purple-700" },
-  day_30: { label: "30 יום", color: "bg-amber-100 text-amber-700" },
-  day_60: { label: "60 יום", color: "bg-amber-100 text-amber-700" },
-  day_90: { label: "90 יום", color: "bg-green-100 text-green-700" },
-};
+// Status configs — split to src/lib/onboarding/statuses.js (Spec v1.2 Section 34)
+export {
+  STAGE_STATUS_CONFIG,
+  TRACK_STATUS_CONFIG,
+  CATEGORY_LABELS,
+  TASK_STATUS_CONFIG,
+  REVIEW_TYPE_CONFIG,
+  KPI_READINESS_STATUS_CONFIG,
+  LEARNING_ITEM_STATUS_CONFIG,
+  CLARIFICATION_STATUS_CONFIG,
+  DAY_TYPE_CONFIG,
+  LEARNING_ITEM_TYPE_CONFIG,
+} from "./onboarding/statuses";
 
 // ─── Quiz Lookup Helper ──────────────────────────────────────────
 export function getQuizForStage(templateStageId) {

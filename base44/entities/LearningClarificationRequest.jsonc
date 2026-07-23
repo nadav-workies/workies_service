@@ -1,0 +1,174 @@
+{
+  "name": "LearningClarificationRequest",
+  "type": "object",
+  "properties": {
+    "onboarding_id": {
+      "type": "string",
+      "description": "\u05de\u05d6\u05d4\u05d4 \u05de\u05e1\u05dc\u05d5\u05dc \u05d4\u05d7\u05e4\u05d9\u05e4\u05d4"
+    },
+    "employee_id": {
+      "type": "string",
+      "description": "\u05de\u05d6\u05d4\u05d4 \u05d4\u05e2\u05d5\u05d1\u05d3\u05ea"
+    },
+    "employee_name": {
+      "type": "string",
+      "description": "\u05e9\u05dd \u05d4\u05e2\u05d5\u05d1\u05d3\u05ea"
+    },
+    "learning_item_id": {
+      "type": "string",
+      "description": "\u05de\u05d6\u05d4\u05d4 \u05d9\u05d7\u05d9\u05d3\u05ea \u05d4\u05dc\u05de\u05d9\u05d3\u05d4"
+    },
+    "learning_item_title": {
+      "type": "string",
+      "description": "\u05db\u05d5\u05ea\u05e8\u05ea \u05d9\u05d7\u05d9\u05d3\u05ea \u05d4\u05dc\u05de\u05d9\u05d3\u05d4"
+    },
+    "stage_id": {
+      "type": "string",
+      "description": "\u05de\u05d6\u05d4\u05d4 \u05d4\u05e9\u05dc\u05d1"
+    },
+    "day_number": {
+      "type": "number",
+      "description": "\u05d9\u05d5\u05dd \u05d1\u05ea\u05d5\u05db\u05e0\u05d9\u05ea"
+    },
+    "question": {
+      "type": "string",
+      "description": "\u05d4\u05e9\u05d0\u05dc\u05d4"
+    },
+    "request_type": {
+      "type": "string",
+      "enum": [
+        "unclear_explanation",
+        "missing_example",
+        "system_question",
+        "procedure_conflict",
+        "permission_required",
+        "other"
+      ],
+      "default": "other",
+      "description": "\u05e1\u05d5\u05d2 \u05d4\u05d1\u05e7\u05e9\u05d4"
+    },
+    "urgency": {
+      "type": "string",
+      "enum": [
+        "normal",
+        "needed_before_next_task",
+        "blocking"
+      ],
+      "default": "normal",
+      "description": "\u05e8\u05de\u05ea \u05d3\u05d7\u05d9\u05e4\u05d5\u05ea"
+    },
+    "attachments": {
+      "type": "array",
+      "description": "\u05e6\u05d9\u05dc\u05d5\u05de\u05d9 \u05de\u05e1\u05da \u05d0\u05d5 \u05e7\u05d1\u05e6\u05d9\u05dd",
+      "items": {
+        "type": "object",
+        "properties": {
+          "file_url": {
+            "type": "string"
+          },
+          "file_name": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "submitted",
+        "received",
+        "in_progress",
+        "answered",
+        "content_update_required",
+        "closed"
+      ],
+      "default": "submitted",
+      "description": "\u05e1\u05d8\u05d8\u05d5\u05e1 \u05d4\u05d1\u05e7\u05e9\u05d4"
+    },
+    "assigned_to": {
+      "type": "string",
+      "description": "\u05de\u05d9 \u05de\u05d8\u05e4\u05dc"
+    },
+    "answer": {
+      "type": "string",
+      "description": "\u05ea\u05e9\u05d5\u05d1\u05ea \u05d4\u05d0\u05d3\u05de\u05d9\u05df"
+    },
+    "answered_by": {
+      "type": "string",
+      "description": "\u05de\u05d9 \u05d4\u05e9\u05d9\u05d1"
+    },
+    "answered_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u05de\u05d5\u05e2\u05d3 \u05d4\u05ea\u05e9\u05d5\u05d1\u05d4"
+    },
+    "add_to_knowledge_base": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05d4\u05d0\u05dd \u05dc\u05d4\u05d5\u05e1\u05d9\u05e3 \u05dc\u05d1\u05e1\u05d9\u05e1 \u05d4\u05d9\u05d3\u05e2"
+    }
+  },
+  "required": [
+    "onboarding_id",
+    "employee_id",
+    "question"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "data.employee_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.employee_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.employee_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
