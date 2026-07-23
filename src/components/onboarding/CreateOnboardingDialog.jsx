@@ -18,7 +18,7 @@ export default function CreateOnboardingDialog({ open, onClose, onCreated, user 
   useEffect(() => {
     if (open) {
       base44.entities.User.list()
-        .then((data) => setUsers(data.filter((u) => u.role === "user" || u.role === "manager")))
+        .then((data) => setUsers(data.filter((u) => u.role === "manager")))
         .catch(() => {});
     }
   }, [open]);
