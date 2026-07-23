@@ -922,17 +922,7 @@ export const REVIEW_TYPE_CONFIG = {
   day_90: { label: "90 יום", color: "bg-green-100 text-green-700" },
 };
 
-// ─── Scoring & Quiz Helpers ──────────────────────────────────────
-export function calculateQuizScore(correctAnswers, totalQuestions) {
-  if (totalQuestions === 0) return 1;
-  if (correctAnswers === 0) return 1;
-  return Math.round((correctAnswers / totalQuestions) * 10);
-}
-
-export function isPassed(score) {
-  return score >= 8;
-}
-
+// ─── Quiz Lookup Helper ──────────────────────────────────────────
 export function getQuizForStage(templateStageId) {
   if (templateStageId === "summary") {
     return ONBOARDING_TEMPLATE.summary_quiz;
