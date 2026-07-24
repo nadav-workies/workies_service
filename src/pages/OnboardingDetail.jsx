@@ -11,6 +11,8 @@ import QuizRunner from "@/components/onboarding/QuizRunner";
 import PracticalTaskList from "@/components/onboarding/PracticalTaskList";
 import ReviewMeetingList from "@/components/onboarding/ReviewMeetingList";
 import AuditLogList from "@/components/onboarding/AuditLogList";
+import OnboardingHelpButton from "@/components/onboarding/OnboardingHelpButton";
+import OnboardingAIAssistant from "@/components/onboarding/OnboardingAIAssistant";
 import { TRACK_STATUS_CONFIG, CATEGORY_LABELS } from "@/lib/onboardingTemplate";
 import { calculateProgress, calculateAverageScore, refreshTrackStats, logAudit } from "@/lib/onboardingUtils";
 import { isManagerOrAdmin } from "@/lib/permissions";
@@ -167,6 +169,8 @@ export default function OnboardingDetail() {
         </div>
       </Card>
 
+      <OnboardingAIAssistant track={track} stages={stages} isManager={isManager} />
+
       <Tabs defaultValue="timeline">
         <TabsList className="w-full grid grid-cols-3 sm:grid-cols-6 gap-1 h-auto p-1">
           <TabsTrigger value="timeline" className="text-xs sm:text-sm py-2">ציר זמן</TabsTrigger>
@@ -260,6 +264,8 @@ export default function OnboardingDetail() {
           <AuditLogList logs={logs} />
         </TabsContent>
       </Tabs>
+
+      <OnboardingHelpButton />
 
       {quizStage && (
         <QuizRunner stage={quizStage} onboardingId={id}
