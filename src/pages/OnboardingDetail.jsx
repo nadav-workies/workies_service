@@ -57,6 +57,13 @@ export default function OnboardingDetail() {
     queryFn: () => base44.entities.OnboardingAuditLog.filter({ onboarding_id: id }, "-created_date", 100),
     enabled: !!id,
   });
+  const { data: managers = [] } = useQuery({
+    queryKey: ["onboarding-managers"],
+    queryFn: async () => {
+      const users = await base44.entities.User.list();
+      return users.filter((u) => u.role === "admin" || u.role === "manager");
+    },
+  });
 
   if (loading || !user) return <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
   if (!track) return <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
@@ -90,6 +97,14 @@ export default function OnboardingDetail() {
   const handleReopenStage = async (stage) => {
     await base44.entities.OnboardingStage.update(stage.id, { status: "available", quiz_attempts: 0 });
     await logAudit(id, track.employee_id, track.employee_name, stage.id, stage.title, user?.full_name || user?.email, `פתיחת שלב מחדש: ${stage.title}`, stage.status, "available");
+    refetchStages();
+  };
+  const handleMentorAssign = async (stage, mentorUserId) => {
+    const mentor = managers.find((m) => m.id === mentorUserId);
+    const updates = { mentor_user_id: mentorUserId || null };
+    if (mentor) updates.mentor_name = mentor.full_name || mentor.email;
+    await base44.entities.OnboardingStage.update(stage.id, updates);
+    await logAudit(id, track.employee_id, track.employee_name, stage.id, stage.title, user?.full_name || user?.email, `שיוך חונך לשלב: ${mentor ? (mentor.full_name || mentor.email) : 'ברירת מחדל'}`, null, mentorUserId || 'כל המנהלים');
     refetchStages();
   };
 
@@ -149,7 +164,7 @@ export default function OnboardingDetail() {
         </TabsList>
 
         <TabsContent value="timeline" className="mt-3">
-          <StageTimeline stages={stages} onQuizStart={setQuizStage} isManager={isManager} onFirstSession={handleFirstSession} />
+          <StageTimeline stages={stages} onQuizStart={setQuizStage} isManager={isManager} onFirstSession={handleFirstSession} managers={managers} onMentorAssign={handleMentorAssign} />
           {isManager && stages.filter((s) => s.status === "completed" || s.status === "relearning").length > 0 && (
             <div className="mt-3 flex gap-2 flex-wrap">
               {stages.filter((s) => s.status === "completed" || s.status === "relearning").map((s) => (

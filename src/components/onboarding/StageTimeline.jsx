@@ -1,11 +1,11 @@
 import ReactMarkdown from "react-markdown";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, Clock, FileText, CheckCircle, AlertCircle } from "lucide-react";
+import { ChevronDown, ChevronUp, Clock, FileText, CheckCircle, AlertCircle, UserCog } from "lucide-react";
 import { STAGE_STATUS_CONFIG, CATEGORY_LABELS, ONBOARDING_TEMPLATE } from "@/lib/onboardingTemplate";
 import { useState } from "react";
 
-export default function StageTimeline({ stages, onQuizStart, isManager, onStageStatusChange, onFirstSession }) {
+export default function StageTimeline({ stages, onQuizStart, isManager, onStageStatusChange, onFirstSession, managers = [], onMentorAssign }) {
   const [expandedId, setExpandedId] = useState(null);
 
   const sorted = [...stages].sort((a, b) => a.order_number - b.order_number);
@@ -92,6 +92,23 @@ export default function StageTimeline({ stages, onQuizStart, isManager, onStageS
                         סמן כבוצע
                       </Button>
                     )}
+                  </div>
+                )}
+
+                {isManager && managers.length > 0 && (
+                  <div className="flex items-center gap-2 text-xs bg-muted/30 rounded-lg p-2">
+                    <UserCog className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+                    <span className="text-muted-foreground shrink-0">חונך מקבל התראות:</span>
+                    <select
+                      value={stage.mentor_user_id || ""}
+                      onChange={(e) => onMentorAssign?.(stage, e.target.value)}
+                      className="flex-1 h-7 text-xs rounded-md border border-input bg-transparent px-2 min-w-0"
+                    >
+                      <option value="">— ברירת מחדל (כל המנהלים) —</option>
+                      {managers.map((m) => (
+                        <option key={m.id} value={m.id}>{m.full_name || m.email}</option>
+                      ))}
+                    </select>
                   </div>
                 )}
 
