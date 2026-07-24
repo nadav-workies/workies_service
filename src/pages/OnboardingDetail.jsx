@@ -107,6 +107,20 @@ export default function OnboardingDetail() {
     await logAudit(id, track.employee_id, track.employee_name, stage.id, stage.title, user?.full_name || user?.email, `שיוך חונך לשלב: ${mentor ? (mentor.full_name || mentor.email) : 'ברירת מחדל'}`, null, mentorUserId || 'כל המנהלים');
     refetchStages();
   };
+  const handleQuickToggle = async (stage) => {
+    const newStatus = stage.status === "completed" ? "available" : "completed";
+    const updates = { status: newStatus };
+    if (newStatus === "completed") {
+      updates.completed_at = new Date().toISOString();
+    }
+    await base44.entities.OnboardingStage.update(stage.id, updates);
+    await logAudit(id, track.employee_id, track.employee_name, stage.id, stage.title, user?.full_name || user?.email, `${newStatus === "completed" ? "סימון שלב כהושלם" : "ביטול סימון השלמה"}: ${stage.title}`, stage.status, newStatus);
+    refetchStages();
+    const updatedStages = await base44.entities.OnboardingStage.filter({ onboarding_id: id }, "order_number", 50);
+    await refreshTrackStats(id, updatedStages);
+    queryClient.invalidateQueries({ queryKey: ["onboarding-track", id] });
+    queryClient.invalidateQueries({ queryKey: ["onboarding-tracks"] });
+  };
 
   const categoryMap = {};
   stages.forEach((s) => {
@@ -154,17 +168,17 @@ export default function OnboardingDetail() {
       </Card>
 
       <Tabs defaultValue="timeline">
-        <TabsList className="w-full overflow-x-auto">
-          <TabsTrigger value="timeline">ציר זמן</TabsTrigger>
-          <TabsTrigger value="map">מפת חפיפה</TabsTrigger>
-          <TabsTrigger value="tasks">משימות</TabsTrigger>
-          <TabsTrigger value="reviews">שיחות בקרה</TabsTrigger>
-          <TabsTrigger value="quizzes">מבדקים</TabsTrigger>
-          <TabsTrigger value="audit">יומן</TabsTrigger>
+        <TabsList className="w-full grid grid-cols-3 sm:grid-cols-6 gap-1 h-auto p-1">
+          <TabsTrigger value="timeline" className="text-xs sm:text-sm py-2">ציר זמן</TabsTrigger>
+          <TabsTrigger value="map" className="text-xs sm:text-sm py-2">מפה</TabsTrigger>
+          <TabsTrigger value="tasks" className="text-xs sm:text-sm py-2">משימות</TabsTrigger>
+          <TabsTrigger value="reviews" className="text-xs sm:text-sm py-2">שיחות</TabsTrigger>
+          <TabsTrigger value="quizzes" className="text-xs sm:text-sm py-2">מבדקים</TabsTrigger>
+          <TabsTrigger value="audit" className="text-xs sm:text-sm py-2">יומן</TabsTrigger>
         </TabsList>
 
         <TabsContent value="timeline" className="mt-3">
-          <StageTimeline stages={stages} onQuizStart={setQuizStage} isManager={isManager} onFirstSession={handleFirstSession} managers={managers} onMentorAssign={handleMentorAssign} />
+          <StageTimeline stages={stages} onQuizStart={setQuizStage} isManager={isManager} onFirstSession={handleFirstSession} managers={managers} onMentorAssign={handleMentorAssign} onQuickToggle={handleQuickToggle} />
           {isManager && stages.filter((s) => s.status === "completed" || s.status === "relearning").length > 0 && (
             <div className="mt-3 flex gap-2 flex-wrap">
               {stages.filter((s) => s.status === "completed" || s.status === "relearning").map((s) => (

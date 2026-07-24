@@ -1,11 +1,12 @@
 import ReactMarkdown from "react-markdown";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronDown, ChevronUp, Clock, FileText, CheckCircle, AlertCircle, UserCog } from "lucide-react";
 import { STAGE_STATUS_CONFIG, CATEGORY_LABELS, ONBOARDING_TEMPLATE } from "@/lib/onboardingTemplate";
 import { useState } from "react";
 
-export default function StageTimeline({ stages, onQuizStart, isManager, onStageStatusChange, onFirstSession, managers = [], onMentorAssign }) {
+export default function StageTimeline({ stages, onQuizStart, isManager, onStageStatusChange, onFirstSession, managers = [], onMentorAssign, onQuickToggle }) {
   const [expandedId, setExpandedId] = useState(null);
 
   const sorted = [...stages].sort((a, b) => a.order_number - b.order_number);
@@ -19,10 +20,18 @@ export default function StageTimeline({ stages, onQuizStart, isManager, onStageS
 
         return (
           <Card key={stage.id} className="min-w-0 overflow-hidden">
-            <button
+            <div
               onClick={() => setExpandedId(isExpanded ? null : stage.id)}
-              className="w-full p-3 flex items-center gap-3 text-right hover:bg-muted/30 transition-colors min-w-0"
+              className="w-full p-3 flex items-center gap-3 text-right hover:bg-muted/30 transition-colors min-w-0 cursor-pointer"
             >
+              {isManager && (
+                <Checkbox
+                  checked={stage.status === "completed"}
+                  onCheckedChange={() => onQuickToggle?.(stage)}
+                  onClick={(e) => e.stopPropagation()}
+                  className="shrink-0"
+                />
+              )}
               <div className={`w-2.5 h-2.5 rounded-full ${config.dot} shrink-0`} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -55,7 +64,7 @@ export default function StageTimeline({ stages, onQuizStart, isManager, onStageS
                 </div>
               )}
               {isExpanded ? <ChevronUp className="w-4 h-4 shrink-0 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 shrink-0 text-muted-foreground" />}
-            </button>
+            </div>
 
             {isExpanded && (
               <div className="px-4 pb-4 border-t space-y-3 min-w-0">
