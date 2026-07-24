@@ -31,6 +31,17 @@ export const ONBOARDING_TEMPLATE = {
         "להבין את הכפיפות והממשקים",
         "לדעת למי פונים בכל תחום",
       ],
+      learning_items: [
+        { id: "ch1_1", title: "קליטת משאבי אנוש", type: "learning", summary: "חוזה, שעות עבודה, דיווח",
+          details: { goal: "להבין את מסגרת הקליטה", steps: ["מעבר על חוזה ומסמכי עובד", "שעות עבודה ודיווח", "כללי נוכחות", "ממשקי דיווח"], commonMistakes: ["בלבול בין משאבי אנוש למנהל הישיר"] } },
+        { id: "ch1_2", title: "שיחה עם נדב", type: "mentor_meeting", summary: "מטרת התפקיד, אחריות, כפיפות",
+          details: { goal: "להבין את מסגרת התפקיד", importance: "התפקיד כולל שירות, קהילה, תוכן ופודקאסט", steps: ["מטרת התפקיד", "אחריות על חוויית הלקוח", "כפיפות ניהולית בשלושת החודשים הראשונים"], example: "מי מאשר תוכן? למי פונים בשירות?", commonMistakes: ["לחשוב שהתפקיד עוסק רק בקבלה"] } },
+        { id: "ch1_3", title: "היכרות עם חיים", type: "mentor_meeting", summary: "מבנה המתחם, צוותים, שגרת יום" },
+        { id: "ch1_4", title: "סיור מלא במתחם", type: "observation", summary: "דלפק, משרדים, חדרי ישיבות, איוונטור, אולפן, מטבחונים, שירותים" },
+        { id: "ch1_5", title: "היכרות עם אפליקציית השירות והתמיכה", type: "learning" },
+        { id: "ch1_6", title: "פתיחת גישות למערכות ולסושיאל", type: "learning" },
+        { id: "ch1_7", title: "שיחת סיכום סוף יום עם נדב", type: "summary" },
+      ],
       learning_content_md: `# יום 1 — קליטה, היכרות ולמידה מלאה
 
 ## אחראים: צללה, נדב, חיים
@@ -138,6 +149,18 @@ export const ONBOARDING_TEMPLATE = {
         "לטפל או להעביר לגורם המתאים",
         "לעדכן את הלקוח ולסגור מעגל",
       ],
+      learning_items: [
+        { id: "ch2_1", title: "צפייה בעבודת קו 1", type: "observation", summary: "ישיבה לצד רותי וצפייה בטיפול בפניות" },
+        { id: "ch2_2", title: "סוגי פניות נפוצות", type: "learning", summary: "שירות, תפעול, חיוב, ניקיון, אירועים" },
+        { id: "ch2_3", title: "פתיחת פנייה ותיעוד", type: "learning", summary: "תיאור ברור, דחיפות, פעולות, סטטוס",
+          details: { goal: "לדעת לתעד פנייה כראוי", steps: ["תיאור הבעיה", "קביעת דחיפות", "תיעוד פעולות", "עדכון סטטוס"], commonMistakes: ["תיעוד חלקי ללא דחיפות או סטטוס"] } },
+        { id: "ch2_4", title: "תעדוף ודחיפות", type: "learning", summary: "רגילה, בינונית, גבוהה, קריטית" },
+        { id: "ch2_5", title: "מענה ראשוני", type: "practice", summary: "איסוף מידע, מענה ראשוני, העברה אם צריך" },
+        { id: "ch2_6", title: "מתי מטפלים ומתי מעבירים", type: "learning", summary: "עקרון האחריות עד סגירת המעגל",
+          details: { goal: "לדעת מתי לטפל ומתי להעביר", importance: "קבלת אחריות על הפנייה עד סגירתה", commonMistakes: ["העברת פנייה ללא תיעוד או עדכון הלקוח"] } },
+        { id: "ch2_7", title: "עדכון הלקוח וסגירת פנייה", type: "practice", summary: "עדכון, וידוא פתרון, סגירה" },
+        { id: "ch2_8", title: "קבלת קהל בדלפק", type: "live_task", summary: "תרגול קבלת פנים פנים אל פנים" },
+      ],
       learning_content_md: `# יום 2 — שירות קו 1 וקבלת קהל
 
 ## אחראית: רותי
@@ -225,6 +248,18 @@ export const ONBOARDING_TEMPLATE = {
         "לזהות תקלה ראשונית",
         "לפתוח קריאת שירות",
         "לעקוב עד לסגירה",
+      ],
+      learning_items: [
+        { id: "ch3_1", title: "פתיחת המתחם", type: "live_task", summary: "צ'קליסט פתיחת בוקר",
+          details: { goal: "ביצוע פתיחה עצמאית", steps: ["בדיקת תקינות מערכות", "בדיקת ניקיון", "היערכות לקראת לקוחות"], commonMistakes: ["דילוג על בדיקות בוקר"] } },
+        { id: "ch3_2", title: "בדיקות בוקר", type: "observation", summary: "ביצוע סיור בוקר מודרך" },
+        { id: "ch3_3", title: "סגירת המתחם", type: "live_task", summary: "צ'קליסט סגירת ערב" },
+        { id: "ch3_4", title: "סיורי ניקיון ובקרת איכות", type: "observation", summary: "חללים משותפים, חדרי ישיבות, שירותים, מטבחונים" },
+        { id: "ch3_5", title: "טיפול ראשוני בתקלות", type: "practice", summary: "זיהוי, בדיקה, הסלמה",
+          details: { goal: "לדעת לטפל בתקלה ראשונית", steps: ["זיהוי סוג הבעיה", "בדיקה ראשונית", "העברה לגורם המתאים במידת הצורך"], commonMistakes: ["הזמנת עזרה לפני בדיקה ראשונית"] } },
+        { id: "ch3_6", title: "נוהל מדפסת משותפת", type: "learning", summary: "קוד משתמש, תקלות נפוצות" },
+        { id: "ch3_7", title: "נוהל תמי 4", type: "learning" },
+        { id: "ch3_8", title: "עבודה עם קריאות שירות", type: "practice", summary: "פתיחה, טיפול, מעקב וסגירה" },
       ],
       learning_content_md: `# יום 3 — מערכות שירות, פתיחה, סגירה וניקיון
 
@@ -322,6 +357,16 @@ export const ONBOARDING_TEMPLATE = {
         "להכין משרד וצ׳יפים",
         "לבצע סיור וקליטה מלאה",
       ],
+      learning_items: [
+        { id: "ch4_1", title: "קבלת משימת קליטת לקוח מתוך AIO", type: "learning", summary: "נקודת המעבר ממכירה לשירות",
+          details: { goal: "להבין מתי השירות נכנס לתהליך", importance: "השירות נכנס לאחר השלמת שלבי המכירה", commonMistakes: ["לימוד גבייה — אינו חלק מהחפיפה"] } },
+        { id: "ch4_2", title: "שיחת תיאום עם הלקוח", type: "mentor_meeting", summary: "תיאום שעת הגעה, צרכים מיוחדים" },
+        { id: "ch4_3", title: "הכנת המשרד והצ'יפים", type: "practice", summary: "בדיקת חדר, צ'יפ, מדפסת" },
+        { id: "ch4_4", title: "קבלת הלקוח בנכס", type: "live_task", summary: "קבלת פנים רשמית" },
+        { id: "ch4_5", title: "סיור במתחם והסבר שירותים", type: "observation", summary: "חדרי ישיבות, אפליקציה, אזורים משותפים" },
+        { id: "ch4_6", title: "צירוף לקבוצת הקהילה ומסירת Welcome", type: "live_task", summary: "מעטפת Welcome, קבוצת וואטסאפ" },
+        { id: "ch4_7", title: "שיחת התאקלמות ודירוג", type: "mentor_meeting", summary: "וידוא קליטה, משוב, סגירת פערים" },
+      ],
       learning_content_md: `# יום 4 — קליטת לקוח משרדים מתוך AIO
 
 ## אחראים: דרור וחיים
@@ -415,6 +460,17 @@ export const ONBOARDING_TEMPLATE = {
         "לבנות תוכנית תוכן שבועית",
         "להגיב לשאלות גולשים",
         "להציע יוזמות קהילה",
+      ],
+      learning_items: [
+        { id: "ch5_1", title: "זהות המותג וקהלי יעד", type: "learning", summary: "מי אנחנו, למי פונים" },
+        { id: "ch5_2", title: "סגנון כתיבה והבדל בין פלטפורמות", type: "learning", summary: "Facebook, Instagram, LinkedIn" },
+        { id: "ch5_3", title: "ניתוח פוסטים קיימים ומדדי מעורבות", type: "observation", summary: "מה עובד, מה לא" },
+        { id: "ch5_4", title: "מענה לשאלות גולשים", type: "practice", summary: "תשובה שירותית, מדויקת, מתועדת",
+          details: { goal: "לדעת להגיב נכון", commonMistakes: ["מענה ללא בדיקת ודאות", "מחיקת שאלות"] } },
+        { id: "ch5_5", title: "השוואה ל-WeWork ו-Spaces", type: "learning", summary: "הבנת שיטות והתאמה ל-Workies" },
+        { id: "ch5_6", title: "בניית תוכנית תוכן שבועית", type: "practice", summary: "פוסט, סטורי, LinkedIn — לאישור נדב",
+          details: { goal: "תוכנית מסודרת לשבוע", importance: "אין צורך באישור נקודתי כל עוד תואם לתוכנית", commonMistakes: ["פרסום ללא תוכנית מאושרת"] } },
+        { id: "ch5_7", title: "בניית יוזמות קהילה", type: "practice", summary: "שתי יוזמות לשבוע" },
       ],
       learning_content_md: `# יום 5 — סושיאל, מותג וקהילה
 
@@ -521,6 +577,17 @@ export const ONBOARDING_TEMPLATE = {
         "לקבל פנים וללוות שירותית",
         "לסגור מעגל ולקבל משוב",
       ],
+      learning_items: [
+        { id: "ch6_1", title: "קבלת האירוע וקריאת פרטי ההזמנה", type: "learning", summary: "הבנת התחייבויות השירות",
+          details: { goal: "להבין מה הובטח ללקוח", commonMistakes: ["דילוג על קריאת פרטי ההזמנה"] } },
+        { id: "ch6_2", title: "שיחת קליטה עם הלקוח", type: "mentor_meeting", summary: "וידוא פרטים, ציפיות, משתתפים, צרכים" },
+        { id: "ch6_3", title: "וידוא קיום האירוע ועדכון משתתפים", type: "practice" },
+        { id: "ch6_4", title: "תיאום דרישות וצרכים מיוחדים", type: "learning" },
+        { id: "ch6_5", title: "הכנת המתחם", type: "live_task", summary: "גיבוי שירות בהתאם לחלוקת אחריות" },
+        { id: "ch6_6", title: "קבלת פנים וליווי שירותי", type: "live_task", summary: "ליווי לאורך האירוע",
+          details: { goal: "חוויית שירות איכותית", commonMistakes: ["עזיבת המתחם באמצע האירוע"] } },
+        { id: "ch6_7", title: "סגירת המתחם וקבלת משוב", type: "summary", summary: "סגירה, תיעוד, משוב" },
+      ],
       learning_content_md: `# יום 7 — אירועי איוונטור
 
 ## אחראים: חיים ונדב
@@ -608,6 +675,18 @@ export const ONBOARDING_TEMPLATE = {
         "להפעיל מערכות בסיסיות",
         "ללוות את הלקוח",
         "לוודא שההקלטה נשמרה",
+      ],
+      learning_items: [
+        { id: "ch7_1", title: "הבנת מטרת ההקלטה ומעבר על בריף", type: "learning", summary: "נושא, קהל, מסרים, מבנה פרק",
+          details: { goal: "להבין את מטרת הפרק", commonMistakes: ["התחלת הקלטה ללא מעבר על הבריף"] } },
+        { id: "ch7_2", title: "וידוא שמות משתתפים ותפקידים", type: "learning" },
+        { id: "ch7_3", title: "הכנת החדר", type: "practice", summary: "ניקיון, שולחן, כיסאות" },
+        { id: "ch7_4", title: "חיבור והפעלת מיקרופונים", type: "practice" },
+        { id: "ch7_5", title: "בדיקת ערוצים במיקסר ועוצמות סאונד", type: "observation" },
+        { id: "ch7_6", title: "הפעלת מצלמות ובדיקת פריים", type: "practice" },
+        { id: "ch7_7", title: "הפעלת הקלטה ובדיקת חיווי", type: "live_task", summary: "הקלטת ניסיון, וידוא חיווי" },
+        { id: "ch7_8", title: "עצירה, שמירה ובדיקת קבצים", type: "live_task", summary: "וידוא שקבצי וידאו וסאונד נוצרו" },
+        { id: "ch7_9", title: "סגירת וסידור האולפן", type: "summary", summary: "כיבוי ציוד, סידור, תיעוד תקלות" },
       ],
       learning_content_md: `# יום 8 — פודקאסט ואולפן
 

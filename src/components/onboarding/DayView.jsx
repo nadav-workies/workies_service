@@ -19,7 +19,8 @@ export default function DayView({
   day, stages, tasks, meetings, attempts, dailyPlan,
   isManager, user, track,
   onQuizStart, onFirstSession, managers, onMentorAssign, onQuickToggle,
-  onTaskUpdate, onMeetingComplete, onFinishDay, onNextDay, onReopenStage
+  onTaskUpdate, onMeetingComplete, onFinishDay, onNextDay, onReopenStage,
+  viewAsUser, onToggleLearningItem
 }) {
   const [expandedId, setExpandedId] = useState(null);
   const [summary, setSummary] = useState({ learned: "", did: "", unclear: "", help: "", note: "" });
@@ -109,12 +110,13 @@ export default function DayView({
               stage={stage}
               isExpanded={expandedId === stage.id}
               onToggleExpand={() => setExpandedId(expandedId === stage.id ? null : stage.id)}
-              isManager={isManager}
+              isManager={isManager && !viewAsUser}
               onQuizStart={onQuizStart}
               onFirstSession={onFirstSession}
               managers={managers}
               onMentorAssign={onMentorAssign}
               onQuickToggle={onQuickToggle}
+              onToggleLearningItem={onToggleLearningItem}
             />
           ))}
         </div>
@@ -208,7 +210,7 @@ export default function DayView({
       )}
 
       {/* Manager: Reopen completed stages */}
-      {isManager && dayStages.some(s => s.status === "completed" || s.status === "relearning") && (
+      {isManager && !viewAsUser && dayStages.some(s => s.status === "completed" || s.status === "relearning") && (
         <div className="flex gap-2 flex-wrap">
           {dayStages.filter(s => s.status === "completed" || s.status === "relearning").map(s => (
             <Button key={s.id} size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => onReopenStage?.(s)}>

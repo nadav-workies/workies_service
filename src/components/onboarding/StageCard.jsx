@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronDown, ChevronUp, Clock, FileText, CheckCircle, AlertCircle, UserCog } from "lucide-react";
 import { STAGE_STATUS_CONFIG, CATEGORY_LABELS, ONBOARDING_TEMPLATE } from "@/lib/onboardingTemplate";
+import LearningChecklist from "@/components/onboarding/LearningChecklist";
 
-export default function StageCard({ stage, isExpanded, onToggleExpand, isManager, onQuizStart, onFirstSession, managers = [], onMentorAssign, onQuickToggle }) {
+export default function StageCard({ stage, isExpanded, onToggleExpand, isManager, onQuizStart, onFirstSession, managers = [], onMentorAssign, onQuickToggle, onToggleLearningItem }) {
   const config = STAGE_STATUS_CONFIG[stage.status] || STAGE_STATUS_CONFIG.not_started;
   const canTakeQuiz = stage.status !== "completed" && stage.status !== "relearning";
 
@@ -70,14 +71,13 @@ export default function StageCard({ stage, isExpanded, onToggleExpand, isManager
 
           {(() => {
             const tplStage = ONBOARDING_TEMPLATE.stages.find((s) => s.template_stage_id === stage.template_stage_id);
-            if (!tplStage?.learning_content_md) return null;
+            if (!tplStage?.learning_items?.length) return null;
             return (
-              <details className="text-xs">
-                <summary className="cursor-pointer font-semibold text-muted-foreground">חומר למידה</summary>
-                <div className="mt-2 prose prose-sm max-w-none bg-muted/20 rounded-lg p-2 overflow-x-auto">
-                  <ReactMarkdown>{tplStage.learning_content_md}</ReactMarkdown>
-                </div>
-              </details>
+              <LearningChecklist
+                items={tplStage.learning_items}
+                checkedItems={stage.checked_learning_items || []}
+                onToggleItem={(itemId) => onToggleLearningItem?.(stage, itemId)}
+              />
             );
           })()}
 

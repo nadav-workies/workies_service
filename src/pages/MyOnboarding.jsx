@@ -120,6 +120,12 @@ export default function MyOnboarding() {
     await base44.entities.ReviewMeeting.update(meeting.id, updates);
     queryClient.invalidateQueries({ queryKey: ["my-meetings", onboardingId] });
   };
+  const handleToggleLearningItem = async (stage, itemId) => {
+    const current = stage.checked_learning_items || [];
+    const updated = current.includes(itemId) ? current.filter(id => id !== itemId) : [...current, itemId];
+    await base44.entities.OnboardingStage.update(stage.id, { checked_learning_items: updated });
+    refetchStages();
+  };
   const handleFinishDay = async (dayNumber, summary) => {
     const plan = dailyPlans.find(p => p.day_number === dayNumber);
     if (plan) {
@@ -202,6 +208,7 @@ export default function MyOnboarding() {
             onMeetingComplete={handleMeetingComplete}
             onFinishDay={handleFinishDay}
             onNextDay={handleNextDay}
+            onToggleLearningItem={handleToggleLearningItem}
           />
         </>
       )}

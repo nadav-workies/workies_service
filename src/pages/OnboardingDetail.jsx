@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowRight, LayoutGrid, CalendarDays } from "lucide-react";
+import { Loader2, ArrowRight, LayoutGrid, CalendarDays, Eye } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import DayNavigator from "@/components/onboarding/DayNavigator";
 import DayView from "@/components/onboarding/DayView";
@@ -25,6 +25,7 @@ export default function OnboardingDetail() {
   const [quizStage, setQuizStage] = useState(null);
   const [activeDay, setActiveDay] = useState(null);
   const [managerView, setManagerView] = useState("days");
+  const [viewAsUser, setViewAsUser] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -171,6 +172,12 @@ export default function OnboardingDetail() {
     queryClient.invalidateQueries({ queryKey: ["onboarding-daily-plans", id] });
     queryClient.invalidateQueries({ queryKey: ["onboarding-logs", id] });
   };
+  const handleToggleLearningItem = async (stage, itemId) => {
+    const current = stage.checked_learning_items || [];
+    const updated = current.includes(itemId) ? current.filter(id => id !== itemId) : [...current, itemId];
+    await base44.entities.OnboardingStage.update(stage.id, { checked_learning_items: updated });
+    refetchStages();
+  };
   const handleNextDay = () => {
     const nextGroup = dayGroups.find(g => g.day > activeDay);
     if (nextGroup) setActiveDay(nextGroup.day);
@@ -186,7 +193,7 @@ export default function OnboardingDetail() {
 
   const activeGroup = dayGroups.find(g => g.day === activeDay);
   const activePlan = dailyPlans.find(p => p.day_number === activeDay);
-  const showDayView = managerView === "days" || !isManager;
+  const showDayView = viewAsUser || managerView === "days" || !isManager;
 
   return (
     <div className="space-y-4 px-1 overflow-x-hidden" dir="rtl">
@@ -201,11 +208,18 @@ export default function OnboardingDetail() {
         </div>
         {isManager && (
           <div className="flex gap-1 shrink-0">
-            <Button size="sm" variant={managerView === "days" ? "default" : "outline"} onClick={() => setManagerView("days")} className="gap-1">
-              <CalendarDays className="w-3.5 h-3.5" /> ימים
-            </Button>
-            <Button size="sm" variant={managerView === "admin" ? "default" : "outline"} onClick={() => setManagerView("admin")} className="gap-1">
-              <LayoutGrid className="w-3.5 h-3.5" /> ניהול
+            {!viewAsUser && (
+              <>
+                <Button size="sm" variant={managerView === "days" ? "default" : "outline"} onClick={() => setManagerView("days")} className="gap-1">
+                  <CalendarDays className="w-3.5 h-3.5" /> ימים
+                </Button>
+                <Button size="sm" variant={managerView === "admin" ? "default" : "outline"} onClick={() => setManagerView("admin")} className="gap-1">
+                  <LayoutGrid className="w-3.5 h-3.5" /> ניהול
+                </Button>
+              </>
+            )}
+            <Button size="sm" variant={viewAsUser ? "default" : "outline"} onClick={() => setViewAsUser(!viewAsUser)} className="gap-1">
+              <Eye className="w-3.5 h-3.5" /> {viewAsUser ? "חזור לניהול" : "צפה כמשתמש"}
             </Button>
           </div>
         )}
@@ -264,12 +278,14 @@ export default function OnboardingDetail() {
             onFinishDay={handleFinishDay}
             onNextDay={handleNextDay}
             onReopenStage={handleReopenStage}
+            viewAsUser={viewAsUser}
+            onToggleLearningItem={handleToggleLearningItem}
           />
         </>
       )}
 
       {/* Day View: Additional Info */}
-      {showDayView && (
+      {showDayView && !viewAsUser && (
         <AdditionalInfoPanel categoryMap={categoryMap} attempts={attempts} logs={logs} />
       )}
 
