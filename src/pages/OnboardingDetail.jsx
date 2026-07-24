@@ -13,6 +13,7 @@ import ReviewMeetingList from "@/components/onboarding/ReviewMeetingList";
 import QuizRunner from "@/components/onboarding/QuizRunner";
 import OnboardingHelpButton from "@/components/onboarding/OnboardingHelpButton";
 import OnboardingAIAssistant from "@/components/onboarding/OnboardingAIAssistant";
+import OnboardingLinkManager from "@/components/onboarding/OnboardingLinkManager";
 import { TRACK_STATUS_CONFIG } from "@/lib/onboardingTemplate";
 import { calculateProgress, calculateAverageScore, refreshTrackStats, logAudit } from "@/lib/onboardingUtils";
 import { isManagerOrAdmin } from "@/lib/permissions";
@@ -250,6 +251,9 @@ export default function OnboardingDetail() {
           <span>מנהל: {track.current_manager_name}</span>
         </div>
       </Card>
+
+      {/* Link Manager */}
+      {isManager && <OnboardingLinkManager track={track} onPreview={() => setViewAsUser(true)} />}
 
       {/* AI Assistant */}
       <OnboardingAIAssistant track={track} stages={stages} isManager={isManager} />

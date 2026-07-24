@@ -9,7 +9,7 @@ import { base44 } from "@/api/base44Client";
 import { getQuizForStage, calculateQuizScore, isPassed, ONBOARDING_TEMPLATE } from "@/lib/onboardingTemplate";
 import { logAudit } from "@/lib/onboardingUtils";
 
-export default function QuizRunner({ stage, onboardingId, employee, user, onClose, onCompleted }) {
+export default function QuizRunner({ stage, onboardingId, employee, user, onClose, onCompleted, submitOverride }) {
   const [phase, setPhase] = useState("quiz");
   const [answers, setAnswers] = useState({});
   const [startTime] = useState(Date.now());
@@ -59,43 +59,57 @@ export default function QuizRunner({ stage, onboardingId, employee, user, onClos
     const duration = Math.floor((Date.now() - startTime) / 1000);
     const attemptNumber = (stage.quiz_attempts || 0) + 1;
 
-    await base44.entities.QuizAttempt.create({
-      onboarding_id: onboardingId,
-      stage_id: stage.id,
-      employee_id: employee.id || employee.employee_id,
-      employee_name: employee.full_name || employee.employee_name,
-      stage_title: stage.title,
-      is_summary: stage.template_stage_id === "summary",
-      attempt_number: attemptNumber,
-      started_at: new Date(startTime).toISOString(),
-      submitted_at: new Date().toISOString(),
-      duration_seconds: duration,
-      correct_answers: correct,
-      total_questions: quiz.questions.length,
-      score_1_to_10: score,
-      passed,
-      answers: answerDetails,
-    });
-
     const newStatus = passed ? "completed" : (attemptNumber >= quiz.max_attempts ? "relearning" : "failed");
-    await base44.entities.OnboardingStage.update(stage.id, {
-      status: newStatus,
-      quiz_score: score,
-      quiz_attempts: attemptNumber,
-      completed_at: passed ? new Date().toISOString() : null,
-    });
 
-    await logAudit(
-      onboardingId,
-      employee.id || employee.employee_id,
-      employee.full_name || employee.employee_name,
-      stage.id,
-      stage.title,
-      user?.full_name || user?.email || "משתמש/ת",
-      `מבדק: ${stage.title} — ניסיון ${attemptNumber}, ציון ${score}/10, ${passed ? "עבר" : "נכשל"}`,
-      null,
-      `ציון: ${score}, סטטוס: ${newStatus}`
-    );
+    if (submitOverride) {
+      await submitOverride({
+        stage_id: stage.id,
+        started_at: new Date(startTime).toISOString(),
+        duration_seconds: duration,
+        correct_answers: correct,
+        total_questions: quiz.questions.length,
+        score_1_to_10: score,
+        passed,
+        answers: answerDetails,
+      });
+    } else {
+      await base44.entities.QuizAttempt.create({
+        onboarding_id: onboardingId,
+        stage_id: stage.id,
+        employee_id: employee.id || employee.employee_id,
+        employee_name: employee.full_name || employee.employee_name,
+        stage_title: stage.title,
+        is_summary: stage.template_stage_id === "summary",
+        attempt_number: attemptNumber,
+        started_at: new Date(startTime).toISOString(),
+        submitted_at: new Date().toISOString(),
+        duration_seconds: duration,
+        correct_answers: correct,
+        total_questions: quiz.questions.length,
+        score_1_to_10: score,
+        passed,
+        answers: answerDetails,
+      });
+
+      await base44.entities.OnboardingStage.update(stage.id, {
+        status: newStatus,
+        quiz_score: score,
+        quiz_attempts: attemptNumber,
+        completed_at: passed ? new Date().toISOString() : null,
+      });
+
+      await logAudit(
+        onboardingId,
+        employee.id || employee.employee_id,
+        employee.full_name || employee.employee_name,
+        stage.id,
+        stage.title,
+        user?.full_name || user?.email || "משתמש/ת",
+        `מבדק: ${stage.title} — ניסיון ${attemptNumber}, ציון ${score}/10, ${passed ? "עבר" : "נכשל"}`,
+        null,
+        `ציון: ${score}, סטטוס: ${newStatus}`
+      );
+    }
 
     setResult({ score, correct, total: quiz.questions.length, passed, details: answerDetails, attemptNumber });
     setPhase("results");

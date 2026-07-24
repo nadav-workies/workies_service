@@ -30,8 +30,9 @@ import EventRegistration from '@/pages/EventRegistration';
 import OnboardingManagement from '@/pages/OnboardingManagement';
 import OnboardingDetail from '@/pages/OnboardingDetail';
 import MyOnboarding from '@/pages/MyOnboarding';
+import OnboardingAccessPage from '@/pages/OnboardingAccessPage';
 
-const PUBLIC_ROUTES = ['/event-registration', '/feedback'];
+const PUBLIC_ROUTES = ['/event-registration', '/feedback', '/onboarding/access'];
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -78,6 +79,7 @@ const AuthenticatedApp = () => {
           <Route path="/my-onboarding" element={<MyOnboarding />} />
         </Route>
       </Route>
+      <Route path="/onboarding/access/:token" element={<OnboardingAccessPage />} />
       <Route path="/feedback/:token" element={<FeedbackSurvey />} />
       <Route path="/event-registration" element={<EventRegistration />} />
       <Route path="*" element={<PageNotFound />} />
