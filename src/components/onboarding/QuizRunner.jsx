@@ -91,7 +91,7 @@ export default function QuizRunner({ stage, onboardingId, employee, user, onClos
       employee.full_name || employee.employee_name,
       stage.id,
       stage.title,
-      user?.full_name || user?.email || "עובדת",
+      user?.full_name || user?.email || "משתמש/ת",
       `מבדק: ${stage.title} — ניסיון ${attemptNumber}, ציון ${score}/10, ${passed ? "עבר" : "נכשל"}`,
       null,
       `ציון: ${score}, סטטוס: ${newStatus}`
@@ -168,7 +168,7 @@ export default function QuizRunner({ stage, onboardingId, employee, user, onClos
                 {result.score}<span className="text-lg text-muted-foreground">/10</span>
               </p>
               <p className={`text-sm font-medium ${result.passed ? "text-green-600" : "text-red-600"}`}>
-                {result.passed ? "✓ עברת" : "נכשלת"} · {result.correct} מתוך {result.total} נכונות
+                {result.passed ? "✓ המבדק הושלם בהצלחה" : "הציון שהתקבל נמוך מציון המעבר"} · {result.correct} מתוך {result.total} נכונות
               </p>
               <p className="text-xs text-muted-foreground mt-1">ניסיון {result.attemptNumber}</p>
             </div>

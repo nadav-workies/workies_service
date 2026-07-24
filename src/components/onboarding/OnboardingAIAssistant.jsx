@@ -20,13 +20,13 @@ export default function OnboardingAIAssistant({ track, stages, isManager }) {
       const stagesSummary = stages
         .map((s) => `- יום ${s.day_number}: ${s.title} (סטטוס: ${s.status}${s.quiz_score != null ? `, ציון: ${s.quiz_score}` : ""})`)
         .join("\n");
-      const prompt = `אתה עוזר וירטואלי לתהליך חפיפת עובדת בחברת Workies.
-פרטי העובדת: שם: ${track.employee_name}, תפקיד: ${track.role_title}, התקדמות: ${track.progress_percent}%, סטטוס: ${track.status}, שלבים שהושלמו: ${track.completed_stages}/${track.total_stages}, תאריך תחילה: ${track.start_date}, תאריך סיום מתוכנן: ${track.planned_end_date}.
+      const prompt = `אתה עוזר וירטואלי לתהליך חפיפה בחברת Workies.
+פרטי החפיפה: שם: ${track.employee_name}, תפקיד: ${track.role_title}, התקדמות: ${track.progress_percent}%, סטטוס: ${track.status}, שלבים שהושלמו: ${track.completed_stages}/${track.total_stages}, תאריך תחילה: ${track.start_date}, תאריך סיום מתוכנן: ${track.planned_end_date}.
 
 שלבי החפיפה:
 ${stagesSummary}
 
-השאלה נשאלה על ידי ${isManager ? "מנהל" : "העובדת"}: ${question}
+השאלה נשאלה על ידי ${isManager ? "מנהל" : "המשתמש/ת"}: ${question}
 
 ענה בעברית, בקצרה ובצורה ברורה ומועילה. אם השאלה לא קשורה לחפיפה, בקש להבהיר.`;
       const res = await base44.integrations.Core.InvokeLLM({ prompt });

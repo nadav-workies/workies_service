@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
       return Response.json({ sent: 0, reason: 'no recipients found' });
     }
 
-    const employeeName = data.employee_name || (onboarding && onboarding.employee_name) || 'עובדת';
+    const employeeName = data.employee_name || (onboarding && onboarding.employee_name) || 'משתמש/ת';
     const stageTitle = data.title || 'שלב חפיפה';
     const quizScore = data.quiz_score;
     const attempts = data.quiz_attempts || 0;
@@ -63,20 +63,20 @@ Deno.serve(async (req) => {
 
     if (quizScore != null) {
       if (quizScore >= 9) {
-        recommendations.push('העובדת הפגינה הבנה מעולה של החומר. ניתן לעבור לשלב הבא בביטחון.');
+        recommendations.push('הופגנה הבנה מעולה של החומר. ניתן לעבור לשלב הבא בביטחון.');
       } else if (quizScore >= 8) {
-        recommendations.push('העובדת עברה את המבדק בהצלחה. מומלץ לבדוק את התשובות השגויות ולוודא הבנה מלאה לפני מעבר הלאה.');
+        recommendations.push('המבדק הושלם בהצלחה. מומלץ לבדוק את התשובות השגויות ולוודא הבנה מלאה לפני מעבר הלאה.');
       } else if (quizScore >= 6) {
-        recommendations.push('הבנה חלקית. מומלץ לתגבר את הנושאים שבהם טעתה העובדת לפני מעבר לשלב הבא.');
+        recommendations.push('הבנה חלקית. מומלץ לתגבר את הנושאים שבהם נטעו לפני מעבר לשלב הבא.');
       } else {
         recommendations.push('ציון נמוך. נדרשת למידה חוזרת של החומר עם החונך לפני המשך.');
       }
     } else {
-      recommendations.push('השלב הושלם ללא מבדק. מומלץ לוודא שהעובדת מבינה את התוכן באופן מעשי.');
+      recommendations.push('השלב הושלם ללא מבדק. מומלץ לוודא הבנה מעשית של התוכן.');
     }
 
     if (attempts >= 3) {
-      recommendations.push('⚠️ העובדת ניסתה 3 פעמים. נדרשת למידה מחדש עם החונך לפני פתיחת המבדק מחדש.');
+      recommendations.push('⚠️ בוצעו 3 ניסיונות. נדרשת למידה מחדש עם החונך לפני פתיחת המבדק מחדש.');
     }
 
     if (data.requires_mentor_first_session && !data.first_session_done) {
@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
     // Build summary text outside template literal to avoid nesting issues
     const dayText = dayNumber ? ' (יום ' + dayNumber + ')' : '';
     const scoreText = quizScore != null ? ' ציון המבדק: ' + quizScore + ' מתוך 10 לאחר ' + attempts + ' ניסיונות.' : '';
-    const summaryText = 'העובדת ' + employeeName + ' השלימה את השלב "' + stageTitle + '"' + dayText + '.' + scoreText;
+    const summaryText = employeeName + ' השלים/ה את השלב "' + stageTitle + '"' + dayText + '.' + scoreText;
 
     const scoreRow = quizScore != null
       ? '<tr><td style="padding:6px;font-weight:bold;">ציון מבדק</td><td><strong style="color:' + (quizScore >= 8 ? '#16a34a' : '#ef4444') + ';">' + quizScore + '/10</strong></td></tr>'
@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
       '<div dir="rtl" style="font-family: sans-serif; max-width: 600px; margin: auto;">' +
         '<h2 style="color:#16a34a;">✅ הושלם שלב חפיפה</h2>' +
         '<table style="width:100%;border-collapse:collapse;">' +
-          '<tr><td style="padding:6px;font-weight:bold;">עובדת</td><td>' + employeeName + '</td></tr>' +
+          '<tr><td style="padding:6px;font-weight:bold;">שם</td><td>' + employeeName + '</td></tr>' +
           '<tr><td style="padding:6px;font-weight:bold;">תפקיד</td><td>' + roleTitle + '</td></tr>' +
           '<tr><td style="padding:6px;font-weight:bold;">שלב</td><td>' + stageTitle + '</td></tr>' +
           '<tr><td style="padding:6px;font-weight:bold;">יום</td><td>' + (dayNumber || '—') + '</td></tr>' +
