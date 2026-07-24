@@ -1,19 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowRight, RotateCcw } from "lucide-react";
+import { Loader2, ArrowRight, LayoutGrid, CalendarDays } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
-import StageTimeline from "@/components/onboarding/StageTimeline";
-import QuizRunner from "@/components/onboarding/QuizRunner";
+import DayNavigator from "@/components/onboarding/DayNavigator";
+import DayView from "@/components/onboarding/DayView";
+import AdditionalInfoPanel from "@/components/onboarding/AdditionalInfoPanel";
 import PracticalTaskList from "@/components/onboarding/PracticalTaskList";
 import ReviewMeetingList from "@/components/onboarding/ReviewMeetingList";
-import AuditLogList from "@/components/onboarding/AuditLogList";
+import QuizRunner from "@/components/onboarding/QuizRunner";
 import OnboardingHelpButton from "@/components/onboarding/OnboardingHelpButton";
 import OnboardingAIAssistant from "@/components/onboarding/OnboardingAIAssistant";
-import { TRACK_STATUS_CONFIG, CATEGORY_LABELS } from "@/lib/onboardingTemplate";
+import { TRACK_STATUS_CONFIG } from "@/lib/onboardingTemplate";
 import { calculateProgress, calculateAverageScore, refreshTrackStats, logAudit } from "@/lib/onboardingUtils";
 import { isManagerOrAdmin } from "@/lib/permissions";
 
@@ -23,6 +23,8 @@ export default function OnboardingDetail() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quizStage, setQuizStage] = useState(null);
+  const [activeDay, setActiveDay] = useState(null);
+  const [managerView, setManagerView] = useState("days");
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -37,6 +39,11 @@ export default function OnboardingDetail() {
   const { data: stages = [], refetch: refetchStages } = useQuery({
     queryKey: ["onboarding-stages", id],
     queryFn: () => base44.entities.OnboardingStage.filter({ onboarding_id: id }, "order_number", 50),
+    enabled: !!id,
+  });
+  const { data: dailyPlans = [] } = useQuery({
+    queryKey: ["onboarding-daily-plans", id],
+    queryFn: () => base44.entities.DailyLearningPlan.filter({ onboarding_id: id }, "day_number", 50),
     enabled: !!id,
   });
   const { data: attempts = [] } = useQuery({
@@ -66,6 +73,38 @@ export default function OnboardingDetail() {
       return users.filter((u) => u.role === "admin" || u.role === "manager");
     },
   });
+
+  const dayGroups = useMemo(() => {
+    const groups = {};
+    stages.forEach((s) => {
+      const day = s.day_number || 0;
+      if (!groups[day]) groups[day] = [];
+      groups[day].push(s);
+    });
+    return Object.keys(groups).map(Number).sort((a, b) => a - b).map((day) => {
+      const dayStages = groups[day];
+      const completed = dayStages.filter((s) => s.status === "completed").length;
+      const plan = dailyPlans.find((p) => p.day_number === day);
+      const stageIds = new Set(dayStages.map(s => s.id));
+      const dayTasks = tasks.filter(t => stageIds.has(t.stage_id));
+      const overdueTasks = dayTasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== "done").length;
+      return {
+        day,
+        completed,
+        total: dayStages.length,
+        date: plan?.planned_date,
+        status: plan?.status || (completed === dayStages.length && dayStages.length > 0 ? "completed" : completed > 0 ? "active" : "available"),
+        overdueTasks,
+      };
+    });
+  }, [stages, dailyPlans, tasks]);
+
+  useEffect(() => {
+    if (activeDay === null && dayGroups.length > 0) {
+      const firstActive = dayGroups.find(g => g.status !== "completed");
+      setActiveDay(firstActive?.day || dayGroups[0].day);
+    }
+  }, [dayGroups, activeDay]);
 
   if (loading || !user) return <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
   if (!track) return <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
@@ -112,9 +151,7 @@ export default function OnboardingDetail() {
   const handleQuickToggle = async (stage) => {
     const newStatus = stage.status === "completed" ? "available" : "completed";
     const updates = { status: newStatus };
-    if (newStatus === "completed") {
-      updates.completed_at = new Date().toISOString();
-    }
+    if (newStatus === "completed") updates.completed_at = new Date().toISOString();
     await base44.entities.OnboardingStage.update(stage.id, updates);
     await logAudit(id, track.employee_id, track.employee_name, stage.id, stage.title, user?.full_name || user?.email, `${newStatus === "completed" ? "סימון שלב כהושלם" : "ביטול סימון השלמה"}: ${stage.title}`, stage.status, newStatus);
     refetchStages();
@@ -122,6 +159,21 @@ export default function OnboardingDetail() {
     await refreshTrackStats(id, updatedStages);
     queryClient.invalidateQueries({ queryKey: ["onboarding-track", id] });
     queryClient.invalidateQueries({ queryKey: ["onboarding-tracks"] });
+  };
+  const handleFinishDay = async (dayNumber, summary) => {
+    const plan = dailyPlans.find(p => p.day_number === dayNumber);
+    if (plan) {
+      await base44.entities.DailyLearningPlan.update(plan.id, { status: "completed" });
+    }
+    const summaryText = [summary.learned, summary.did, summary.unclear, summary.help, summary.note].filter(Boolean).join(" | ");
+    await logAudit(id, track.employee_id, track.employee_name, null, `יום ${dayNumber}`, user?.full_name || user?.email,
+      `סיום יום ${dayNumber}${summaryText ? ` — סיכום: ${summaryText}` : ""}`);
+    queryClient.invalidateQueries({ queryKey: ["onboarding-daily-plans", id] });
+    queryClient.invalidateQueries({ queryKey: ["onboarding-logs", id] });
+  };
+  const handleNextDay = () => {
+    const nextGroup = dayGroups.find(g => g.day > activeDay);
+    if (nextGroup) setActiveDay(nextGroup.day);
   };
 
   const categoryMap = {};
@@ -132,8 +184,13 @@ export default function OnboardingDetail() {
     if (s.quiz_score != null) categoryMap[s.category].scores.push(s.quiz_score);
   });
 
+  const activeGroup = dayGroups.find(g => g.day === activeDay);
+  const activePlan = dailyPlans.find(p => p.day_number === activeDay);
+  const showDayView = managerView === "days" || !isManager;
+
   return (
     <div className="space-y-4 px-1 overflow-x-hidden" dir="rtl">
+      {/* Header */}
       <div className="flex items-center gap-2 min-w-0">
         <Button variant="ghost" size="sm" onClick={() => navigate("/onboarding")} className="gap-1 shrink-0">
           <ArrowRight className="w-4 h-4" /> חזרה
@@ -142,8 +199,19 @@ export default function OnboardingDetail() {
           <h1 className="text-lg sm:text-xl font-bold truncate">{track.employee_name}</h1>
           <p className="text-xs text-muted-foreground">{track.role_title} · {track.template_name}</p>
         </div>
+        {isManager && (
+          <div className="flex gap-1 shrink-0">
+            <Button size="sm" variant={managerView === "days" ? "default" : "outline"} onClick={() => setManagerView("days")} className="gap-1">
+              <CalendarDays className="w-3.5 h-3.5" /> ימים
+            </Button>
+            <Button size="sm" variant={managerView === "admin" ? "default" : "outline"} onClick={() => setManagerView("admin")} className="gap-1">
+              <LayoutGrid className="w-3.5 h-3.5" /> ניהול
+            </Button>
+          </div>
+        )}
       </div>
 
+      {/* Metrics */}
       <Card className="p-3 min-w-0">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
           <div>
@@ -169,104 +237,61 @@ export default function OnboardingDetail() {
         </div>
       </Card>
 
+      {/* AI Assistant */}
       <OnboardingAIAssistant track={track} stages={stages} isManager={isManager} />
 
-      <Tabs defaultValue="timeline">
-        <TabsList className="w-full grid grid-cols-3 sm:grid-cols-6 gap-1 h-auto p-1">
-          <TabsTrigger value="timeline" className="text-xs sm:text-sm py-2">ציר זמן</TabsTrigger>
-          <TabsTrigger value="map" className="text-xs sm:text-sm py-2">מפה</TabsTrigger>
-          <TabsTrigger value="tasks" className="text-xs sm:text-sm py-2">משימות</TabsTrigger>
-          <TabsTrigger value="reviews" className="text-xs sm:text-sm py-2">שיחות</TabsTrigger>
-          <TabsTrigger value="quizzes" className="text-xs sm:text-sm py-2">מבדקים</TabsTrigger>
-          <TabsTrigger value="audit" className="text-xs sm:text-sm py-2">יומן</TabsTrigger>
-        </TabsList>
+      {/* Day View (default) */}
+      {showDayView && activeGroup && (
+        <>
+          <DayNavigator dayGroups={dayGroups} activeDay={activeDay} onSelectDay={setActiveDay} />
+          <DayView
+            day={activeDay}
+            stages={stages}
+            tasks={tasks}
+            meetings={meetings}
+            attempts={attempts}
+            dailyPlan={activePlan}
+            isManager={isManager}
+            user={user}
+            track={track}
+            onQuizStart={setQuizStage}
+            onFirstSession={handleFirstSession}
+            managers={managers}
+            onMentorAssign={handleMentorAssign}
+            onQuickToggle={handleQuickToggle}
+            onTaskUpdate={handleTaskUpdate}
+            onMeetingComplete={handleMeetingComplete}
+            onFinishDay={handleFinishDay}
+            onNextDay={handleNextDay}
+            onReopenStage={handleReopenStage}
+          />
+        </>
+      )}
 
-        <TabsContent value="timeline" className="mt-3">
-          <StageTimeline stages={stages} onQuizStart={setQuizStage} isManager={isManager} onFirstSession={handleFirstSession} managers={managers} onMentorAssign={handleMentorAssign} onQuickToggle={handleQuickToggle} />
-          {isManager && stages.filter((s) => s.status === "completed" || s.status === "relearning").length > 0 && (
-            <div className="mt-3 flex gap-2 flex-wrap">
-              {stages.filter((s) => s.status === "completed" || s.status === "relearning").map((s) => (
-                <Button key={s.id} size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => handleReopenStage(s)}>
-                  <RotateCcw className="w-3 h-3" /> פתח מחדש: {s.title}
-                </Button>
-              ))}
-            </div>
-          )}
-        </TabsContent>
+      {/* Day View: Additional Info */}
+      {showDayView && (
+        <AdditionalInfoPanel categoryMap={categoryMap} attempts={attempts} logs={logs} />
+      )}
 
-        <TabsContent value="map" className="mt-3">
-          <Card className="overflow-hidden min-w-0">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[500px] text-sm">
-                <thead className="bg-muted/50">
-                  <tr>
-                    <th className="text-right p-2">תחום</th>
-                    <th className="text-center p-2">התקדמות</th>
-                    <th className="text-center p-2">ציון</th>
-                    <th className="text-center p-2">סטטוס</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(categoryMap).map(([cat, data]) => {
-                    const catAvg = data.scores.length > 0 ? Math.round(data.scores.reduce((s, v) => s + v, 0) / data.scores.length * 10) / 10 : null;
-                    const pct = Math.round((data.completed / data.total) * 100);
-                    return (
-                      <tr key={cat} className="border-t">
-                        <td className="p-2 font-medium">{CATEGORY_LABELS[cat] || cat}</td>
-                        <td className="text-center p-2">{data.completed}/{data.total} ({pct}%)</td>
-                        <td className="text-center p-2">{catAvg || "—"}</td>
-                        <td className="text-center p-2">
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${pct === 100 ? "bg-green-100 text-green-700" : pct > 0 ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600"}`}>
-                            {pct === 100 ? "הושלם" : pct > 0 ? "בתהליך" : "טרם התחיל"}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="tasks" className="mt-3">
-          <PracticalTaskList tasks={tasks} onUpdate={handleTaskUpdate} isManager={isManager} />
-        </TabsContent>
-
-        <TabsContent value="reviews" className="mt-3">
-          <ReviewMeetingList meetings={meetings} onComplete={handleMeetingComplete} user={user} />
-        </TabsContent>
-
-        <TabsContent value="quizzes" className="mt-3">
-          <div className="space-y-2 min-w-0">
-            {attempts.length === 0 ? (
-              <Card className="p-6 text-center text-sm text-muted-foreground">אין ניסיונות מבדק עדיין</Card>
-            ) : (
-              attempts.map((att) => (
-                <Card key={att.id} className="p-3 min-w-0">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${att.passed ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}>
-                      {att.score_1_to_10}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{att.stage_title}</p>
-                      <p className="text-xs text-muted-foreground">ניסיון {att.attempt_number} · {att.correct_answers}/{att.total_questions} נכונות · {att.passed ? "עבר" : "נכשל"}</p>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground shrink-0">{att.submitted_at ? new Date(att.submitted_at).toLocaleDateString("he-IL") : ""}</span>
-                  </div>
-                </Card>
-              ))
-            )}
+      {/* Manager Admin View */}
+      {!showDayView && isManager && (
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-sm font-bold mb-2">כל המשימות</h3>
+            <PracticalTaskList tasks={tasks} onUpdate={handleTaskUpdate} isManager={isManager} />
           </div>
-        </TabsContent>
+          <div>
+            <h3 className="text-sm font-bold mb-2">כל השיחות</h3>
+            <ReviewMeetingList meetings={meetings} onComplete={handleMeetingComplete} user={user} />
+          </div>
+          <AdditionalInfoPanel categoryMap={categoryMap} attempts={attempts} logs={logs} defaultOpen={true} />
+        </div>
+      )}
 
-        <TabsContent value="audit" className="mt-3">
-          <AuditLogList logs={logs} />
-        </TabsContent>
-      </Tabs>
-
+      {/* Help Button */}
       <OnboardingHelpButton />
 
+      {/* Quiz Runner */}
       {quizStage && (
         <QuizRunner stage={quizStage} onboardingId={id}
           employee={{ id: track.employee_id, full_name: track.employee_name }}

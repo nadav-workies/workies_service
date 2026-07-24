@@ -1,18 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Loader2, GraduationCap, Clock, AlertCircle } from "lucide-react";
-import StageTimeline from "@/components/onboarding/StageTimeline";
+import DayNavigator from "@/components/onboarding/DayNavigator";
+import DayView from "@/components/onboarding/DayView";
+import OnboardingHelpButton from "@/components/onboarding/OnboardingHelpButton";
 import QuizRunner from "@/components/onboarding/QuizRunner";
-import PracticalTaskList from "@/components/onboarding/PracticalTaskList";
 import { TRACK_STATUS_CONFIG } from "@/lib/onboardingTemplate";
 import { calculateProgress } from "@/lib/onboardingUtils";
+import { logAudit } from "@/lib/onboardingUtils";
 
 export default function MyOnboarding() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quizStage, setQuizStage] = useState(null);
+  const [activeDay, setActiveDay] = useState(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -33,6 +36,11 @@ export default function MyOnboarding() {
     queryFn: () => base44.entities.OnboardingStage.filter({ onboarding_id: onboardingId }, "order_number", 50),
     enabled: !!onboardingId,
   });
+  const { data: dailyPlans = [] } = useQuery({
+    queryKey: ["my-daily-plans", onboardingId],
+    queryFn: () => base44.entities.DailyLearningPlan.filter({ onboarding_id: onboardingId }, "day_number", 50),
+    enabled: !!onboardingId,
+  });
   const { data: tasks = [] } = useQuery({
     queryKey: ["my-tasks", onboardingId],
     queryFn: () => base44.entities.PracticalTask.filter({ onboarding_id: onboardingId }, "due_date", 100),
@@ -43,6 +51,43 @@ export default function MyOnboarding() {
     queryFn: () => base44.entities.ReviewMeeting.filter({ onboarding_id: onboardingId }, "day_number", 50),
     enabled: !!onboardingId,
   });
+  const { data: attempts = [] } = useQuery({
+    queryKey: ["my-attempts", onboardingId],
+    queryFn: () => base44.entities.QuizAttempt.filter({ onboarding_id: onboardingId }, "-submitted_at", 100),
+    enabled: !!onboardingId,
+  });
+
+  const dayGroups = useMemo(() => {
+    const groups = {};
+    stages.forEach((s) => {
+      const day = s.day_number || 0;
+      if (!groups[day]) groups[day] = [];
+      groups[day].push(s);
+    });
+    return Object.keys(groups).map(Number).sort((a, b) => a - b).map((day) => {
+      const dayStages = groups[day];
+      const completed = dayStages.filter((s) => s.status === "completed").length;
+      const plan = dailyPlans.find((p) => p.day_number === day);
+      const stageIds = new Set(dayStages.map(s => s.id));
+      const dayTasks = tasks.filter(t => stageIds.has(t.stage_id));
+      const overdueTasks = dayTasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== "done").length;
+      return {
+        day,
+        completed,
+        total: dayStages.length,
+        date: plan?.planned_date,
+        status: plan?.status || (completed === dayStages.length && dayStages.length > 0 ? "completed" : completed > 0 ? "active" : "available"),
+        overdueTasks,
+      };
+    });
+  }, [stages, dailyPlans, tasks]);
+
+  useEffect(() => {
+    if (activeDay === null && dayGroups.length > 0) {
+      const firstActive = dayGroups.find(g => g.status !== "completed");
+      setActiveDay(firstActive?.day || dayGroups[0].day);
+    }
+  }, [dayGroups, activeDay]);
 
   if (loading || !user) return <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
 
@@ -71,6 +116,26 @@ export default function MyOnboarding() {
     refetchStages();
     queryClient.invalidateQueries({ queryKey: ["my-onboarding", user.id] });
   };
+  const handleMeetingComplete = async (meeting, updates) => {
+    await base44.entities.ReviewMeeting.update(meeting.id, updates);
+    queryClient.invalidateQueries({ queryKey: ["my-meetings", onboardingId] });
+  };
+  const handleFinishDay = async (dayNumber, summary) => {
+    const plan = dailyPlans.find(p => p.day_number === dayNumber);
+    if (plan) {
+      await base44.entities.DailyLearningPlan.update(plan.id, { status: "completed" });
+    }
+    const summaryText = [summary.learned, summary.did, summary.unclear, summary.help, summary.note].filter(Boolean).join(" | ");
+    await logAudit(onboardingId, user.id, user.full_name || user.email, null, `יום ${dayNumber}`, user.full_name || user.email,
+      `סיום יום ${dayNumber}${summaryText ? ` — סיכום: ${summaryText}` : ""}`);
+    queryClient.invalidateQueries({ queryKey: ["my-daily-plans", onboardingId] });
+  };
+  const handleNextDay = () => {
+    const nextGroup = dayGroups.find(g => g.day > activeDay);
+    if (nextGroup) setActiveDay(nextGroup.day);
+  };
+
+  const activePlan = dailyPlans.find(p => p.day_number === activeDay);
 
   return (
     <div className="space-y-4 px-1 overflow-x-hidden" dir="rtl">
@@ -119,17 +184,29 @@ export default function MyOnboarding() {
         </Card>
       )}
 
-      <div>
-        <h2 className="font-semibold text-sm mb-2">מפת החפיפה</h2>
-        <StageTimeline stages={stages} onQuizStart={setQuizStage} />
-      </div>
-
-      {tasks.length > 0 && (
-        <div>
-          <h2 className="font-semibold text-sm mb-2">משימות מעשיות</h2>
-          <PracticalTaskList tasks={tasks} onUpdate={handleTaskUpdate} />
-        </div>
+      {dayGroups.length > 0 && (
+        <>
+          <DayNavigator dayGroups={dayGroups} activeDay={activeDay} onSelectDay={setActiveDay} />
+          <DayView
+            day={activeDay}
+            stages={stages}
+            tasks={tasks}
+            meetings={meetings}
+            attempts={attempts}
+            dailyPlan={activePlan}
+            isManager={false}
+            user={user}
+            track={track}
+            onQuizStart={setQuizStage}
+            onTaskUpdate={handleTaskUpdate}
+            onMeetingComplete={handleMeetingComplete}
+            onFinishDay={handleFinishDay}
+            onNextDay={handleNextDay}
+          />
+        </>
       )}
+
+      <OnboardingHelpButton />
 
       {quizStage && (
         <QuizRunner stage={quizStage} onboardingId={onboardingId} employee={user} user={user}
