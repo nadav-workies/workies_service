@@ -1,22 +1,21 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Loader2, AlertCircle, Lock } from "lucide-react";
+import { Loader2, Lock } from "lucide-react";
 import { useParams } from "react-router-dom";
-import DayNavigator from "@/components/onboarding/DayNavigator";
-import DayView from "@/components/onboarding/DayView";
+import UnitList from "@/components/onboarding/UnitList";
+import UnitView from "@/components/onboarding/UnitView";
 import OnboardingHelpButton from "@/components/onboarding/OnboardingHelpButton";
 import QuizRunner from "@/components/onboarding/QuizRunner";
 import { TRACK_STATUS_CONFIG } from "@/lib/onboardingTemplate";
-import { calculateProgress } from "@/lib/onboardingUtils";
+import { calculateProgress, calculateAverageScore } from "@/lib/onboardingUtils";
 
 export default function OnboardingAccessPage() {
   const { token } = useParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeDay, setActiveDay] = useState(null);
+  const [activeUnitId, setActiveUnitId] = useState(null);
   const [quizStage, setQuizStage] = useState(null);
 
   const fetchData = useCallback(async () => {
@@ -39,52 +38,30 @@ export default function OnboardingAccessPage() {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 30000); // poll for manager updates
+    const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, [fetchData]);
 
   const stages = data?.stages || [];
-  const dailyPlans = data?.dailyPlans || [];
   const tasks = data?.tasks || [];
-  const meetings = data?.meetings || [];
   const attempts = data?.attempts || [];
   const track = data?.track;
 
-  const dayGroups = useMemo(() => {
-    const groups = {};
-    stages.forEach((s) => {
-      const day = s.day_number || 0;
-      if (!groups[day]) groups[day] = [];
-      groups[day].push(s);
-    });
-    return Object.keys(groups).map(Number).sort((a, b) => a - b).map((day) => {
-      const dayStages = groups[day];
-      const completed = dayStages.filter((s) => s.status === "completed").length;
-      const plan = dailyPlans.find((p) => p.day_number === day);
-      return {
-        day,
-        completed,
-        total: dayStages.length,
-        date: plan?.planned_date,
-        status: plan?.status || (completed === dayStages.length && dayStages.length > 0 ? "completed" : completed > 0 ? "active" : "available"),
-      };
-    });
-  }, [stages, dailyPlans]);
+  const sortedStages = [...stages].sort((a, b) => (a.order_number || 0) - (b.order_number || 0));
 
   useEffect(() => {
-    if (activeDay === null && dayGroups.length > 0) {
-      const firstActive = dayGroups.find((g) => g.status !== "completed");
-      setActiveDay(firstActive?.day || dayGroups[0].day);
+    if (activeUnitId === null && sortedStages.length > 0) {
+      const firstActive = sortedStages.find((s) => s.status !== "completed");
+      setActiveUnitId(firstActive?.id || sortedStages[0].id);
     }
-  }, [dayGroups, activeDay]);
+  }, [sortedStages, activeUnitId]);
 
   const handleToggleLearningItem = async (stage, itemId) => {
     const current = stage.checked_learning_items || [];
-    const updated = current.includes(itemId) ? current.filter((id) => id !== itemId) : [...current, itemId];
-    // optimistic update
+    const updated = current.includes(itemId) ? current.filter((x) => x !== itemId) : [...current, itemId];
     setData((prev) => ({
       ...prev,
-      stages: prev.stages.map((s) => s.id === stage.id ? { ...s, checked_learning_items: updated } : s),
+      stages: prev.stages.map((s) => (s.id === stage.id ? { ...s, checked_learning_items: updated } : s)),
     }));
     try {
       await base44.functions.invoke("onboardingAccess", {
@@ -94,14 +71,14 @@ export default function OnboardingAccessPage() {
         item_id: itemId,
       });
     } catch {
-      fetchData(); // revert on error
+      fetchData();
     }
   };
 
   const handleTaskUpdate = async (task, updates) => {
     setData((prev) => ({
       ...prev,
-      tasks: prev.tasks.map((t) => t.id === task.id ? { ...t, ...updates } : t),
+      tasks: prev.tasks.map((t) => (t.id === task.id ? { ...t, ...updates } : t)),
     }));
     try {
       await base44.functions.invoke("onboardingAccess", {
@@ -115,42 +92,20 @@ export default function OnboardingAccessPage() {
     }
   };
 
-  const handleFinishDay = async (dayNumber, summary) => {
-    setData((prev) => ({
-      ...prev,
-      dailyPlans: prev.dailyPlans.map((p) => p.day_number === dayNumber ? { ...p, status: "completed" } : p),
-    }));
-    try {
-      await base44.functions.invoke("onboardingAccess", {
-        action: "finishDay",
-        token,
-        day_number: dayNumber,
-        summary,
-      });
-    } catch {
-      fetchData();
-    }
-  };
-
-  const handleNextDay = () => {
-    const nextGroup = dayGroups.find((g) => g.day > activeDay);
-    if (nextGroup) setActiveDay(nextGroup.day);
-  };
-
   const handleQuizSubmit = async (quizData) => {
-    const res = await base44.functions.invoke("onboardingAccess", {
+    await base44.functions.invoke("onboardingAccess", {
       action: "submitQuiz",
       token,
       ...quizData,
       max_attempts: 3,
     });
-    if (res.data?.ok) {
-      fetchData(); // refresh to get updated stage status
-    }
+    fetchData();
   };
 
-  const handleQuizCompleted = () => {
-    fetchData();
+  const handleNextUnit = () => {
+    const activeIndex = sortedStages.findIndex((s) => s.id === activeUnitId);
+    const next = sortedStages[activeIndex + 1];
+    if (next) setActiveUnitId(next.id);
   };
 
   if (loading) {
@@ -178,7 +133,10 @@ export default function OnboardingAccessPage() {
   if (!track) return null;
 
   const progress = calculateProgress(stages);
-  const activePlan = dailyPlans.find((p) => p.day_number === activeDay);
+  const avgScore = calculateAverageScore(attempts);
+  const activeStage = sortedStages.find((s) => s.id === activeUnitId);
+  const activeIndex = sortedStages.findIndex((s) => s.id === activeUnitId);
+  const hasNextUnit = activeIndex >= 0 && activeIndex < sortedStages.length - 1;
   const employee = { id: data.employee_id, full_name: data.employee_name };
 
   return (
@@ -186,43 +144,33 @@ export default function OnboardingAccessPage() {
       <div className="space-y-4">
         <div>
           <h1 className="text-lg sm:text-xl font-bold">שלום, {data.employee_name?.split(" ")[0]} 👋</h1>
-          <p className="text-xs text-muted-foreground">{track.role_title} · יום {track.current_day || 1} מתוך 10</p>
+          <p className="text-xs text-muted-foreground">{track.role_title}</p>
         </div>
 
         <Card className="p-3">
           <div className="grid grid-cols-3 gap-3 text-center">
             <div><p className="text-xs text-muted-foreground">התקדמות</p><p className="text-lg font-bold">{progress}%</p></div>
-            <div><p className="text-xs text-muted-foreground">שלבים</p><p className="text-lg font-bold">{track.completed_stages || 0}/{track.total_stages || 0}</p></div>
-            <div>
-              <p className="text-xs text-muted-foreground">סטטוס</p>
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${(TRACK_STATUS_CONFIG[track.status] || {}).color}`}>
-                {(TRACK_STATUS_CONFIG[track.status] || {}).label}
-              </span>
-            </div>
+            <div><p className="text-xs text-muted-foreground">יחידות</p><p className="text-lg font-bold">{track.completed_stages || 0}/{track.total_stages || 0}</p></div>
+            <div><p className="text-xs text-muted-foreground">ציון ממוצע</p><p className="text-lg font-bold">{avgScore || "—"}</p></div>
           </div>
         </Card>
 
-        {dayGroups.length > 0 && (
-          <>
-            <DayNavigator dayGroups={dayGroups} activeDay={activeDay} onSelectDay={setActiveDay} />
-            <DayView
-              day={activeDay}
-              stages={stages}
-              tasks={tasks}
-              meetings={meetings}
-              attempts={attempts}
-              dailyPlan={activePlan}
-              isManager={false}
-              user={employee}
-              track={track}
-              onQuizStart={setQuizStage}
-              onTaskUpdate={handleTaskUpdate}
-              onMeetingComplete={() => {}}
-              onFinishDay={handleFinishDay}
-              onNextDay={handleNextDay}
-              onToggleLearningItem={handleToggleLearningItem}
-            />
-          </>
+        <UnitList stages={sortedStages} activeUnitId={activeUnitId} onSelectUnit={setActiveUnitId} />
+
+        {activeStage && (
+          <UnitView
+            stage={activeStage}
+            tasks={tasks}
+            attempts={attempts}
+            isManager={false}
+            user={employee}
+            track={track}
+            onQuizStart={setQuizStage}
+            onTaskUpdate={handleTaskUpdate}
+            onToggleLearningItem={handleToggleLearningItem}
+            onNextUnit={handleNextUnit}
+            hasNextUnit={hasNextUnit}
+          />
         )}
 
         <OnboardingHelpButton />
@@ -234,7 +182,7 @@ export default function OnboardingAccessPage() {
             employee={employee}
             user={employee}
             onClose={() => setQuizStage(null)}
-            onCompleted={handleQuizCompleted}
+            onCompleted={fetchData}
             submitOverride={handleQuizSubmit}
           />
         )}
