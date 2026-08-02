@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Loader2, ArrowRight, Eye } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import UnitList from "@/components/onboarding/UnitList";
-import UnitView from "@/components/onboarding/UnitView";
 import HistoryPanel from "@/components/onboarding/HistoryPanel";
 import QuizRunner from "@/components/onboarding/QuizRunner";
 import OnboardingHelpButton from "@/components/onboarding/OnboardingHelpButton";
@@ -22,7 +21,6 @@ export default function OnboardingDetail() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quizStage, setQuizStage] = useState(null);
-  const [activeUnitId, setActiveUnitId] = useState(null);
   const [viewAsUser, setViewAsUser] = useState(false);
   const queryClient = useQueryClient();
 
@@ -70,22 +68,12 @@ export default function OnboardingDetail() {
 
   const sortedStages = [...stages].sort((a, b) => (a.order_number || 0) - (b.order_number || 0));
 
-  useEffect(() => {
-    if (activeUnitId === null && sortedStages.length > 0) {
-      const firstActive = sortedStages.find((s) => s.status !== "completed");
-      setActiveUnitId(firstActive?.id || sortedStages[0].id);
-    }
-  }, [sortedStages, activeUnitId]);
-
   if (loading || !user) return <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
   if (!track) return <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
 
   const isManager = isManagerOrAdmin(user) && !viewAsUser;
   const progress = calculateProgress(stages);
   const avgScore = calculateAverageScore(attempts);
-  const activeStage = sortedStages.find((s) => s.id === activeUnitId);
-  const activeIndex = sortedStages.findIndex((s) => s.id === activeUnitId);
-  const hasNextUnit = activeIndex >= 0 && activeIndex < sortedStages.length - 1;
 
   const handleTaskUpdate = async (task, updates) => {
     await base44.entities.PracticalTask.update(task.id, updates);
@@ -139,11 +127,6 @@ export default function OnboardingDetail() {
     await base44.entities.OnboardingStage.update(stage.id, updates);
     refetchStages();
   };
-  const handleNextUnit = () => {
-    const next = sortedStages[activeIndex + 1];
-    if (next) setActiveUnitId(next.id);
-  };
-
   return (
     <div className="space-y-4 px-1 overflow-x-hidden" dir="rtl">
       {/* Header */}
@@ -190,30 +173,21 @@ export default function OnboardingDetail() {
       <OnboardingAIAssistant track={track} stages={stages} isManager={isManager} />
 
       {/* Unit List */}
-      <UnitList stages={sortedStages} activeUnitId={activeUnitId} onSelectUnit={setActiveUnitId} />
-
-      {/* Active Unit View */}
-      {activeStage && (
-        <UnitView
-          stage={activeStage}
-          tasks={tasks}
-          attempts={attempts}
-          isManager={isManager}
-          user={user}
-          track={track}
-          onQuizStart={setQuizStage}
-          onFirstSession={handleFirstSession}
-          managers={managers}
-          onMentorAssign={handleMentorAssign}
-          onQuickToggle={handleQuickToggle}
-          onTaskUpdate={handleTaskUpdate}
-          onToggleLearningItem={handleToggleLearningItem}
-          onUpdateStage={handleUpdateStage}
-          onNextUnit={handleNextUnit}
-          hasNextUnit={hasNextUnit}
-          onReopenStage={handleReopenStage}
-        />
-      )}
+      <UnitList
+        stages={sortedStages}
+        tasks={tasks}
+        attempts={attempts}
+        isManager={isManager}
+        onQuizStart={setQuizStage}
+        onFirstSession={handleFirstSession}
+        managers={managers}
+        onMentorAssign={handleMentorAssign}
+        onQuickToggle={handleQuickToggle}
+        onTaskUpdate={handleTaskUpdate}
+        onToggleLearningItem={handleToggleLearningItem}
+        onUpdateStage={handleUpdateStage}
+        onReopenStage={handleReopenStage}
+      />
 
       {/* Help Button */}
       <OnboardingHelpButton />

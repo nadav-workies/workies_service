@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/card";
 import { Loader2, Lock } from "lucide-react";
 import { useParams } from "react-router-dom";
 import UnitList from "@/components/onboarding/UnitList";
-import UnitView from "@/components/onboarding/UnitView";
 import OnboardingHelpButton from "@/components/onboarding/OnboardingHelpButton";
 import QuizRunner from "@/components/onboarding/QuizRunner";
 import { TRACK_STATUS_CONFIG } from "@/lib/onboardingTemplate";
@@ -15,7 +14,6 @@ export default function OnboardingAccessPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeUnitId, setActiveUnitId] = useState(null);
   const [quizStage, setQuizStage] = useState(null);
 
   const fetchData = useCallback(async () => {
@@ -48,13 +46,6 @@ export default function OnboardingAccessPage() {
   const track = data?.track;
 
   const sortedStages = [...stages].sort((a, b) => (a.order_number || 0) - (b.order_number || 0));
-
-  useEffect(() => {
-    if (activeUnitId === null && sortedStages.length > 0) {
-      const firstActive = sortedStages.find((s) => s.status !== "completed");
-      setActiveUnitId(firstActive?.id || sortedStages[0].id);
-    }
-  }, [sortedStages, activeUnitId]);
 
   const handleToggleLearningItem = async (stage, itemId) => {
     const current = stage.checked_learning_items || [];
@@ -102,12 +93,6 @@ export default function OnboardingAccessPage() {
     fetchData();
   };
 
-  const handleNextUnit = () => {
-    const activeIndex = sortedStages.findIndex((s) => s.id === activeUnitId);
-    const next = sortedStages[activeIndex + 1];
-    if (next) setActiveUnitId(next.id);
-  };
-
   if (loading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background">
@@ -134,9 +119,6 @@ export default function OnboardingAccessPage() {
 
   const progress = calculateProgress(stages);
   const avgScore = calculateAverageScore(attempts);
-  const activeStage = sortedStages.find((s) => s.id === activeUnitId);
-  const activeIndex = sortedStages.findIndex((s) => s.id === activeUnitId);
-  const hasNextUnit = activeIndex >= 0 && activeIndex < sortedStages.length - 1;
   const employee = { id: data.employee_id, full_name: data.employee_name };
 
   return (
@@ -155,23 +137,15 @@ export default function OnboardingAccessPage() {
           </div>
         </Card>
 
-        <UnitList stages={sortedStages} activeUnitId={activeUnitId} onSelectUnit={setActiveUnitId} />
-
-        {activeStage && (
-          <UnitView
-            stage={activeStage}
-            tasks={tasks}
-            attempts={attempts}
-            isManager={false}
-            user={employee}
-            track={track}
-            onQuizStart={setQuizStage}
-            onTaskUpdate={handleTaskUpdate}
-            onToggleLearningItem={handleToggleLearningItem}
-            onNextUnit={handleNextUnit}
-            hasNextUnit={hasNextUnit}
-          />
-        )}
+        <UnitList
+          stages={sortedStages}
+          tasks={tasks}
+          attempts={attempts}
+          isManager={false}
+          onQuizStart={setQuizStage}
+          onTaskUpdate={handleTaskUpdate}
+          onToggleLearningItem={handleToggleLearningItem}
+        />
 
         <OnboardingHelpButton />
 
