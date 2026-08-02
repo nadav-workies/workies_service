@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { WORKIES_ROOMS } from "@/lib/workiesRooms";
 import EditTenantDialog from "@/components/users/EditTenantDialog";
+import CustomerDrawer from "@/components/community/CustomerDrawer";
 
 const MAX_BULK_INVITE = 10;
 
@@ -47,6 +48,7 @@ export default function CustomersAndRoomsTab() {
   const [bulkInviting, setBulkInviting] = useState(false);
   const [bulkResult, setBulkResult] = useState(null);
   const [editingTenant, setEditingTenant] = useState(null);
+  const [drawerTenant, setDrawerTenant] = useState(null);
 
   const { data: tenants = [], isLoading } = useQuery({
     queryKey: ["room-tenants"],
@@ -381,10 +383,14 @@ export default function CustomersAndRoomsTab() {
                           )}
                         </td>
                         <td className="p-2 font-medium">
-                          <div className="flex items-center gap-1.5 flex-wrap">
+                          <button
+                            onClick={() => setDrawerTenant(t)}
+                            className="flex items-center gap-1.5 flex-wrap text-right hover:text-primary transition-colors"
+                            title="פתח כרטיס לקוח"
+                          >
                             {t.is_primary_contact && <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />}
                             {t.contact_name || t.customer_name || "—"}
-                          </div>
+                          </button>
                           {t.company_id && <span className="text-xs text-muted-foreground" dir="ltr">({t.company_id})</span>}
                         </td>
                         <td className="p-2 text-xs" dir="ltr">{t.email || "—"}</td>
@@ -514,6 +520,10 @@ export default function CustomersAndRoomsTab() {
             setEditingTenant(null);
           }}
         />
+      )}
+
+      {drawerTenant && (
+        <CustomerDrawer tenant={drawerTenant} open={true} onClose={() => setDrawerTenant(null)} />
       )}
     </>
   );

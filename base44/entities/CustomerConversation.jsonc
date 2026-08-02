@@ -1,0 +1,194 @@
+{
+  "name": "CustomerConversation",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "description": "\u05de\u05d6\u05d4\u05d4 \u05d4\u05dc\u05e7\u05d5\u05d7 (RoomTenant)"
+    },
+    "customer_name": {
+      "type": "string",
+      "description": "\u05e9\u05dd \u05d4\u05dc\u05e7\u05d5\u05d7"
+    },
+    "contact_name": {
+      "type": "string",
+      "description": "\u05d0\u05d9\u05e9 \u05e7\u05e9\u05e8"
+    },
+    "email": {
+      "type": "string",
+      "description": "\u05d0\u05d9\u05de\u05d9\u05d9\u05dc"
+    },
+    "phone": {
+      "type": "string",
+      "description": "\u05d8\u05dc\u05e4\u05d5\u05df"
+    },
+    "room_code": {
+      "type": "string",
+      "description": "\u05e7\u05d5\u05d3 \u05de\u05e9\u05e8\u05d3"
+    },
+    "room_number": {
+      "type": "string",
+      "description": "\u05de\u05e1\u05e4\u05e8 \u05d7\u05d3\u05e8"
+    },
+    "conversation_date": {
+      "type": "string",
+      "format": "date",
+      "description": "\u05ea\u05d0\u05e8\u05d9\u05da \u05d4\u05e9\u05d9\u05d7\u05d4"
+    },
+    "conversation_title": {
+      "type": "string",
+      "description": "\u05db\u05d5\u05ea\u05e8\u05ea \u05d4\u05e9\u05d9\u05d7\u05d4"
+    },
+    "conversation_type": {
+      "type": "string",
+      "enum": [
+        "intro",
+        "service",
+        "community",
+        "retention",
+        "sales",
+        "onboarding",
+        "general"
+      ],
+      "description": "\u05e1\u05d5\u05d2 \u05e9\u05d9\u05d7\u05d4"
+    },
+    "raw_text": {
+      "type": "string",
+      "description": "\u05ea\u05de\u05dc\u05d5\u05dc / \u05e1\u05d9\u05db\u05d5\u05dd \u05d2\u05d5\u05dc\u05de\u05d9"
+    },
+    "ai_analysis_status": {
+      "type": "string",
+      "enum": [
+        "not_analyzed",
+        "analyzed",
+        "failed"
+      ],
+      "default": "not_analyzed",
+      "description": "\u05e1\u05d8\u05d8\u05d5\u05e1 \u05e0\u05d9\u05ea\u05d5\u05d7 AI"
+    },
+    "ai_summary": {
+      "type": "string",
+      "description": "\u05ea\u05e7\u05e6\u05d9\u05e8 AI"
+    },
+    "ai_facts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u05e2\u05d5\u05d1\u05d3\u05d5\u05ea \u05e9\u05d6\u05d5\u05d4\u05d5"
+    },
+    "ai_business_domain": {
+      "type": "string",
+      "description": "\u05ea\u05d7\u05d5\u05dd \u05e2\u05d9\u05e1\u05d5\u05e7"
+    },
+    "ai_expertise": {
+      "type": "string",
+      "description": "\u05d4\u05ea\u05de\u05d7\u05d5\u05ea"
+    },
+    "ai_target_customers": {
+      "type": "string",
+      "description": "\u05e7\u05d4\u05dc \u05d9\u05e2\u05d3"
+    },
+    "ai_customer_needs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u05e6\u05e8\u05db\u05d9\u05dd"
+    },
+    "ai_opportunities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u05d4\u05d6\u05d3\u05de\u05e0\u05d5\u05d9\u05d5\u05ea"
+    },
+    "ai_content_ideas": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u05e8\u05e2\u05d9\u05d5\u05e0\u05d5\u05ea \u05ea\u05d5\u05db\u05df"
+    },
+    "ai_connection_ideas": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "\u05e8\u05e2\u05d9\u05d5\u05e0\u05d5\u05ea \u05d7\u05d9\u05d1\u05d5\u05e8"
+    },
+    "ai_follow_up_actions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u05e4\u05e2\u05d5\u05dc\u05d5\u05ea \u05d4\u05de\u05e9\u05da"
+    },
+    "ai_suggested_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u05ea\u05d5\u05d5\u05d9\u05d5\u05ea \u05de\u05d5\u05e6\u05e2\u05d5\u05ea"
+    },
+    "ai_confidence_notes": {
+      "type": "string",
+      "description": "\u05d4\u05e2\u05e8\u05d5\u05ea \u05e8\u05de\u05ea \u05d1\u05d9\u05d8\u05d7\u05d5\u05df / \u05de\u05d9\u05d3\u05e2 \u05d7\u05e1\u05e8"
+    }
+  },
+  "required": [
+    "tenant_id",
+    "conversation_date",
+    "conversation_title",
+    "raw_text"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

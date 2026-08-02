@@ -1,0 +1,118 @@
+{
+  "name": "WeeklyContentIdea",
+  "type": "object",
+  "properties": {
+    "week_start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "\u05ea\u05d0\u05e8\u05d9\u05da \u05ea\u05d7\u05d9\u05dc\u05ea \u05d4\u05e9\u05d1\u05d5\u05e2"
+    },
+    "day_of_week": {
+      "type": "string",
+      "enum": [
+        "sunday",
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday"
+      ],
+      "description": "\u05d9\u05d5\u05dd \u05d1\u05e9\u05d1\u05d5\u05e2"
+    },
+    "platform": {
+      "type": "string",
+      "enum": [
+        "facebook",
+        "instagram",
+        "linkedin",
+        "story",
+        "whatsapp_community",
+        "newsletter"
+      ],
+      "description": "\u05e4\u05dc\u05d8\u05e4\u05d5\u05e8\u05de\u05ea \u05ea\u05d5\u05db\u05df"
+    },
+    "topic": {
+      "type": "string",
+      "description": "\u05e0\u05d5\u05e9\u05d0 / \u05e8\u05e2\u05d9\u05d5\u05df \u05ea\u05d5\u05db\u05df"
+    },
+    "related_customer_id": {
+      "type": "string",
+      "description": "\u05de\u05d6\u05d4\u05d4 \u05dc\u05e7\u05d5\u05d7 \u05e7\u05e9\u05d5\u05e8"
+    },
+    "related_customer_name": {
+      "type": "string",
+      "description": "\u05e9\u05dd \u05dc\u05e7\u05d5\u05d7 \u05e7\u05e9\u05d5\u05e8"
+    },
+    "source_insight_id": {
+      "type": "string",
+      "description": "\u05de\u05d6\u05d4\u05d4 \u05ea\u05d5\u05d1\u05e0\u05d4 \u05de\u05e7\u05d5\u05e8"
+    },
+    "source_note": {
+      "type": "string",
+      "description": "\u05d4\u05e2\u05e8\u05ea \u05de\u05e7\u05d5\u05e8"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "idea",
+        "planned",
+        "approved",
+        "published",
+        "dismissed"
+      ],
+      "default": "idea",
+      "description": "\u05e1\u05d8\u05d8\u05d5\u05e1 \u05e8\u05e2\u05d9\u05d5\u05df \u05d4\u05ea\u05d5\u05db\u05df"
+    }
+  },
+  "required": [
+    "topic"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
