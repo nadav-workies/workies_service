@@ -1,5 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.31";
 
+const escapeHtml = (s: any) => String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -193,10 +195,10 @@ Deno.serve(async (req) => {
           <table style="width:100%;border-collapse:collapse;font-size:12px;">
             ${ratedYesterday.map(r => `
               <tr style="border-bottom:1px solid #eee;">
-                <td style="padding:4px 8px;">${r.ticket_number || "—"}</td>
-                <td style="padding:4px 8px;">${r.customer_name || "—"}</td>
+                <td style="padding:4px 8px;">${escapeHtml(r.ticket_number || "—")}</td>
+                <td style="padding:4px 8px;">${escapeHtml(r.customer_name || "—")}</td>
                 <td style="padding:4px 8px;font-weight:bold;color:${Number(r.rating) >= 9 ? '#22c55e' : Number(r.rating) <= 5 ? '#ef4444' : '#f97316'};">${r.rating}/10</td>
-                <td style="padding:4px 8px;color:#666;">${r.comment || "—"}</td>
+                <td style="padding:4px 8px;color:#666;">${escapeHtml(r.comment || "—")}</td>
               </tr>`).join("")}
           </table>
         </div>`;

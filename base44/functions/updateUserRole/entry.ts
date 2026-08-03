@@ -34,6 +34,12 @@ Deno.serve(async (req) => {
             { status: 400 }
           );
         }
+        if (target_user_id === user.id) {
+          return Response.json(
+            { error: 'לא ניתן להסיר הרשאת Admin מעצמך. בקש ממנהל אחר לבצע זאת.' },
+            { status: 400 }
+          );
+        }
       }
       updates.role = new_role;
     }

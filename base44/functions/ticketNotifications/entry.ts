@@ -1,9 +1,15 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 // ─── Template renderer ────────────────────────────────────────────
-function renderTemplate(template, ticket) {
+const escapeHtml = (s: any) => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+const e = (s: any) => escapeHtml(s);
+
+function renderTemplate(template: string, ticket: any, escape = true): string {
   if (!template) return '';
-  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => ticket[key] ?? '');
+  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
+    const val = ticket[key] ?? '';
+    return escape ? escapeHtml(String(val)) : String(val);
+  });
 }
 
 // ─── Build HTML email ─────────────────────────────────────────────
@@ -184,7 +190,7 @@ function buildPrintingManagerCreatedEmail(ticket) {
   const billingLabel = ticket.printing_billing_method === 'monthly_account'
     ? 'הוספה לחשבון השכירות החודשי'
     : 'תשלום ידני מול הלקוח';
-  const roomDisplay = ticket.room_label || ticket.room_number || 'לא משויך לחדר';
+  const roomDisplay = e(ticket.room_label || ticket.room_number || 'לא משויך לחדר');
   const openedAt = ticket.opened_at ? new Date(ticket.opened_at).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' }) : '';
 
   const subject = `דחוף: בקשת עדכון חבילת הדפסה — SLA 5 דקות`;
@@ -192,16 +198,16 @@ function buildPrintingManagerCreatedEmail(ticket) {
 <p>נפתחה בקשה חדשה לעדכון חבילת הדפסה.<br/>יש לטפל בבקשה בתוך 5 דקות.</p>
 <h3>פרטי לקוח</h3>
 <ul>
-  <li><strong>שם לקוח:</strong> ${ticket.customer_name || ''}</li>
-  <li><strong>מייל:</strong> ${ticket.email || ticket.created_by || ''}</li>
-  <li><strong>טלפון:</strong> ${ticket.phone || ''}</li>
+  <li><strong>שם לקוח:</strong> ${e(ticket.customer_name)}</li>
+  <li><strong>מייל:</strong> ${e(ticket.email || ticket.created_by)}</li>
+  <li><strong>טלפון:</strong> ${e(ticket.phone)}</li>
   <li><strong>חדר:</strong> ${roomDisplay}</li>
 </ul>
 <h3>פרטי החבילה</h3>
 <ul>
-  <li><strong>חבילה:</strong> ${ticket.printing_package_name || ''}</li>
-  <li><strong>קרדיטים:</strong> ${ticket.printing_package_credit_value || ''}</li>
-  <li><strong>עלות:</strong> ₪${ticket.printing_package_payment_amount || ''} כולל מע״מ</li>
+  <li><strong>חבילה:</strong> ${e(ticket.printing_package_name)}</li>
+  <li><strong>קרדיטים:</strong> ${e(ticket.printing_package_credit_value)}</li>
+  <li><strong>עלות:</strong> ₪${e(ticket.printing_package_payment_amount)} כולל מע״מ</li>
   <li><strong>אופן חיוב:</strong> ${billingLabel}</li>
 </ul>
 <h3>הנחיות פעולה</h3>
@@ -212,7 +218,7 @@ function buildPrintingManagerCreatedEmail(ticket) {
   <li>המערכת תשלח מייל אוטומטי לגבייה לאחר סגירת הקריאה.</li>
 </ol>
 <p>
-  <strong>מספר קריאה:</strong> ${ticket.ticket_number || ''}<br/>
+  <strong>מספר קריאה:</strong> ${e(ticket.ticket_number)}<br/>
   <strong>SLA:</strong> 5 דקות<br/>
   <strong>מועד פתיחה:</strong> ${openedAt}
 </p>`;
@@ -220,18 +226,18 @@ function buildPrintingManagerCreatedEmail(ticket) {
 }
 
 function buildPrintingCustomerCreatedEmail(ticket) {
-  const roomDisplay = ticket.room_label || ticket.room_number || 'לא משויך לחדר';
+  const roomDisplay = e(ticket.room_label || ticket.room_number || 'לא משויך לחדר');
   const subject = `בקשתך לעדכון חבילת הדפסה התקבלה`;
   const body = `<h2>בקשתך לעדכון חבילת הדפסה התקבלה</h2>
-<p>שלום ${ticket.customer_name || ''},</p>
+<p>שלום ${e(ticket.customer_name)},</p>
 <p>בקשתך נמצאת בטיפול בשירות.<br/>בדקות הקרובות יתווספו הקרדיטים לחשבונך.</p>
 <h3>פרטי הבקשה</h3>
 <ul>
-  <li><strong>חבילה:</strong> ${ticket.printing_package_name || ''}</li>
-  <li><strong>עלות לתשלום:</strong> ₪${ticket.printing_package_payment_amount || ''} כולל מע״ב</li>
-  <li><strong>קרדיטים:</strong> ${ticket.printing_package_credit_value || ''}</li>
+  <li><strong>חבילה:</strong> ${e(ticket.printing_package_name)}</li>
+  <li><strong>עלות לתשלום:</strong> ₪${e(ticket.printing_package_payment_amount)} כולל מע״ב</li>
+  <li><strong>קרדיטים:</strong> ${e(ticket.printing_package_credit_value)}</li>
   <li><strong>חדר:</strong> ${roomDisplay}</li>
-  <li><strong>מספר קריאה:</strong> ${ticket.ticket_number || ''}</li>
+  <li><strong>מספר קריאה:</strong> ${e(ticket.ticket_number)}</li>
 </ul>
 <p>צוות Workies</p>`;
   return { subject, body };
@@ -240,12 +246,12 @@ function buildPrintingCustomerCreatedEmail(ticket) {
 function buildPrintingCustomerCompletedEmail(ticket) {
   const subject = `חבילת ההדפסה עודכנה בהצלחה`;
   const body = `<h2>חבילת ההדפסה עודכנה בהצלחה</h2>
-<p>שלום ${ticket.customer_name || ''},</p>
+<p>שלום ${e(ticket.customer_name)},</p>
 <p>הקרדיטים שביקשת נוספו לחשבונך.<br/>ניתן להתחיל להשתמש בחבילת ההדפסה.</p>
 <ul>
-  <li><strong>חבילה:</strong> ${ticket.printing_package_name || ''}</li>
-  <li><strong>קרדיטים:</strong> ${ticket.printing_package_credit_value || ''}</li>
-  <li><strong>מספר קריאה:</strong> ${ticket.ticket_number || ''}</li>
+  <li><strong>חבילה:</strong> ${e(ticket.printing_package_name)}</li>
+  <li><strong>קרדיטים:</strong> ${e(ticket.printing_package_credit_value)}</li>
+  <li><strong>מספר קריאה:</strong> ${e(ticket.ticket_number)}</li>
 </ul>
 <p>צוות Workies</p>`;
   return { subject, body };
@@ -255,7 +261,7 @@ function buildPrintingCollectionsEmail(ticket) {
   const billingLabel = ticket.printing_billing_method === 'monthly_account'
     ? 'הוספה לחשבון השכירות החודשי'
     : 'תשלום ידני מול הלקוח';
-  const roomDisplay = ticket.room_label || ticket.room_number || 'לא משויך לחדר';
+  const roomDisplay = e(ticket.room_label || ticket.room_number || 'לא משויך לחדר');
   const closedAt = ticket.closed_at ? new Date(ticket.closed_at).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' }) : '';
 
   const subject = `נדרש חיוב לקוח — חבילת הדפסה עודכנה`;
@@ -263,36 +269,36 @@ function buildPrintingCollectionsEmail(ticket) {
 <p>חבילת הדפסה עודכנה ללקוח במערכת השירות.<br/>יש לוודא פתיחת חיוב / גבייה בהתאם.</p>
 <h3>פרטי לקוח</h3>
 <ul>
-  <li><strong>שם לקוח:</strong> ${ticket.customer_name || ''}</li>
-  <li><strong>מייל:</strong> ${ticket.email || ticket.created_by || ''}</li>
-  <li><strong>טלפון:</strong> ${ticket.phone || ''}</li>
+  <li><strong>שם לקוח:</strong> ${e(ticket.customer_name)}</li>
+  <li><strong>מייל:</strong> ${e(ticket.email || ticket.created_by)}</li>
+  <li><strong>טלפון:</strong> ${e(ticket.phone)}</li>
   <li><strong>חדר:</strong> ${roomDisplay}</li>
 </ul>
 <h3>פרטי חיוב</h3>
 <ul>
-  <li><strong>חבילה:</strong> ${ticket.printing_package_name || ''}</li>
-  <li><strong>קרדיטים:</strong> ${ticket.printing_package_credit_value || ''}</li>
-  <li><strong>עלות לתשלום:</strong> ₪${ticket.printing_package_payment_amount || ''} כולל מע״ב</li>
+  <li><strong>חבילה:</strong> ${e(ticket.printing_package_name)}</li>
+  <li><strong>קרדיטים:</strong> ${e(ticket.printing_package_credit_value)}</li>
+  <li><strong>עלות לתשלום:</strong> ₪${e(ticket.printing_package_payment_amount)} כולל מע״ב</li>
   <li><strong>אופן חיוב:</strong> ${billingLabel}</li>
 </ul>
 <p>
-  <strong>מספר קריאה:</strong> ${ticket.ticket_number || ''}<br/>
+  <strong>מספר קריאה:</strong> ${e(ticket.ticket_number)}<br/>
   <strong>מועד סגירה:</strong> ${closedAt}
 </p>`;
   return { subject, body };
 }
 
 function buildPrintingFollowupEmail(ticket) {
-  const roomDisplay = ticket.room_label || ticket.room_number || 'לא משויך לחדר';
+  const roomDisplay = e(ticket.room_label || ticket.room_number || 'לא משויך לחדר');
   const subject = `תזכורת: לוודא פתיחת גבייה עבור חבילת הדפסה`;
   const body = `<h2>תזכורת שירות — בדיקת גבייה</h2>
 <p>אתמול נסגרה קריאה לעדכון חבילת הדפסה.<br/>יש לוודא שהקריאה נפתחה / טופלה מול הגבייה.</p>
 <ul>
-  <li><strong>לקוח:</strong> ${ticket.customer_name || ''}</li>
+  <li><strong>לקוח:</strong> ${e(ticket.customer_name)}</li>
   <li><strong>חדר:</strong> ${roomDisplay}</li>
-  <li><strong>חבילה:</strong> ${ticket.printing_package_name || ''}</li>
-  <li><strong>עלות:</strong> ₪${ticket.printing_package_payment_amount || ''} כולל מע״ב</li>
-  <li><strong>מספר קריאה:</strong> ${ticket.ticket_number || ''}</li>
+  <li><strong>חבילה:</strong> ${e(ticket.printing_package_name)}</li>
+  <li><strong>עלות:</strong> ₪${e(ticket.printing_package_payment_amount)} כולל מע״ב</li>
+  <li><strong>מספר קריאה:</strong> ${e(ticket.ticket_number)}</li>
 </ul>`;
   return { subject, body };
 }
@@ -377,7 +383,7 @@ Deno.serve(async (req) => {
     // 1. User email
     const userSetting = await getSetting(base44, 'user_ticket_created');
     if (userSetting?.enabled && ticket.created_by) {
-      const subject = renderTemplate(userSetting.subject_template, ticket);
+      const subject = renderTemplate(userSetting.subject_template, ticket, false);
       const body = renderTemplate(userSetting.body_template, ticket);
       const sent = await sendAndLog(base44, { key: 'user_ticket_created', toEmail: ticket.created_by, subject, bodyHtml: buildHtml(body), ticket, recipientType: 'user' });
       if (sent) await base44.asServiceRole.entities.ServiceTicket.update(ticket.id, { user_created_email_sent: true });
@@ -395,7 +401,7 @@ Deno.serve(async (req) => {
       let managerSent = false;
       for (const mgr of managers) {
         if (!mgr.email) continue;
-        const subject = renderTemplate(managerSetting.subject_template, ticket);
+        const subject = renderTemplate(managerSetting.subject_template, ticket, false);
         const body = renderTemplate(managerSetting.body_template, ticket);
         const sent = await sendAndLog(base44, { key: 'manager_ticket_created', toEmail: mgr.email, subject, bodyHtml: buildHtml(body), ticket, recipientType: 'managers' });
         if (sent) managerSent = true;
@@ -414,7 +420,7 @@ Deno.serve(async (req) => {
         let urgentSent = false;
         for (const mgr of managers) {
           if (!mgr.email) continue;
-          const subject = renderTemplate(urgentSetting.subject_template, ticket);
+          const subject = renderTemplate(urgentSetting.subject_template, ticket, false);
           const body = renderTemplate(urgentSetting.body_template, ticket);
           const sent = await sendAndLog(base44, { key: 'manager_urgent_ticket_created', toEmail: mgr.email, subject, bodyHtml: buildHtml(body), ticket, recipientType: 'managers' });
           if (sent) urgentSent = true;
@@ -501,7 +507,7 @@ Deno.serve(async (req) => {
     if (key) {
       const setting = await getSetting(base44, key);
       if (setting?.enabled) {
-        const subject = renderTemplate(setting.subject_template, ticket);
+        const subject = renderTemplate(setting.subject_template, ticket, false);
         const body = renderTemplate(setting.body_template, ticket);
         const sent = await sendAndLog(base44, { key, toEmail: ticket.created_by, subject, bodyHtml: buildHtml(body), ticket, recipientType: 'user' });
         if (sent) await base44.asServiceRole.entities.ServiceTicket.update(ticket.id, { user_status_email_sent_at: new Date().toISOString() });
@@ -592,7 +598,7 @@ Deno.serve(async (req) => {
         await logSkipped(base44, { key: 'user_service_feedback_request', ticket, reason: 'feedback_link could not be generated', recipientType: 'user' });
         results.feedback_request = false;
       } else {
-        const subject = renderTemplate(setting.subject_template, ticketWithFeedback);
+        const subject = renderTemplate(setting.subject_template, ticketWithFeedback, false);
         const body = renderTemplate(setting.body_template, ticketWithFeedback);
         const sent = await sendAndLog(base44, { key: 'user_service_feedback_request', toEmail: recipientEmail, subject, bodyHtml: buildHtml(body), ticket: ticketWithFeedback, recipientType: 'user' });
         if (sent) await base44.asServiceRole.entities.ServiceTicket.update(ticket.id, { feedback_request_sent: true, feedback_request_sent_at: new Date().toISOString() });
@@ -614,7 +620,7 @@ Deno.serve(async (req) => {
       const ticketForEmail = { ...ticket, feedback_rating: rating || ticket.feedback_rating, feedback_comment: comment || ticket.feedback_comment };
       for (const mgr of managers) {
         if (!mgr.email) continue;
-        const subject = renderTemplate(setting.subject_template, ticketForEmail);
+        const subject = renderTemplate(setting.subject_template, ticketForEmail, false);
         const body = renderTemplate(setting.body_template, ticketForEmail);
         const sent = await sendAndLog(base44, { key: 'manager_low_service_rating', toEmail: mgr.email, subject, bodyHtml: buildHtml(body), ticket: ticketForEmail, recipientType: 'managers' });
         if (sent) sentAny = true;
@@ -627,7 +633,7 @@ Deno.serve(async (req) => {
   if (action === 'google_review_request') {
     const setting = await getSetting(base44, 'user_google_review_request');
     if (setting?.enabled && ticket.created_by) {
-      const subject = renderTemplate(setting.subject_template, ticket);
+      const subject = renderTemplate(setting.subject_template, ticket, false);
       const body = renderTemplate(setting.body_template, ticket);
       const sent = await sendAndLog(base44, { key: 'user_google_review_request', toEmail: ticket.created_by, subject, bodyHtml: buildHtml(body), ticket, recipientType: 'user' });
       if (sent) await base44.asServiceRole.entities.ServiceTicket.update(ticket.id, { google_review_request_sent: true, google_review_request_sent_at: new Date().toISOString() });
@@ -645,7 +651,7 @@ Deno.serve(async (req) => {
       ? new Date(ticket.treatment_deadline).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' })
       : '';
     const subject = `עדכון תאריך יעד לקריאת השירות שלך | Workies`;
-    const body = `שלום ${ticket.created_by_name || ticket.customer_name || ''},\n\nעדכנו את תאריך היעד הצפוי לסיום טיפול בקריאת השירות שלך.\n\nמספר קריאה: ${ticket.ticket_number || ''}\nתאריך יעד חדש: ${deadlineStr}\n\nצוות Workies`;
+    const body = `שלום ${e(ticket.created_by_name || ticket.customer_name)},\n\nעדכנו את תאריך היעד הצפוי לסיום טיפול בקריאת השירות שלך.\n\nמספר קריאה: ${e(ticket.ticket_number)}\nתאריך יעד חדש: ${deadlineStr}\n\nצוות Workies`;
 
     if (customerEmail) {
       const sent = await sendAndLog(base44, {
@@ -678,7 +684,7 @@ Deno.serve(async (req) => {
       if (nowMs - closedMs < THREE_DAYS) continue;
       const setting = await getSetting(base44, 'user_google_review_request');
       if (!setting?.enabled) continue;
-      const subject = renderTemplate(setting.subject_template, t);
+      const subject = renderTemplate(setting.subject_template, t, false);
       const body = renderTemplate(setting.body_template, t);
       const sent = await sendAndLog(base44, { key: 'user_google_review_request', toEmail: t.created_by, subject, bodyHtml: buildHtml(body), ticket: t, recipientType: 'user' });
       if (sent) {
@@ -741,7 +747,7 @@ Deno.serve(async (req) => {
           let sent = false;
           for (const mgr of managers) {
             if (!mgr.email) continue;
-            const subject = renderTemplate(setting.subject_template, t);
+            const subject = renderTemplate(setting.subject_template, t, false);
             const body = renderTemplate(setting.body_template, t);
             const ok = await sendAndLog(base44, { key: 'manager_sla_reminder', toEmail: mgr.email, subject, bodyHtml: buildHtml(body), ticket: t, recipientType: 'managers' });
             if (ok) sent = true;
@@ -756,7 +762,7 @@ Deno.serve(async (req) => {
           let sent = false;
           for (const mgr of managers) {
             if (!mgr.email) continue;
-            const subject = renderTemplate(setting.subject_template, t);
+            const subject = renderTemplate(setting.subject_template, t, false);
             const body = renderTemplate(setting.body_template, t);
             const ok = await sendAndLog(base44, { key: 'manager_sla_breached', toEmail: mgr.email, subject, bodyHtml: buildHtml(body), ticket: t, recipientType: 'managers' });
             if (ok) sent = true;
