@@ -159,5 +159,11 @@ export function getWeekStart(date = new Date()) {
   const day = d.getDay();
   const diff = day === 0 ? 0 : day;
   d.setDate(d.getDate() - diff);
-  return d.toISOString().split("T")[0];
+  // Format as YYYY-MM-DD in local time — toISOString() shifts to UTC and
+  // returns the previous day in positive-offset timezones (e.g. Israel UTC+3),
+  // causing the client week key to mismatch the server's. Use local components.
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const dayOfMonth = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${dayOfMonth}`;
 }

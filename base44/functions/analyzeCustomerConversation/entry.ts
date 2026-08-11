@@ -339,7 +339,7 @@ export default async function(req) {
     weekStart.setHours(0, 0, 0, 0);
     const day = weekStart.getDay();
     weekStart.setDate(weekStart.getDate() - (day === 0 ? 0 : day));
-    const weekStartStr = weekStart.toISOString().split("T")[0];
+    const weekStartStr = `${weekStart.getFullYear()}-${String(weekStart.getMonth() + 1).padStart(2, "0")}-${String(weekStart.getDate()).padStart(2, "0")}`;
 
     const contentIdeaRecords = (analysis.content_ideas || []).map((c, i) => {
       const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday"];
