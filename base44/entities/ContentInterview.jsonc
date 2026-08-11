@@ -1,0 +1,190 @@
+{
+  "name": "ContentInterview",
+  "type": "object",
+  "properties": {
+    "week_start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "\u05ea\u05d0\u05e8\u05d9\u05da \u05ea\u05d7\u05d9\u05dc\u05ea \u05d4\u05e9\u05d1\u05d5\u05e2"
+    },
+    "session_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u05de\u05d5\u05e2\u05d3 \u05d4\u05e8\u05d0\u05d9\u05d5\u05df"
+    },
+    "manager_name": {
+      "type": "string",
+      "description": "\u05e9\u05dd \u05de\u05e0\u05d4\u05dc \u05d4\u05ea\u05d5\u05db\u05df"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "active",
+        "completed"
+      ],
+      "default": "draft",
+      "description": "\u05e1\u05d8\u05d8\u05d5\u05e1 \u05d4\u05e8\u05d0\u05d9\u05d5\u05df"
+    },
+    "weekly_theme": {
+      "type": "string",
+      "description": "\u05e0\u05d5\u05e9\u05d0 \u05de\u05e8\u05db\u05d6\u05d9 \u05d4\u05e9\u05d1\u05d5\u05e2"
+    },
+    "target_audience": {
+      "type": "string",
+      "description": "\u05e7\u05d4\u05dc \u05d9\u05e2\u05d3"
+    },
+    "key_messages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u05de\u05e1\u05e8\u05d9\u05dd \u05de\u05e8\u05db\u05d6\u05d9\u05d9\u05dd"
+    },
+    "content_goals": {
+      "type": "string",
+      "description": "\u05d9\u05e2\u05d3\u05d9 \u05ea\u05d5\u05db\u05df"
+    },
+    "upcoming_highlights": {
+      "type": "string",
+      "description": "\u05d0\u05d9\u05e8\u05d5\u05e2\u05d9\u05dd / \u05d4\u05d3\u05d2\u05e9\u05d9\u05dd \u05e7\u05e8\u05d5\u05d1\u05d9\u05dd"
+    },
+    "spotlight_customers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u05dc\u05e7\u05d5\u05d7\u05d5\u05ea \u05dc\u05d4\u05d3\u05d2\u05e9\u05d4"
+    },
+    "platforms_focus": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u05e4\u05dc\u05d8\u05e4\u05d5\u05e8\u05de\u05d5\u05ea \u05d1\u05de\u05d9\u05e7\u05d5\u05d3"
+    },
+    "additional_notes": {
+      "type": "string",
+      "description": "\u05d4\u05e2\u05e8\u05d5\u05ea \u05e0\u05d5\u05e1\u05e4\u05d5\u05ea"
+    },
+    "ai_extracted_content": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "topic": {
+            "type": "string"
+          },
+          "angle": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string"
+          },
+          "reasoning": {
+            "type": "string"
+          },
+          "day": {
+            "type": "string"
+          },
+          "customer_ref": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "\u05ea\u05d5\u05db\u05df \u05e9\u05d7\u05d5\u05dc\u05e5 \u05e2\u05dc \u05d9\u05d3\u05d9 AI"
+    },
+    "ai_platform_recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "platform": {
+            "type": "string"
+          },
+          "why": {
+            "type": "string"
+          },
+          "content_types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "best_days": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "description": "\u05d4\u05de\u05dc\u05e6\u05d5\u05ea \u05e4\u05dc\u05d8\u05e4\u05d5\u05e8\u05de\u05d4"
+    },
+    "ai_timing_suggestions": {
+      "type": "string",
+      "description": "\u05d4\u05de\u05dc\u05e6\u05d5\u05ea \u05ea\u05d6\u05de\u05d5\u05df"
+    },
+    "ai_summary": {
+      "type": "string",
+      "description": "\u05e1\u05d9\u05db\u05d5\u05dd AI"
+    },
+    "ai_analyzed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u05de\u05d5\u05e2\u05d3 \u05e0\u05d9\u05ea\u05d5\u05d7 AI"
+    }
+  },
+  "required": [
+    "week_start_date"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
