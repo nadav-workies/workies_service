@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2, Sparkles, Save, Plus, X, Wand2, Check, Lightbulb, Send } from "lucide-react";
+import { Loader2, Sparkles, Save, Plus, X, Wand2, Check, Lightbulb, Send, Upload, ClipboardPaste } from "lucide-react";
 import { getWeekStart } from "@/lib/communityConfig";
 
 const PLATFORM_OPTIONS = [
@@ -45,6 +45,10 @@ export default function ContentInterviewTab() {
   const [analyzing, setAnalyzing] = useState(false);
   const [adopting, setAdopting] = useState(false);
   const [aiResult, setAiResult] = useState(null);
+  const [showTranscript, setShowTranscript] = useState(false);
+  const [transcriptText, setTranscriptText] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [extracting, setExtracting] = useState(false);
 
   const { data: existingInterview, isLoading } = useQuery({
     queryKey: ["content-interview", weekStart],
@@ -159,6 +163,45 @@ export default function ContentInterviewTab() {
     }
   };
 
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (file) setSelectedFile(file);
+  };
+
+  const handleAutoFill = async () => {
+    if (!transcriptText.trim() && !selectedFile) return;
+    setExtracting(true);
+    try {
+      let fileUrl = null;
+      if (selectedFile) {
+        const uploadRes = await base44.integrations.Core.UploadFile({ file: selectedFile });
+        fileUrl = uploadRes.file_url || uploadRes.data?.file_url;
+      }
+      const res = await base44.functions.invoke("extractInterviewFromTranscript", {
+        transcript_text: transcriptText || undefined,
+        file_url: fileUrl || undefined,
+      });
+      const data = res.data || res;
+      setForm((prev) => ({
+        ...prev,
+        weekly_theme: data.weekly_theme || prev.weekly_theme,
+        target_audience: data.target_audience || prev.target_audience,
+        key_messages: [...new Set([...prev.key_messages, ...(data.key_messages || [])])],
+        content_goals: data.content_goals || prev.content_goals,
+        upcoming_highlights: data.upcoming_highlights || prev.upcoming_highlights,
+        spotlight_customers: [...new Set([...prev.spotlight_customers, ...(data.spotlight_customers || [])])],
+        platforms_focus: [...new Set([...prev.platforms_focus, ...(data.platforms_focus || [])])],
+      }));
+      setShowTranscript(false);
+      setTranscriptText("");
+      setSelectedFile(null);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setExtracting(false);
+    }
+  };
+
   if (isLoading) {
     return <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
   }
@@ -178,6 +221,43 @@ export default function ContentInterviewTab() {
           </Button>
         </div>
       </div>
+
+      {/* Auto-fill from transcript / file */}
+      <Card>
+        <CardContent className="pt-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-bold flex items-center gap-1.5">
+              <ClipboardPaste className="w-4 h-4 text-primary" /> מילוי אוטומטי מתמלול / קובץ
+            </h3>
+            <Button size="sm" variant="ghost" className="text-xs" onClick={() => setShowTranscript(!showTranscript)}>
+              {showTranscript ? "סגור" : "פתח"}
+            </Button>
+          </div>
+          {showTranscript && (
+            <div className="space-y-2">
+              <Textarea
+                value={transcriptText}
+                onChange={(e) => setTranscriptText(e.target.value)}
+                placeholder="הדביקו כאן את תמלול הראיון..."
+                rows={5}
+              />
+              <div className="flex items-center gap-2 flex-wrap">
+                <label className="cursor-pointer">
+                  <input type="file" accept=".txt,.pdf,.doc,.docx" onChange={handleFileSelect} className="hidden" />
+                  <span className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md border border-input bg-transparent text-xs hover:bg-accent cursor-pointer">
+                    <Upload className="w-3.5 h-3.5" /> העלה קובץ
+                  </span>
+                </label>
+                {selectedFile && <span className="text-xs text-muted-foreground truncate max-w-[150px]">{selectedFile.name}</span>}
+                <Button size="sm" className="gap-1.5 mr-auto" onClick={handleAutoFill} disabled={extracting || (!transcriptText.trim() && !selectedFile)}>
+                  {extracting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
+                  מילוי אוטומטי
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Left: Structured questions */}
