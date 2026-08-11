@@ -35,19 +35,31 @@ export default async function(req) {
     const tenants = await base44.entities.RoomTenant.list("-created_date", 500);
     const insights = await base44.entities.CustomerInsight.list("-created_date", 1000);
 
-    // Build profiles from card data + insights
-    const profiles = tenants.map(t => {
-      const tInsights = insights.filter(i => i.tenant_id === t.id);
-      return {
-        id: t.id,
-        name: t.customer_name,
-        industry: t.industry || "",
-        business_domain: tInsights.find(i => i.insight_type === "business_domain")?.content || "",
-        expertise: tInsights.find(i => i.insight_type === "expertise")?.content || "",
-        target_customers: tInsights.find(i => i.insight_type === "target_customer")?.content || "",
-        needs: tInsights.filter(i => i.insight_type === "need").map(i => i.title),
-      };
-    }).filter(p => p.business_domain || p.expertise || p.target_customers || p.needs.length > 0 || p.industry);
+    // Exclude the hosting company (Workies) and its subsidiaries from connection recommendations.
+    // These are part of the Workies group — not clients to be connected with each other or with tenants.
+    const EXCLUDED_COMPANY_KEYWORDS = ["וורקיז", "workies", "סול אביב", "יד אריה"];
+    const isExcludedCompany = (name) => {
+      if (!name) return false;
+      const lower = name.toLowerCase();
+      return EXCLUDED_COMPANY_KEYWORDS.some(kw => lower.includes(kw.toLowerCase()));
+    };
+
+    // Build profiles from card data + insights, excluding the hosting company group
+    const profiles = tenants
+      .map(t => {
+        const tInsights = insights.filter(i => i.tenant_id === t.id);
+        return {
+          id: t.id,
+          name: t.customer_name,
+          industry: t.industry || "",
+          business_domain: tInsights.find(i => i.insight_type === "business_domain")?.content || "",
+          expertise: tInsights.find(i => i.insight_type === "expertise")?.content || "",
+          target_customers: tInsights.find(i => i.insight_type === "target_customer")?.content || "",
+          needs: tInsights.filter(i => i.insight_type === "need").map(i => i.title),
+        };
+      })
+      .filter(p => !isExcludedCompany(p.name))
+      .filter(p => p.business_domain || p.expertise || p.target_customers || p.needs.length > 0 || p.industry);
 
     if (profiles.length === 0) {
       return Response.json({ ok: true, connections_created: 0, message: "אין נתוני לקוחות לחיבור" });
@@ -66,6 +78,7 @@ export default async function(req) {
 5. הסבר את הסיבה בקצרה ובעברית.
 6. אל תחזיר חיבורים חלשים או מופשטים. איכות על כמות.
 7. השתמש רק ב-id של לקוחות שקיימים ברשימה.
+8. אל תחבר חברות השייכות לאותה קבוצה/בעלות — אלו אינן המלצות חיבור עסקיות.
 
 פרופילי לקוחות:
 ${JSON.stringify(profiles.map(p => ({ id: p.id, name: p.name, industry: p.industry, business_domain: p.business_domain, expertise: p.expertise, target_customers: p.target_customers, needs: p.needs })))}
