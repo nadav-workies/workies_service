@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Plus, MessageSquare, Lightbulb, Phone, Mail, MapPin, Briefcase, Pencil, Link2, Sparkles } from "lucide-react";
 import AddConversationDialog from "@/components/community/AddConversationDialog";
 import CustomerEditForm from "@/components/community/CustomerEditForm";
+import ContentRecommendationsTab from "@/components/community/ContentRecommendationsTab";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   CONVERSATION_TYPE_LABELS, CONVERSATION_TYPE_COLORS,
   INSIGHT_TYPE_LABELS, INSIGHT_TYPE_COLORS, INSIGHT_STATUS_COLORS, INSIGHT_STATUS_LABELS,
@@ -78,7 +80,7 @@ export default function CustomerDrawer({ tenant, open, onClose, onNavigateToCont
 
   return (
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent side="left" className="w-full sm:max-w-lg overflow-y-auto" dir="rtl">
+      <SheetContent side="left" className="w-full sm:max-w-5xl overflow-y-auto" dir="rtl">
         <SheetHeader>
           <SheetTitle className="text-right flex items-center justify-between gap-2">
             <span>{currentTenant.customer_name}</span>
@@ -91,7 +93,12 @@ export default function CustomerDrawer({ tenant, open, onClose, onNavigateToCont
           <SheetDescription className="text-right">כרטיס לקוח — קהילה ותוכן</SheetDescription>
         </SheetHeader>
 
-        <div className="space-y-4 mt-4">
+        <Tabs defaultValue="card" className="w-full mt-4">
+          <TabsList className="grid grid-cols-2 w-full mb-4">
+            <TabsTrigger value="card">כרטיס לקוח</TabsTrigger>
+            <TabsTrigger value="content">המלצות תוכן</TabsTrigger>
+          </TabsList>
+          <TabsContent value="card" className="space-y-4">
           {/* Edit form or read-only info */}
           {editMode ? (
             <CustomerEditForm
@@ -250,7 +257,11 @@ export default function CustomerDrawer({ tenant, open, onClose, onNavigateToCont
               </div>
             )}
           </div>
-        </div>
+          </TabsContent>
+          <TabsContent value="content">
+            <ContentRecommendationsTab tenant={currentTenant} />
+          </TabsContent>
+        </Tabs>
       </SheetContent>
 
       {showAddConv && (

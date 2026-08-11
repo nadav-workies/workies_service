@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Plus, Loader2 } from "lucide-react";
 import {
   DAY_LABELS, DAY_ORDER, PLATFORM_LABELS, PLATFORM_COLORS,
-  CONTENT_STATUS_LABELS, CONTENT_STATUS_COLORS, getWeekStart,
+  CONTENT_STATUS_LABELS, CONTENT_STATUS_COLORS,
+  CONTENT_TYPE_LABELS, CONTENT_TYPE_COLORS, getWeekStart,
 } from "@/lib/communityConfig";
 
 export default function WeeklyContentPlan() {
@@ -119,6 +120,9 @@ export default function WeeklyContentPlan() {
                     <div key={idea.id} className="flex items-center gap-2 border rounded-lg p-2">
                       <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${PLATFORM_COLORS[idea.platform] || "bg-gray-100"}`}>
                         {PLATFORM_LABELS[idea.platform] || idea.platform}
+                      </span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${CONTENT_TYPE_COLORS[idea.content_type] || CONTENT_TYPE_COLORS.customer_specific}`}>
+                        {CONTENT_TYPE_LABELS[idea.content_type] || "מותאם ללקוח"}
                       </span>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{idea.topic}</p>

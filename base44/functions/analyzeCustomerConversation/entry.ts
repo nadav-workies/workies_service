@@ -75,6 +75,7 @@ const ANALYSIS_SCHEMA = {
         properties: {
           topic: { type: "string" },
           platform_suggestion: { type: "string", enum: ["facebook", "instagram", "linkedin", "story", "whatsapp_community", "newsletter"] },
+          content_type: { type: "string", enum: ["customer_specific", "workies_general"] },
           source_quote: { type: "string" },
           confidence: { type: "string", enum: ["high", "medium", "low"] }
         }
@@ -138,6 +139,7 @@ function buildPrompt(rawText, customerContext) {
 8. כל רמות הביטחון: high = נאמר במפורש, medium = משתמע בבירור, low = השערה בלבד.
 9. התובנות צריכות להיות שימושיות למנהלת קהילה — תחום עיסוק, התמחות, קהל יעד, צרכים, הזדמנויות לחיבורים, רעיונות תוכן, פעולות המשך.
 10. השב בעברית בלבד.
+11. רעיונות תוכן: סווג כל רעיון כ-customer_specific (מותאם למרואיין: פרופיל עסקי, סיפור מקצועי, טיפ מתחום המומחיות שלו) או workies_general (כללי לוורקיז: מגמה בשוק, טיפ לעסקים, נושא לדיון קהילתי העולה מהשיחה). השתדל לייצר לפחות רעיון אחד מכל סוג אם רלוונטי.
 
 הקשר הלקוח:
 שם לקוח: ${customerContext.customer_name || "לא ידוע"}
@@ -346,6 +348,7 @@ export default async function(req) {
         day_of_week: dayNames[i % 5],
         platform: c.platform_suggestion || "facebook",
         topic: c.topic,
+        content_type: c.content_type || "customer_specific",
         related_customer_id: tenant_id,
         related_customer_name: customerName,
         source_note: c.source_quote || "",

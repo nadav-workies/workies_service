@@ -137,6 +137,16 @@ export const CONTENT_STATUS_COLORS = {
   dismissed: "bg-gray-100 text-gray-700",
 };
 
+export const CONTENT_TYPE_LABELS = {
+  customer_specific: "מותאם ללקוח",
+  workies_general: "כללי לוורקיז",
+};
+
+export const CONTENT_TYPE_COLORS = {
+  customer_specific: "bg-purple-100 text-purple-700",
+  workies_general: "bg-teal-100 text-teal-700",
+};
+
 export const AI_ANALYSIS_STATUS_LABELS = {
   not_analyzed: "טרם נותח",
   analyzed: "נותח",
