@@ -1,48 +1,103 @@
 export const WORK_STATUS_ORDER = [
-  "idea", "to_plan", "to_write", "draft_ready", "needs_visual",
-  "ready_for_approval", "approved", "published", "dismissed",
+  "idea", "planned", "in_progress", "draft_ready", "needs_approval",
+  "approved", "published", "not_done", "cancelled",
 ];
 
 export const WORK_STATUS_LABELS = {
   idea: "רעיון",
-  to_plan: "לתכנון",
-  to_write: "לכתיבה",
+  planned: "מתוכנן",
+  in_progress: "בעבודה",
   draft_ready: "טיוטה מוכנה",
-  needs_visual: "נדרש ויז׳ואל",
-  ready_for_approval: "מוכן לאישור",
-  approved: "אושר לפרסום",
+  needs_approval: "ממתין לאישור",
+  approved: "מאושר",
   published: "פורסם",
-  dismissed: "נדחה",
+  not_done: "לא בוצע",
+  cancelled: "בוטל",
 };
 
 export const WORK_STATUS_COLORS = {
   idea: "bg-blue-100 text-blue-700",
-  to_plan: "bg-cyan-100 text-cyan-700",
-  to_write: "bg-amber-100 text-amber-700",
+  planned: "bg-cyan-100 text-cyan-700",
+  in_progress: "bg-amber-100 text-amber-700",
   draft_ready: "bg-purple-100 text-purple-700",
-  needs_visual: "bg-pink-100 text-pink-700",
-  ready_for_approval: "bg-indigo-100 text-indigo-700",
+  needs_approval: "bg-indigo-100 text-indigo-700",
   approved: "bg-green-100 text-green-700",
   published: "bg-emerald-100 text-emerald-700",
-  dismissed: "bg-gray-100 text-gray-500",
+  not_done: "bg-red-100 text-red-700",
+  cancelled: "bg-gray-100 text-gray-500",
 };
 
-// legacy statuses -> operational statuses
+export const WORK_STATUS_DOT_COLORS = {
+  idea: "bg-blue-500",
+  planned: "bg-cyan-500",
+  in_progress: "bg-amber-500",
+  draft_ready: "bg-purple-500",
+  needs_approval: "bg-indigo-500",
+  approved: "bg-green-500",
+  published: "bg-emerald-500",
+  not_done: "bg-red-500",
+  cancelled: "bg-gray-400",
+};
+
+// legacy statuses -> current operational statuses
+const LEGACY_STATUS_MAP = {
+  to_plan: "planned",
+  to_write: "in_progress",
+  needs_visual: "in_progress",
+  ready_for_approval: "needs_approval",
+  dismissed: "cancelled",
+};
+
 export function normalizeStatus(s) {
-  if (s === "planned") return "to_plan";
+  if (LEGACY_STATUS_MAP[s]) return LEGACY_STATUS_MAP[s];
   return WORK_STATUS_LABELS[s] ? s : "idea";
 }
 
-export const CONTENT_FORMAT_LABELS = {
+export const OUTPUT_TYPE_LABELS = {
   post: "פוסט",
-  reels: "רילס",
+  community_event: "אירוע קהילה",
   story: "סטורי",
-  carousel: "קרוסלה",
-  newsletter: "ניוזלטר",
-  whatsapp: "וואטסאפ קהילה",
-  linkedin: "לינקדאין",
-  other: "אחר",
+  reels: "רילס",
+  podcast: "פודקאסט",
 };
+
+export const SOURCE_TYPE_LABELS = {
+  customer_interview: "ראיון לקוח",
+  event_story_photos: "צילום אירוע לסטורי",
+  survey: "סקר",
+  conversation_transcript: "תמלול שיחה",
+  meeting: "פגישה",
+};
+
+export const EXECUTION_STATUS_LABELS = {
+  not_checked: "טרם נבדק",
+  done: "בוצע",
+  not_done: "לא בוצע",
+};
+
+export const KPI_GROUPS = [
+  { key: "idea", label: "רעיונות" },
+  { key: "planning", label: "בתכנון" },
+  { key: "working", label: "בעבודה" },
+  { key: "waiting_approval", label: "ממתין לאישור" },
+  { key: "approved", label: "מאושר לשבוע" },
+  { key: "done", label: "פורסם / בוצע" },
+  { key: "not_done", label: "לא בוצע" },
+];
+
+export function matchesKpi(item, key) {
+  const s = normalizeStatus(item.status);
+  switch (key) {
+    case "idea": return s === "idea";
+    case "planning": return s === "planned";
+    case "working": return s === "in_progress" || s === "draft_ready";
+    case "waiting_approval": return s === "needs_approval";
+    case "approved": return (item.final_approved || s === "approved") && s !== "published" && item.execution_status !== "done";
+    case "done": return s === "published" || item.execution_status === "done";
+    case "not_done": return s === "not_done" || item.execution_status === "not_done";
+    default: return true;
+  }
+}
 
 export const FULL_DAY_ORDER = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 

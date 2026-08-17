@@ -9,15 +9,16 @@ import ContentBoardFilters from "./ContentBoardFilters";
 import WeekBoard from "./WeekBoard";
 import MonthCalendar from "./MonthCalendar";
 import ContentItemDrawer from "./ContentItemDrawer";
+import ApprovedWeeklyPlan from "./ApprovedWeeklyPlan";
 import { getWeekStart } from "@/lib/communityConfig";
-import { effectiveDate, addDays, toLocalDateStr, normalizeStatus } from "@/lib/contentBoardConfig";
+import { effectiveDate, addDays, toLocalDateStr, normalizeStatus, matchesKpi } from "@/lib/contentBoardConfig";
 
 export default function ContentBoard() {
   const qc = useQueryClient();
   const [view, setView] = useState("week");
   const [weekStart, setWeekStart] = useState(getWeekStart());
   const [monthStr, setMonthStr] = useState(() => toLocalDateStr(new Date()).slice(0, 7));
-  const [filters, setFilters] = useState({ status: "", platform: "", content_format: "", customer: "" });
+  const [filters, setFilters] = useState({ kpi: "", status: "", platform: "", output_type: "", source_type: "", customer: "" });
   const [drawerItem, setDrawerItem] = useState(null);
   const [showInsights, setShowInsights] = useState(false);
 
@@ -41,9 +42,11 @@ export default function ContentBoard() {
   }), [items, view, weekStart, monthStr]);
 
   const filtered = useMemo(() => rangeItems.filter((it) =>
+    (!filters.kpi || matchesKpi(it, filters.kpi)) &&
     (!filters.status || normalizeStatus(it.status) === filters.status) &&
     (!filters.platform || it.platform === filters.platform) &&
-    (!filters.content_format || it.content_format === filters.content_format) &&
+    (!filters.output_type || it.output_type === filters.output_type) &&
+    (!filters.source_type || it.source_type === filters.source_type) &&
     (!filters.customer || it.related_customer_name === filters.customer)
   ), [rangeItems, filters]);
 
@@ -60,7 +63,7 @@ export default function ContentBoard() {
 
   const openNew = () => setDrawerItem({
     planned_date: view === "week" ? weekStart : `${monthStr}-01`,
-    platform: "facebook", content_format: "post", status: "idea",
+    output_type: "post", status: "idea",
   });
 
   if (isLoading) {
@@ -80,10 +83,10 @@ export default function ContentBoard() {
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
           <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => setShowInsights(true)}>
-            <Sparkles className="w-3.5 h-3.5" /> מתובנות
+            <Sparkles className="w-3.5 h-3.5" /> הפק המלצות מתוכן קיים
           </Button>
           <Button size="sm" className="gap-1.5 text-xs" onClick={openNew}>
-            <Plus className="w-3.5 h-3.5" /> יחידת תוכן
+            <Plus className="w-3.5 h-3.5" /> הוסף יחידת תוכן
           </Button>
         </div>
       </div>
@@ -105,13 +108,16 @@ export default function ContentBoard() {
         )}
       </div>
 
-      <ContentKPIBar items={rangeItems} activeStatus={filters.status}
-        onSelect={(s) => setFilters((p) => ({ ...p, status: s }))} />
+      <ContentKPIBar items={rangeItems} activeKpi={filters.kpi}
+        onSelect={(k) => setFilters((p) => ({ ...p, kpi: k }))} />
 
       <ContentBoardFilters filters={filters} setFilters={setFilters} customers={customers} />
 
       {view === "week" ? (
-        <WeekBoard weekStart={weekStart} items={filtered} onOpen={setDrawerItem} />
+        <>
+          <WeekBoard weekStart={weekStart} items={filtered} onOpen={setDrawerItem} />
+          <ApprovedWeeklyPlan weekStart={weekStart} items={items} onOpen={setDrawerItem} onChanged={refresh} />
+        </>
       ) : (
         <MonthCalendar monthStr={monthStr} items={filtered} onOpen={setDrawerItem} />
       )}

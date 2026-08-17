@@ -1,6 +1,6 @@
 import { useState } from "react";
 import ContentCard from "./ContentCard";
-import { effectiveDate, toLocalDateStr, FULL_DAY_LABELS, FULL_DAY_ORDER } from "@/lib/contentBoardConfig";
+import { effectiveDate, toLocalDateStr, FULL_DAY_LABELS, FULL_DAY_ORDER, normalizeStatus, WORK_STATUS_DOT_COLORS } from "@/lib/contentBoardConfig";
 
 export default function MonthCalendar({ monthStr, items, onOpen }) {
   const [selectedDay, setSelectedDay] = useState(null);
@@ -45,6 +45,11 @@ export default function MonthCalendar({ monthStr, items, onOpen }) {
                     {cell.items.length}
                   </span>
                 )}
+              </div>
+              <div className="flex gap-0.5 mt-0.5 flex-wrap">
+                {cell.items.slice(0, 5).map((it) => (
+                  <span key={it.id} className={`w-1.5 h-1.5 rounded-full ${WORK_STATUS_DOT_COLORS[normalizeStatus(it.status)] || "bg-gray-400"}`} />
+                ))}
               </div>
               <div className="hidden sm:block space-y-0.5 mt-0.5">
                 {cell.items.slice(0, 2).map((it) => (

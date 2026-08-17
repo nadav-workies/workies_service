@@ -45,6 +45,32 @@
       "type": "string",
       "description": "\u05e0\u05d5\u05e9\u05d0 / \u05e8\u05e2\u05d9\u05d5\u05df \u05ea\u05d5\u05db\u05df"
     },
+    "output_type": {
+      "type": "string",
+      "enum": [
+        "post",
+        "community_event",
+        "story",
+        "reels",
+        "podcast"
+      ],
+      "description": "\u05ea\u05d5\u05e6\u05e8: \u05e4\u05d5\u05e1\u05d8 / \u05d0\u05d9\u05e8\u05d5\u05e2 \u05e7\u05d4\u05d9\u05dc\u05d4 / \u05e1\u05d8\u05d5\u05e8\u05d9 / \u05e8\u05d9\u05dc\u05e1 / \u05e4\u05d5\u05d3\u05e7\u05d0\u05e1\u05d8"
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "customer_interview",
+        "event_story_photos",
+        "survey",
+        "conversation_transcript",
+        "meeting"
+      ],
+      "description": "\u05d0\u05de\u05e6\u05e2\u05d9 / \u05de\u05e7\u05d5\u05e8 \u05d4\u05ea\u05d5\u05db\u05df"
+    },
+    "source_text": {
+      "type": "string",
+      "description": "\u05d8\u05e7\u05e1\u05d8 \u05de\u05e7\u05d5\u05e8 / \u05ea\u05de\u05dc\u05d5\u05dc / \u05d4\u05e2\u05e8\u05d5\u05ea"
+    },
     "content_type": {
       "type": "string",
       "enum": [
@@ -66,7 +92,7 @@
         "linkedin",
         "other"
       ],
-      "description": "\u05e1\u05d5\u05d2 \u05ea\u05d5\u05db\u05df: \u05e4\u05d5\u05e1\u05d8 / \u05e8\u05d9\u05dc\u05e1 / \u05e1\u05d8\u05d5\u05e8\u05d9 \u05d5\u05db\u05d5\u05f3"
+      "description": "\u05e9\u05d3\u05d4 \u05d9\u05e9\u05df \u2014 \u05d4\u05d5\u05d7\u05dc\u05e3 \u05d1-output_type"
     },
     "related_customer_id": {
       "type": "string",
@@ -91,6 +117,42 @@
     "notes": {
       "type": "string",
       "description": "\u05d4\u05e2\u05e8\u05d5\u05ea"
+    },
+    "ai_recommendations": {
+      "type": "object",
+      "description": "\u05d4\u05de\u05dc\u05e6\u05d5\u05ea AI \u05de\u05d5\u05d1\u05e0\u05d5\u05ea \u05dc\u05d9\u05d7\u05d9\u05d3\u05ea \u05d4\u05ea\u05d5\u05db\u05df",
+      "properties": {
+        "recommended_angles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "recommended_hook": {
+          "type": "string"
+        },
+        "recommended_structure": {
+          "type": "string"
+        },
+        "key_messages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "what_not_to_say": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "missing_information": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
     },
     "post_draft": {
       "type": "string",
@@ -125,6 +187,20 @@
       "type": "string",
       "description": "\u05de\u05d9 \u05d0\u05d9\u05e9\u05e8"
     },
+    "execution_status": {
+      "type": "string",
+      "enum": [
+        "not_checked",
+        "done",
+        "not_done"
+      ],
+      "default": "not_checked",
+      "description": "\u05e1\u05d8\u05d8\u05d5\u05e1 \u05d1\u05d9\u05e6\u05d5\u05e2: \u05d1\u05d5\u05e6\u05e2 / \u05dc\u05d0 \u05d1\u05d5\u05e6\u05e2"
+    },
+    "execution_note": {
+      "type": "string",
+      "description": "\u05e1\u05d9\u05d1\u05ea \u05d0\u05d9 \u05d1\u05d9\u05e6\u05d5\u05e2"
+    },
     "ai_thread_notes": {
       "type": "array",
       "items": {
@@ -147,15 +223,19 @@
       "type": "string",
       "enum": [
         "idea",
-        "to_plan",
-        "to_write",
+        "planned",
+        "in_progress",
         "draft_ready",
-        "needs_visual",
-        "ready_for_approval",
+        "needs_approval",
         "approved",
         "published",
-        "dismissed",
-        "planned"
+        "not_done",
+        "cancelled",
+        "to_plan",
+        "to_write",
+        "needs_visual",
+        "ready_for_approval",
+        "dismissed"
       ],
       "default": "idea",
       "description": "\u05e1\u05d8\u05d8\u05d5\u05e1 \u05e2\u05d1\u05d5\u05d3\u05d4 \u05e9\u05dc \u05d9\u05d7\u05d9\u05d3\u05ea \u05d4\u05ea\u05d5\u05db\u05df"

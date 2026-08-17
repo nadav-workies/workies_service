@@ -7,16 +7,19 @@ import { Input } from "@/components/ui/input";
 import { Loader2, Save, CheckCircle2, Trash2 } from "lucide-react";
 import ContentAIActions from "./ContentAIActions";
 import ContentAIChat from "./ContentAIChat";
+import AIRecommendationsView from "./AIRecommendationsView";
+import ExecutionControls from "./ExecutionControls";
 import { PLATFORM_LABELS, getWeekStart } from "@/lib/communityConfig";
 import {
   WORK_STATUS_ORDER, WORK_STATUS_LABELS, normalizeStatus,
-  CONTENT_FORMAT_LABELS, FULL_DAY_ORDER,
+  OUTPUT_TYPE_LABELS, SOURCE_TYPE_LABELS, FULL_DAY_ORDER,
 } from "@/lib/contentBoardConfig";
 
 const EMPTY = {
-  title: "", topic: "", planned_date: "", platform: "facebook", content_format: "post",
-  related_customer_name: "", status: "idea", notes: "", post_draft: "", image_prompt: "",
-  hashtags: [], final_content: "", source_note: "",
+  title: "", topic: "", output_type: "post", source_type: "", planned_date: "",
+  platform: "", related_customer_name: "", status: "idea", source_text: "",
+  post_draft: "", image_prompt: "", hashtags: [], final_content: "", source_note: "",
+  ai_recommendations: null,
 };
 
 export default function ContentItemDrawer({ item, onClose, onSaved, onDeleted }) {
@@ -36,15 +39,17 @@ export default function ContentItemDrawer({ item, onClose, onSaved, onDeleted })
   const isNew = !item.id;
   const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
   const selectCls = "h-9 w-full px-2 rounded-md border bg-background text-sm";
+  const isValid = form.title.trim() && form.output_type && form.source_type && form.planned_date;
 
   const buildPayload = () => {
     const payload = {
-      title: form.title, topic: form.topic, planned_date: form.planned_date || undefined,
-      platform: form.platform, content_format: form.content_format,
-      related_customer_name: form.related_customer_name, status: form.status,
-      notes: form.notes, post_draft: form.post_draft, image_prompt: form.image_prompt,
-      hashtags: form.hashtags, source_note: form.source_note,
+      title: form.title, topic: form.topic || form.title, output_type: form.output_type,
+      source_type: form.source_type, planned_date: form.planned_date,
+      platform: form.platform || undefined, related_customer_name: form.related_customer_name,
+      status: form.status, source_text: form.source_text, post_draft: form.post_draft,
+      image_prompt: form.image_prompt, hashtags: form.hashtags, source_note: form.source_note,
     };
+    if (form.ai_recommendations) payload.ai_recommendations = form.ai_recommendations;
     if (form.planned_date) {
       const d = new Date(form.planned_date + "T00:00:00");
       payload.week_start_date = getWeekStart(d);
@@ -54,10 +59,9 @@ export default function ContentItemDrawer({ item, onClose, onSaved, onDeleted })
   };
 
   const handleSave = async () => {
-    if (!form.topic.trim() && !form.title.trim()) return;
+    if (!isValid) return;
     setSaving(true);
     const payload = buildPayload();
-    if (!payload.topic) payload.topic = payload.title;
     let saved;
     if (isNew) saved = await base44.entities.WeeklyContentIdea.create(payload);
     else saved = await base44.entities.WeeklyContentIdea.update(item.id, payload);
@@ -75,10 +79,9 @@ export default function ContentItemDrawer({ item, onClose, onSaved, onDeleted })
       final_content: content,
       final_approved: true,
       approved_at: new Date().toISOString(),
-      approved_by: me.full_name || me.email,
+      approved_by: me.email,
       status: "approved",
     };
-    if (!payload.topic) payload.topic = payload.title;
     await base44.entities.WeeklyContentIdea.update(item.id, payload);
     setForm((p) => ({ ...p, final_content: content, final_approved: true, status: "approved" }));
     setApproving(false);
@@ -101,15 +104,24 @@ export default function ContentItemDrawer({ item, onClose, onSaved, onDeleted })
         <div className="space-y-3 mt-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div className="sm:col-span-2">
-              <label className="text-xs font-medium">כותרת</label>
+              <label className="text-xs font-medium">כותרת *</label>
               <Input value={form.title} onChange={(e) => set("title", e.target.value)} className="mt-1" />
             </div>
-            <div className="sm:col-span-2">
-              <label className="text-xs font-medium">נושא *</label>
-              <Input value={form.topic} onChange={(e) => set("topic", e.target.value)} className="mt-1" />
+            <div>
+              <label className="text-xs font-medium">תוצר *</label>
+              <select className={`${selectCls} mt-1`} value={form.output_type} onChange={(e) => set("output_type", e.target.value)}>
+                {Object.entries(OUTPUT_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
             </div>
             <div>
-              <label className="text-xs font-medium">תאריך פרסום</label>
+              <label className="text-xs font-medium">אמצעי / מקור *</label>
+              <select className={`${selectCls} mt-1`} value={form.source_type} onChange={(e) => set("source_type", e.target.value)}>
+                <option value="">בחרו אמצעי...</option>
+                {Object.entries(SOURCE_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-medium">תאריך מתוכנן *</label>
               <Input type="date" value={form.planned_date || ""} onChange={(e) => set("planned_date", e.target.value)} className="mt-1" />
             </div>
             <div>
@@ -121,37 +133,40 @@ export default function ContentItemDrawer({ item, onClose, onSaved, onDeleted })
             <div>
               <label className="text-xs font-medium">פלטפורמה</label>
               <select className={`${selectCls} mt-1`} value={form.platform} onChange={(e) => set("platform", e.target.value)}>
+                <option value="">ללא</option>
                 {Object.entries(PLATFORM_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-xs font-medium">סוג תוכן</label>
-              <select className={`${selectCls} mt-1`} value={form.content_format} onChange={(e) => set("content_format", e.target.value)}>
-                {Object.entries(CONTENT_FORMAT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-              </select>
-            </div>
-            <div className="sm:col-span-2">
               <label className="text-xs font-medium">לקוח קשור</label>
               <Input value={form.related_customer_name} onChange={(e) => set("related_customer_name", e.target.value)} className="mt-1" />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="text-xs font-medium">נושא</label>
+              <Input value={form.topic} onChange={(e) => set("topic", e.target.value)} className="mt-1" />
             </div>
           </div>
 
           {form.source_note && (
             <div className="bg-muted/40 border rounded-lg p-2">
-              <p className="text-[10px] font-bold text-muted-foreground">מקור / ציטוט מהשיחה</p>
+              <p className="text-[10px] font-bold text-muted-foreground">ציטוט מקור</p>
               <p className="text-xs mt-0.5">{form.source_note}</p>
             </div>
           )}
 
           <div>
-            <label className="text-xs font-medium">הערות</label>
-            <Textarea rows={2} value={form.notes} onChange={(e) => set("notes", e.target.value)} className="mt-1 text-sm" />
+            <label className="text-xs font-medium">שייך מקור תוכן — טקסט מקור / תמלול / הערות</label>
+            <Textarea rows={4} value={form.source_text} onChange={(e) => set("source_text", e.target.value)}
+              placeholder="הדביקו כאן תמלול ראיון, סיכום פגישה, תוצאות סקר או כל טקסט מקור..."
+              className="mt-1 text-sm" />
           </div>
 
           <ContentAIActions form={form} setForm={setForm} />
 
+          <AIRecommendationsView rec={form.ai_recommendations} />
+
           <div>
-            <label className="text-xs font-medium">טיוטת פוסט</label>
+            <label className="text-xs font-medium">טיוטת תוכן</label>
             <Textarea rows={6} value={form.post_draft} onChange={(e) => set("post_draft", e.target.value)} className="mt-1 text-sm" />
           </div>
 
@@ -180,8 +195,12 @@ export default function ContentItemDrawer({ item, onClose, onSaved, onDeleted })
             </div>
           )}
 
+          {!isNew && form.final_approved && (
+            <ExecutionControls item={{ ...item, ...form }} onChanged={onSaved} />
+          )}
+
           <div className="flex items-center gap-2 flex-wrap pt-2 border-t">
-            <Button size="sm" onClick={handleSave} disabled={saving || (!form.topic.trim() && !form.title.trim())} className="gap-1.5">
+            <Button size="sm" onClick={handleSave} disabled={saving || !isValid} className="gap-1.5">
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} שמור
             </Button>
             <Button size="sm" variant="outline" className="gap-1.5 text-green-700 border-green-300 hover:bg-green-50"
@@ -194,6 +213,7 @@ export default function ContentItemDrawer({ item, onClose, onSaved, onDeleted })
               </Button>
             )}
           </div>
+          {!isValid && <p className="text-[10px] text-muted-foreground">שדות חובה: כותרת, תוצר, אמצעי, תאריך מתוכנן.</p>}
           <p className="text-[10px] text-muted-foreground">עד לחיצה על "אשר תוצר סופי" — הכל נחשב טיוטה.</p>
         </div>
       </SheetContent>

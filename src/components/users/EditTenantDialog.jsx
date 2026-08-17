@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Pencil, Cake } from "lucide-react";
+import TenantConnectionsSection from "@/components/users/TenantConnectionsSection";
 
 export default function EditTenantDialog({ tenant, onClose, onSaved }) {
   const [contactName, setContactName] = useState("");
@@ -138,6 +139,7 @@ export default function EditTenantDialog({ tenant, onClose, onSaved }) {
               סימון כאיש קשר מרכזי יעדכן את שאר אנשי הקשר בחדר זה כלא מרכזיים.
             </p>
           )}
+          {tenant?.id && <TenantConnectionsSection tenant={tenant} />}
           {error && (
             <div className="text-sm text-red-600 bg-red-50 rounded-lg p-2">{error}</div>
           )}

@@ -1,4 +1,4 @@
-import { WORK_STATUS_ORDER, WORK_STATUS_LABELS, CONTENT_FORMAT_LABELS } from "@/lib/contentBoardConfig";
+import { WORK_STATUS_ORDER, WORK_STATUS_LABELS, OUTPUT_TYPE_LABELS, SOURCE_TYPE_LABELS } from "@/lib/contentBoardConfig";
 import { PLATFORM_LABELS } from "@/lib/communityConfig";
 
 export default function ContentBoardFilters({ filters, setFilters, customers }) {
@@ -11,13 +11,17 @@ export default function ContentBoardFilters({ filters, setFilters, customers }) 
         <option value="">כל הסטטוסים</option>
         {WORK_STATUS_ORDER.map((s) => <option key={s} value={s}>{WORK_STATUS_LABELS[s]}</option>)}
       </select>
+      <select className={selectCls} value={filters.output_type} onChange={(e) => set("output_type", e.target.value)}>
+        <option value="">כל התוצרים</option>
+        {Object.entries(OUTPUT_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+      </select>
+      <select className={selectCls} value={filters.source_type} onChange={(e) => set("source_type", e.target.value)}>
+        <option value="">כל האמצעים</option>
+        {Object.entries(SOURCE_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+      </select>
       <select className={selectCls} value={filters.platform} onChange={(e) => set("platform", e.target.value)}>
         <option value="">כל הפלטפורמות</option>
         {Object.entries(PLATFORM_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-      </select>
-      <select className={selectCls} value={filters.content_format} onChange={(e) => set("content_format", e.target.value)}>
-        <option value="">כל סוגי התוכן</option>
-        {Object.entries(CONTENT_FORMAT_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
       </select>
       <select className={selectCls} value={filters.customer} onChange={(e) => set("customer", e.target.value)}>
         <option value="">כל הלקוחות</option>

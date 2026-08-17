@@ -53,6 +53,8 @@ export default function InsightsPickerDialog({ weekStart, onClose, onAdded }) {
       day_of_week: DAY_ORDER[i % DAY_ORDER.length],
       planned_date: addDays(weekStart, i % DAY_ORDER.length),
       platform,
+      output_type: "post",
+      source_type: "conversation_transcript",
       title: ins.title,
       topic: ins.title,
       content_type: "customer_specific",
