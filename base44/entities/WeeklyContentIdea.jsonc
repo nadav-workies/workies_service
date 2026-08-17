@@ -7,6 +7,11 @@
       "format": "date",
       "description": "\u05ea\u05d0\u05e8\u05d9\u05da \u05ea\u05d7\u05d9\u05dc\u05ea \u05d4\u05e9\u05d1\u05d5\u05e2"
     },
+    "planned_date": {
+      "type": "string",
+      "format": "date",
+      "description": "\u05ea\u05d0\u05e8\u05d9\u05da \u05e4\u05e8\u05e1\u05d5\u05dd \u05de\u05ea\u05d5\u05db\u05e0\u05df"
+    },
     "day_of_week": {
       "type": "string",
       "enum": [
@@ -14,7 +19,9 @@
         "monday",
         "tuesday",
         "wednesday",
-        "thursday"
+        "thursday",
+        "friday",
+        "saturday"
       ],
       "description": "\u05d9\u05d5\u05dd \u05d1\u05e9\u05d1\u05d5\u05e2"
     },
@@ -30,6 +37,10 @@
       ],
       "description": "\u05e4\u05dc\u05d8\u05e4\u05d5\u05e8\u05de\u05ea \u05ea\u05d5\u05db\u05df"
     },
+    "title": {
+      "type": "string",
+      "description": "\u05db\u05d5\u05ea\u05e8\u05ea \u05d9\u05d7\u05d9\u05d3\u05ea \u05d4\u05ea\u05d5\u05db\u05df"
+    },
     "topic": {
       "type": "string",
       "description": "\u05e0\u05d5\u05e9\u05d0 / \u05e8\u05e2\u05d9\u05d5\u05df \u05ea\u05d5\u05db\u05df"
@@ -43,6 +54,20 @@
       "default": "customer_specific",
       "description": "\u05e1\u05d5\u05d2 \u05ea\u05d5\u05db\u05df: \u05de\u05d5\u05ea\u05d0\u05dd \u05dc\u05dc\u05e7\u05d5\u05d7 \u05d0\u05d5 \u05db\u05dc\u05dc\u05d9 \u05dc\u05d5\u05d5\u05e8\u05e7\u05d9\u05d6"
     },
+    "content_format": {
+      "type": "string",
+      "enum": [
+        "post",
+        "reels",
+        "story",
+        "carousel",
+        "newsletter",
+        "whatsapp",
+        "linkedin",
+        "other"
+      ],
+      "description": "\u05e1\u05d5\u05d2 \u05ea\u05d5\u05db\u05df: \u05e4\u05d5\u05e1\u05d8 / \u05e8\u05d9\u05dc\u05e1 / \u05e1\u05d8\u05d5\u05e8\u05d9 \u05d5\u05db\u05d5\u05f3"
+    },
     "related_customer_id": {
       "type": "string",
       "description": "\u05de\u05d6\u05d4\u05d4 \u05dc\u05e7\u05d5\u05d7 \u05e7\u05e9\u05d5\u05e8"
@@ -55,21 +80,85 @@
       "type": "string",
       "description": "\u05de\u05d6\u05d4\u05d4 \u05ea\u05d5\u05d1\u05e0\u05d4 \u05de\u05e7\u05d5\u05e8"
     },
+    "source_conversation_id": {
+      "type": "string",
+      "description": "\u05de\u05d6\u05d4\u05d4 \u05e9\u05d9\u05d7\u05ea \u05de\u05e7\u05d5\u05e8"
+    },
     "source_note": {
       "type": "string",
-      "description": "\u05d4\u05e2\u05e8\u05ea \u05de\u05e7\u05d5\u05e8"
+      "description": "\u05d4\u05e2\u05e8\u05ea \u05de\u05e7\u05d5\u05e8 / \u05e6\u05d9\u05d8\u05d5\u05d8"
+    },
+    "notes": {
+      "type": "string",
+      "description": "\u05d4\u05e2\u05e8\u05d5\u05ea"
+    },
+    "post_draft": {
+      "type": "string",
+      "description": "\u05d8\u05d9\u05d5\u05d8\u05ea \u05e4\u05d5\u05e1\u05d8"
+    },
+    "image_prompt": {
+      "type": "string",
+      "description": "\u05e4\u05e8\u05d5\u05de\u05e4\u05d8 \u05dc\u05ea\u05de\u05d5\u05e0\u05d4 / \u05d5\u05d9\u05d6\u05f3\u05d5\u05d0\u05dc"
+    },
+    "hashtags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u05ea\u05d2\u05d9\u05d5\u05ea / \u05d4\u05d0\u05e9\u05d8\u05d2\u05d9\u05dd"
+    },
+    "final_content": {
+      "type": "string",
+      "description": "\u05ea\u05d5\u05e6\u05e8 \u05e1\u05d5\u05e4\u05d9 \u05de\u05d0\u05d5\u05e9\u05e8"
+    },
+    "final_approved": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05d4\u05d0\u05dd \u05d4\u05ea\u05d5\u05e6\u05e8 \u05d0\u05d5\u05e9\u05e8 \u05e1\u05d5\u05e4\u05d9\u05ea"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u05de\u05d5\u05e2\u05d3 \u05d0\u05d9\u05e9\u05d5\u05e8"
+    },
+    "approved_by": {
+      "type": "string",
+      "description": "\u05de\u05d9 \u05d0\u05d9\u05e9\u05e8"
+    },
+    "ai_thread_notes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "\u05d4\u05ea\u05db\u05ea\u05d1\u05d5\u05ea AI \u05e2\u05dc \u05d9\u05d7\u05d9\u05d3\u05ea \u05d4\u05ea\u05d5\u05db\u05df"
     },
     "status": {
       "type": "string",
       "enum": [
         "idea",
-        "planned",
+        "to_plan",
+        "to_write",
+        "draft_ready",
+        "needs_visual",
+        "ready_for_approval",
         "approved",
         "published",
-        "dismissed"
+        "dismissed",
+        "planned"
       ],
       "default": "idea",
-      "description": "\u05e1\u05d8\u05d8\u05d5\u05e1 \u05e8\u05e2\u05d9\u05d5\u05df \u05d4\u05ea\u05d5\u05db\u05df"
+      "description": "\u05e1\u05d8\u05d8\u05d5\u05e1 \u05e2\u05d1\u05d5\u05d3\u05d4 \u05e9\u05dc \u05d9\u05d7\u05d9\u05d3\u05ea \u05d4\u05ea\u05d5\u05db\u05df"
     }
   },
   "required": [

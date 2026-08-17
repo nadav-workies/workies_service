@@ -124,7 +124,12 @@ export const PLATFORM_COLORS = {
 export const CONTENT_STATUS_LABELS = {
   idea: "רעיון",
   planned: "מתוכנן",
-  approved: "מאושר",
+  to_plan: "לתכנון",
+  to_write: "לכתיבה",
+  draft_ready: "טיוטה מוכנה",
+  needs_visual: "נדרש ויז׳ואל",
+  ready_for_approval: "מוכן לאישור",
+  approved: "אושר לפרסום",
   published: "פורסם",
   dismissed: "נדחה",
 };
@@ -132,6 +137,11 @@ export const CONTENT_STATUS_LABELS = {
 export const CONTENT_STATUS_COLORS = {
   idea: "bg-blue-100 text-blue-700",
   planned: "bg-amber-100 text-amber-700",
+  to_plan: "bg-cyan-100 text-cyan-700",
+  to_write: "bg-amber-100 text-amber-700",
+  draft_ready: "bg-purple-100 text-purple-700",
+  needs_visual: "bg-pink-100 text-pink-700",
+  ready_for_approval: "bg-indigo-100 text-indigo-700",
   approved: "bg-green-100 text-green-700",
   published: "bg-emerald-100 text-emerald-700",
   dismissed: "bg-gray-100 text-gray-700",

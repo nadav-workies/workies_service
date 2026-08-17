@@ -10,6 +10,7 @@ import {
   INSIGHT_TYPE_LABELS, INSIGHT_TYPE_COLORS,
   DAY_ORDER, PLATFORM_LABELS,
 } from "@/lib/communityConfig";
+import { addDays } from "@/lib/contentBoardConfig";
 
 export default function InsightsPickerDialog({ weekStart, onClose, onAdded }) {
   const [selected, setSelected] = useState(new Set());
@@ -50,7 +51,9 @@ export default function InsightsPickerDialog({ weekStart, onClose, onAdded }) {
     const records = selectedInsights.map((ins, i) => ({
       week_start_date: weekStart,
       day_of_week: DAY_ORDER[i % DAY_ORDER.length],
+      planned_date: addDays(weekStart, i % DAY_ORDER.length),
       platform,
+      title: ins.title,
       topic: ins.title,
       content_type: "customer_specific",
       related_customer_id: ins.tenant_id || "",
@@ -121,7 +124,7 @@ export default function InsightsPickerDialog({ weekStart, onClose, onAdded }) {
             <Button variant="outline" onClick={onClose} disabled={adding}>ביטול</Button>
             <Button onClick={handleAdd} disabled={adding || selected.size === 0} className="gap-2 flex-1">
               {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-              הוסף {selected.size > 0 ? selected.size : ""} רעיונות
+              הפוך {selected.size > 0 ? selected.size : ""} רעיונות ליחידות תוכן
             </Button>
           </div>
         </DialogFooter>
