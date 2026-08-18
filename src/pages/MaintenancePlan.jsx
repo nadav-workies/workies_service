@@ -129,6 +129,14 @@ export default function MaintenancePlan() {
   const byDay = (date) => filtered.filter(t => t.planned_date === date).sort((a, b) => (a.start_time || "").localeCompare(b.start_time || ""));
   const workers = Array.from(new Set(tasks.map(t => t.assigned_maintenance_worker || DEFAULT_WORKER)));
 
+  // Week view: only days with tasks
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const activeWeekDays = weekDays.map(d => ({ date: d, tasks: byDay(d) })).filter(d => d.tasks.length > 0);
+
+  // Month view: days with tasks in selected month
+  const monthTasks = filtered.filter(t => (t.planned_date || "").startsWith(monthStr));
+  const activeMonthDays = Array.from(new Set(monthTasks.map(t => t.planned_date))).sort();
+
   // Tasks in the current view scope (week or month) pending approval
   const viewTasks = view === "week"
     ? filtered.filter(t => weekDays.includes(t.planned_date))
@@ -141,14 +149,6 @@ export default function MaintenancePlan() {
     if (!window.confirm(`לאשר ${viewPending.length} משימות תחזוקה ולהכניסן לשיבוץ?`)) return;
     approvePlanMutation.mutate(viewPending.map(t => t.id));
   };
-
-  // Week view: only days with tasks
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-  const activeWeekDays = weekDays.map(d => ({ date: d, tasks: byDay(d) })).filter(d => d.tasks.length > 0);
-
-  // Month view: days with tasks in selected month
-  const monthTasks = filtered.filter(t => (t.planned_date || "").startsWith(monthStr));
-  const activeMonthDays = Array.from(new Set(monthTasks.map(t => t.planned_date))).sort();
 
   const shiftMonth = (delta) => {
     const [y, m] = monthStr.split("-").map(Number);
