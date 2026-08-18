@@ -8,6 +8,7 @@ import KPICards from "@/components/dashboard/KPICards";
 import TicketDistributionCards from "@/components/dashboard/TicketDistributionCards";
 import OperationalMetricsCards from "@/components/dashboard/OperationalMetricsCards";
 import BirthdayListCard from "@/components/dashboard/BirthdayListCard";
+import MaintenanceKpiCard from "@/components/dashboard/MaintenanceKpiCard";
 import BirthdayPromptModal from "@/components/user/BirthdayPromptModal";
 import DateRangeFilter from "@/components/dashboard/DateRangeFilter";
 import TicketTable from "@/components/tickets/TicketTable";
@@ -156,6 +157,8 @@ function ManagerDashboard({ user }) {
       </div>
 
       <DateRangeFilter value={selectedRange} onChange={setSelectedRange} />
+
+      <MaintenanceKpiCard user={user} />
 
       <KPICards tickets={periodTickets} slaMetrics={slaMetrics} selectedRange={selectedRange} />
 
