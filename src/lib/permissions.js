@@ -77,3 +77,8 @@ export function canCloseTicket(user) {
 export function canManageMaintenancePlan(user) {
   return ["admin", "manager", "operations_manager", "maintenance_manager"].includes(user?.role);
 }
+
+// אישור תוכנית תחזוקה — אדמין או מנהל תפעול בלבד
+export function canApproveMaintenancePlan(user) {
+  return ["admin", "operations_manager"].includes(user?.role);
+}

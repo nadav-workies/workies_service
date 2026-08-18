@@ -19,6 +19,14 @@ export const MAINTENANCE_STATUSES = [
   { key: "cancelled", label: "בוטלה", color: "bg-gray-200 text-gray-600", dot: "bg-gray-400" },
 ];
 
+export const MAINTENANCE_APPROVAL_STATUSES = [
+  { key: "pending_approval", label: "ממתינה לאישור", color: "bg-amber-100 text-amber-800", dot: "bg-amber-500" },
+  { key: "approved", label: "מאושרת / משובצת", color: "bg-green-100 text-green-800", dot: "bg-green-500" },
+  { key: "rejected", label: "נדחתה", color: "bg-red-100 text-red-800", dot: "bg-red-500" },
+];
+
+export const getApprovalStatus = (k) => MAINTENANCE_APPROVAL_STATUSES.find(s => s.key === k) || MAINTENANCE_APPROVAL_STATUSES[0];
+
 export const MAINTENANCE_PRIORITIES = [
   { key: "low", label: "נמוכה", color: "text-slate-500" },
   { key: "medium", label: "בינונית", color: "text-orange-600" },

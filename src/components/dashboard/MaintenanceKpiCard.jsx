@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Wrench, CheckCircle2 } from "lucide-react";
+import { Wrench, CheckCircle2, Clock4, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { canManageMaintenancePlan } from "@/lib/permissions";
+import { canManageMaintenancePlan, canApproveMaintenancePlan } from "@/lib/permissions";
 
 export default function MaintenanceKpiCard({ user }) {
   const navigate = useNavigate();
@@ -14,9 +14,10 @@ export default function MaintenanceKpiCard({ user }) {
 
   if (!canManageMaintenancePlan(user)) return null;
 
-  const opened = tasks.length;
-  const done = tasks.filter(t => t.status === "done" || t.status === "checked").length;
-  const pending = tasks.filter(t => t.status === "planned" || t.status === "in_progress").length;
+  const pending = tasks.filter(t => (t.approval_status || "pending_approval") === "pending_approval").length;
+  const approved = tasks.filter(t => t.approval_status === "approved").length;
+  const done = tasks.filter(t => t.approval_status === "approved" && (t.status === "done" || t.status === "checked")).length;
+  const canApprove = canApproveMaintenancePlan(user);
 
   return (
     <button
@@ -29,10 +30,15 @@ export default function MaintenanceKpiCard({ user }) {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-xs text-muted-foreground">תוכנית תחזוקה</p>
-        <p className="text-sm font-semibold">נפתחו {opened} · בוצעו {done}</p>
-        {pending > 0 && <p className="text-[10px] text-orange-600">{pending} ממתינות לביצוע</p>}
+        <p className="text-sm font-semibold flex flex-wrap items-center gap-x-2 gap-y-0.5">
+          <span className="flex items-center gap-1 text-amber-600"><Clock4 className="w-3.5 h-3.5" />{pending} ממתינות</span>
+          <span className="text-muted-300">·</span>
+          <span className="flex items-center gap-1 text-green-600"><ShieldCheck className="w-3.5 h-3.5" />{approved} אושרו</span>
+          <span className="text-muted-300">·</span>
+          <span className="flex items-center gap-1 text-emerald-700"><CheckCircle2 className="w-3.5 h-3.5" />{done} בוצעו</span>
+        </p>
+        {canApprove && pending > 0 && <p className="text-[11px] text-amber-700 font-medium mt-0.5">נדרש אישור מנהל תפעול — {pending} משימות ממתינות</p>}
       </div>
-      <CheckCircle2 className="w-4 h-4 text-muted-foreground shrink-0" />
     </button>
   );
 }

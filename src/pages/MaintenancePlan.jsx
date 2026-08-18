@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Plus, Sparkles, Wrench, ChevronRight, ChevronLeft, Trash2, Pencil, CheckCircle2, XCircle, Ticket, CalendarDays, List } from "lucide-react";
+import { Loader2, Plus, Sparkles, Wrench, ChevronRight, ChevronLeft, Trash2, Pencil, CheckCircle2, XCircle, Ticket, CalendarDays, List, ShieldCheck, Clock4 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { canManageMaintenancePlan, isAdmin } from "@/lib/permissions";
+import { canManageMaintenancePlan, canApproveMaintenancePlan, isAdmin } from "@/lib/permissions";
 import {
   MAINTENANCE_CATEGORIES, MAINTENANCE_STATUSES, getCategory, getStatus, getPriority,
+  getApprovalStatus, MAINTENANCE_APPROVAL_STATUSES,
   getWeekStart, addDays, WEEKDAYS, formatHebrewDate, DEFAULT_WORKER
 } from "@/lib/maintenanceConfig";
 import MaintenanceTaskForm from "@/components/maintenance/MaintenanceTaskForm";
@@ -25,6 +26,7 @@ export default function MaintenancePlan() {
   const [filterWorker, setFilterWorker] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [filterApproval, setFilterApproval] = useState("all");
   const [formOpen, setFormOpen] = useState(false);
   const [extractOpen, setExtractOpen] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -75,6 +77,12 @@ export default function MaintenancePlan() {
     mutationFn: (arr) => base44.entities.MaintenanceTask.bulkCreate(arr),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["maintenance-tasks"] }),
   });
+  const approvePlanMutation = useMutation({
+    mutationFn: (ids) => base44.entities.MaintenanceTask.bulkUpdate(
+      ids.map(id => ({ id, approval_status: "approved", approved_by: user?.full_name || user?.email || "מנהל תפעול", approved_at: new Date().toISOString() }))
+    ),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["maintenance-tasks"] }),
+  });
 
   const handleSave = async (form) => {
     const payload = {
@@ -111,11 +119,25 @@ export default function MaintenancePlan() {
     if (filterWorker !== "all" && (t.assigned_maintenance_worker || DEFAULT_WORKER) !== filterWorker) return false;
     if (filterCategory !== "all" && t.category !== filterCategory) return false;
     if (filterStatus !== "all" && t.status !== filterStatus) return false;
+    if (filterApproval !== "all" && (t.approval_status || "pending_approval") !== filterApproval) return false;
     return true;
   });
 
   const byDay = (date) => filtered.filter(t => t.planned_date === date).sort((a, b) => (a.start_time || "").localeCompare(b.start_time || ""));
   const workers = Array.from(new Set(tasks.map(t => t.assigned_maintenance_worker || DEFAULT_WORKER)));
+
+  // Tasks in the current view scope (week or month) pending approval
+  const viewTasks = view === "week"
+    ? filtered.filter(t => weekDays.includes(t.planned_date))
+    : filtered.filter(t => (t.planned_date || "").startsWith(monthStr));
+  const viewPending = viewTasks.filter(t => (t.approval_status || "pending_approval") === "pending_approval");
+  const canApprove = canApproveMaintenancePlan(user);
+
+  const approvePlan = () => {
+    if (viewPending.length === 0) return;
+    if (!window.confirm(`לאשר ${viewPending.length} משימות תחזוקה ולהכניסן לשיבוץ?`)) return;
+    approvePlanMutation.mutate(viewPending.map(t => t.id));
+  };
 
   // Week view: only days with tasks
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -199,7 +221,30 @@ export default function MaintenancePlan() {
             {MAINTENANCE_STATUSES.map(s => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}
           </SelectContent>
         </Select>
+        <Select value={filterApproval} onValueChange={setFilterApproval}>
+          <SelectTrigger className="h-9 w-36 text-sm"><SelectValue placeholder="אישור" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">כל סטטוסי אישור</SelectItem>
+            {MAINTENANCE_APPROVAL_STATUSES.map(s => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}
+          </SelectContent>
+        </Select>
       </div>
+
+      {/* Approval banner */}
+      {canApprove && viewPending.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2 border-2 border-amber-300 bg-amber-50 rounded-xl p-3">
+          <div className="flex items-center gap-2">
+            <Clock4 className="w-5 h-5 text-amber-600" />
+            <div>
+              <p className="text-sm font-semibold text-amber-800">{viewPending.length} משימות ממתינות לאישור התוכנית</p>
+              <p className="text-xs text-amber-700">משימות שאינן מאושרות אינן משובצות לביצוע עד לאישור מנהל התפעול.</p>
+            </div>
+          </div>
+          <Button className="gap-1 h-9 bg-amber-600 hover:bg-amber-700" onClick={approvePlan} disabled={approvePlanMutation.isPending}>
+            <ShieldCheck className="w-4 h-4" /> אשר תוכנית ({viewPending.length})
+          </Button>
+        </div>
+      )}
 
       {/* Board */}
       {isLoading ? (
@@ -283,16 +328,19 @@ function TaskCard({ task, onEdit, onDelete, onStatus, admin }) {
   const cat = getCategory(task.category);
   const st = getStatus(task.status);
   const pr = getPriority(task.priority);
+  const ap = getApprovalStatus(task.approval_status || "pending_approval");
+  const pending = ap.key === "pending_approval";
   return (
-    <div className="border rounded-lg p-3 space-y-2 bg-background">
+    <div className={`border rounded-lg p-3 space-y-2 bg-background ${pending ? "border-amber-300 border-dashed bg-amber-50/40" : ""}`}>
       <div className="flex items-start gap-2">
-        <span className={`w-2 h-2 rounded-full ${st.dot} mt-1.5 shrink-0`} />
+        <span className={`w-2 h-2 rounded-full ${pending ? "bg-amber-500" : st.dot} mt-1.5 shrink-0`} />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium leading-tight">{task.title}</p>
           <p className="text-xs text-muted-foreground mt-0.5">{task.start_time || ""} · {task.assigned_maintenance_worker || DEFAULT_WORKER}</p>
         </div>
       </div>
       <div className="flex flex-wrap gap-1.5">
+        <span className={`text-xs px-2 py-0.5 rounded ${ap.color} flex items-center gap-1`}>{pending && <Clock4 className="w-3 h-3" />}{ap.label}</span>
         <span className={`text-xs px-2 py-0.5 rounded ${cat.color}`}>{cat.label}</span>
         <span className={`text-xs px-2 py-0.5 rounded ${st.color}`}>{st.label}</span>
         <span className={`text-xs px-2 py-0.5 rounded bg-muted ${pr.color}`}>{pr.label}</span>
@@ -300,10 +348,12 @@ function TaskCard({ task, onEdit, onDelete, onStatus, admin }) {
       </div>
       {task.location && <p className="text-xs text-muted-foreground">📍 {task.location}</p>}
       {task.execution_note && task.status === "not_done" && <p className="text-xs text-red-600 bg-red-50 rounded px-2 py-1">{task.execution_note}</p>}
+      {pending && <p className="text-xs text-amber-700 bg-amber-100 rounded px-2 py-1">ממתין לאישור התוכנית — לא משובצת עדיין</p>}
       <div className="flex items-center gap-1 pt-1.5 border-t">
-        {task.status !== "done" && <button onClick={() => onStatus("done")} title="בוצע" className="text-green-600 hover:bg-green-50 p-2 rounded-lg"><CheckCircle2 className="w-4 h-4" /></button>}
-        {task.status !== "not_done" && <button onClick={() => onStatus("not_done")} title="לא בוצע" className="text-red-600 hover:bg-red-50 p-2 rounded-lg"><XCircle className="w-4 h-4" /></button>}
-        {task.status !== "checked" && <button onClick={() => onStatus("checked")} title="בוקר" className="text-emerald-700 hover:bg-emerald-50 p-2 rounded-lg"><CheckCircle2 className="w-4 h-4" /></button>}
+        {pending && <span className="text-xs text-muted-foreground px-1 py-2">טרם אושר לביצוע</span>}
+        {!pending && task.status !== "done" && <button onClick={() => onStatus("done")} title="בוצע" className="text-green-600 hover:bg-green-50 p-2 rounded-lg"><CheckCircle2 className="w-4 h-4" /></button>}
+        {!pending && task.status !== "not_done" && <button onClick={() => onStatus("not_done")} title="לא בוצע" className="text-red-600 hover:bg-red-50 p-2 rounded-lg"><XCircle className="w-4 h-4" /></button>}
+        {!pending && task.status !== "checked" && <button onClick={() => onStatus("checked")} title="בוקר" className="text-emerald-700 hover:bg-emerald-50 p-2 rounded-lg"><CheckCircle2 className="w-4 h-4" /></button>}
         <button onClick={onEdit} title="ערוך" className="text-muted-foreground hover:bg-muted p-2 rounded-lg"><Pencil className="w-4 h-4" /></button>
         {admin && <button onClick={onDelete} title="מחק" className="text-muted-foreground hover:text-red-600 p-2 rounded-lg mr-auto"><Trash2 className="w-4 h-4" /></button>}
       </div>
