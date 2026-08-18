@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Plus, Sparkles, Wrench, ChevronRight, ChevronLeft, Trash2, Pencil, CheckCircle2, XCircle, Ticket, CalendarDays, List, ShieldCheck, Clock4 } from "lucide-react";
+import { Loader2, Plus, Sparkles, Wrench, ChevronRight, ChevronLeft, Trash2, Pencil, CheckCircle2, XCircle, Ticket, CalendarDays, List, ShieldCheck, Clock4, ClipboardCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { canManageMaintenancePlan, canApproveMaintenancePlan, isAdmin } from "@/lib/permissions";
@@ -81,7 +81,10 @@ export default function MaintenancePlan() {
     mutationFn: (ids) => base44.entities.MaintenanceTask.bulkUpdate(
       ids.map(id => ({ id, approval_status: "approved", approved_by: user?.full_name || user?.email || "מנהל תפעול", approved_at: new Date().toISOString() }))
     ),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["maintenance-tasks"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["maintenance-tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["maintenance-tasks-dash"] });
+    },
   });
 
   const handleSave = async (form) => {
@@ -164,6 +167,19 @@ export default function MaintenancePlan() {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-lg sm:text-xl font-bold flex items-center gap-2"><Wrench className="w-5 h-5" /> תוכנית תחזוקה</h1>
         <div className="flex flex-wrap gap-2">
+          {canApprove && (
+            <Button
+              size="sm"
+              variant={viewPending.length > 0 ? "default" : "outline"}
+              className="gap-1 h-9 bg-amber-600 hover:bg-amber-700"
+              onClick={approvePlan}
+              disabled={approvePlanMutation.isPending || viewPending.length === 0}
+              title={viewPending.length === 0 ? "אין משימות הממתינות לאישור בתצוגה הנוכחית" : ""}
+            >
+              {approvePlanMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+              אשר תוכנית שבועית{viewPending.length > 0 ? ` (${viewPending.length})` : ""}
+            </Button>
+          )}
           <Button variant="outline" size="sm" className="gap-1 h-9" onClick={() => setExtractOpen(true)}>
             <Sparkles className="w-4 h-4" /> חילוץ משימות מקובץ
           </Button>
@@ -349,13 +365,25 @@ function TaskCard({ task, onEdit, onDelete, onStatus, admin }) {
       {task.location && <p className="text-xs text-muted-foreground">📍 {task.location}</p>}
       {task.execution_note && task.status === "not_done" && <p className="text-xs text-red-600 bg-red-50 rounded px-2 py-1">{task.execution_note}</p>}
       {pending && <p className="text-xs text-amber-700 bg-amber-100 rounded px-2 py-1">ממתין לאישור התוכנית — לא משובצת עדיין</p>}
-      <div className="flex items-center gap-1 pt-1.5 border-t">
+      <div className="flex items-center gap-1 pt-1.5 border-t flex-wrap">
         {pending && <span className="text-xs text-muted-foreground px-1 py-2">טרם אושר לביצוע</span>}
-        {!pending && task.status !== "done" && <button onClick={() => onStatus("done")} title="בוצע" className="text-green-600 hover:bg-green-50 p-2 rounded-lg"><CheckCircle2 className="w-4 h-4" /></button>}
-        {!pending && task.status !== "not_done" && <button onClick={() => onStatus("not_done")} title="לא בוצע" className="text-red-600 hover:bg-red-50 p-2 rounded-lg"><XCircle className="w-4 h-4" /></button>}
-        {!pending && task.status !== "checked" && <button onClick={() => onStatus("checked")} title="בוקר" className="text-emerald-700 hover:bg-emerald-50 p-2 rounded-lg"><CheckCircle2 className="w-4 h-4" /></button>}
-        <button onClick={onEdit} title="ערוך" className="text-muted-foreground hover:bg-muted p-2 rounded-lg"><Pencil className="w-4 h-4" /></button>
-        {admin && <button onClick={onDelete} title="מחק" className="text-muted-foreground hover:text-red-600 p-2 rounded-lg mr-auto"><Trash2 className="w-4 h-4" /></button>}
+        {!pending && task.status !== "done" && (
+          <button onClick={() => onStatus("done")} className="flex items-center gap-1 text-[11px] font-medium text-green-700 bg-green-50 hover:bg-green-100 px-2 py-1 rounded-md border border-green-200">
+            <CheckCircle2 className="w-3.5 h-3.5" /> בוצע
+          </button>
+        )}
+        {!pending && task.status !== "not_done" && (
+          <button onClick={() => onStatus("not_done")} className="flex items-center gap-1 text-[11px] font-medium text-red-700 bg-red-50 hover:bg-red-100 px-2 py-1 rounded-md border border-red-200">
+            <XCircle className="w-3.5 h-3.5" /> לא בוצע
+          </button>
+        )}
+        {!pending && task.status !== "checked" && (
+          <button onClick={() => onStatus("checked")} className="flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded-md border border-emerald-200">
+            <ClipboardCheck className="w-3.5 h-3.5" /> נבדק
+          </button>
+        )}
+        <button onClick={onEdit} className="text-muted-foreground hover:bg-muted p-1.5 rounded-md mr-auto" title="ערוך"><Pencil className="w-4 h-4" /></button>
+        {admin && <button onClick={onDelete} className="text-muted-foreground hover:text-red-600 p-1.5 rounded-md" title="מחק"><Trash2 className="w-4 h-4" /></button>}
       </div>
     </div>
   );
