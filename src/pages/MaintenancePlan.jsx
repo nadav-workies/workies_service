@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Plus, Sparkles, Wrench, ChevronRight, ChevronLeft, Trash2, Pencil, CheckCircle2, XCircle, Ticket, CalendarDays, List, ShieldCheck, Clock4, ClipboardCheck } from "lucide-react";
+import { Loader2, Plus, Sparkles, Wrench, ChevronRight, ChevronLeft, Trash2, Pencil, CheckCircle2, XCircle, Ticket, CalendarDays, List, ShieldCheck, Clock4, ClipboardCheck, CalendarClock, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { canManageMaintenancePlan, canApproveMaintenancePlan, isAdmin } from "@/lib/permissions";
@@ -14,11 +14,16 @@ import {
 import MaintenanceTaskForm from "@/components/maintenance/MaintenanceTaskForm";
 import ExtractTasksDialog from "@/components/maintenance/ExtractTasksDialog";
 import MaintenanceMonthCalendar from "@/components/maintenance/MaintenanceMonthCalendar";
+import MaintenanceTasksTable from "@/components/maintenance/MaintenanceTasksTable";
+import MaintenanceWindowsTab from "@/components/maintenance/MaintenanceWindowsTab";
+import MaintenanceWorkersTab from "@/components/maintenance/MaintenanceWorkersTab";
+import { DEFAULT_WORKERS, weekDates as buildWeekDates } from "@/lib/maintenanceWindows";
 
 export default function MaintenancePlan() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [user, setUser] = useState(null);
+  const [tab, setTab] = useState("tasks"); // "tasks" | "windows" | "workers"
   const [view, setView] = useState("week"); // "week" | "month"
   const [weekStart, setWeekStart] = useState(getWeekStart(new Date()));
   const [monthStr, setMonthStr] = useState(new Date().toISOString().slice(0, 7));
@@ -49,6 +54,21 @@ export default function MaintenancePlan() {
     queryKey: ["maintenance-tasks"],
     queryFn: () => base44.entities.MaintenanceTask.list("-planned_date", 500),
   });
+
+  const { data: windows = [] } = useQuery({
+    queryKey: ["maintenance-windows"],
+    queryFn: () => base44.entities.MaintenanceWindow.list("date", 1000),
+    enabled: !!user,
+  });
+
+  const { data: workerRecords = [] } = useQuery({
+    queryKey: ["maintenance-workers"],
+    queryFn: () => base44.entities.MaintenanceWorker.list("name", 100),
+    enabled: !!user,
+  });
+
+  const activeWorkerNames = workerRecords.filter(w => w.is_active !== false).map(w => w.name);
+  const workerNames = activeWorkerNames.length ? activeWorkerNames : DEFAULT_WORKERS;
 
   const { data: ticketData } = useQuery({
     queryKey: ["ticket", ticketIdParam],
@@ -127,7 +147,12 @@ export default function MaintenancePlan() {
   });
 
   const byDay = (date) => filtered.filter(t => t.planned_date === date).sort((a, b) => (a.start_time || "").localeCompare(b.start_time || ""));
-  const workers = Array.from(new Set(tasks.map(t => t.assigned_maintenance_worker || DEFAULT_WORKER)));
+  const tasksByDate = tasks.reduce((acc, t) => {
+    if (!t.planned_date) return acc;
+    (acc[t.planned_date] = acc[t.planned_date] || []).push(t);
+    return acc;
+  }, {});
+  const workers = Array.from(new Set([...workerNames, ...tasks.map(t => t.assigned_maintenance_worker || DEFAULT_WORKER)]));
 
   // Week view: only days with tasks
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -189,8 +214,42 @@ export default function MaintenancePlan() {
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="flex items-center gap-1 border-b">
+        {[
+          { key: "tasks", label: "משימות", icon: List },
+          { key: "windows", label: "חלונות שיבוץ", icon: CalendarClock },
+          { key: "workers", label: "עובדים", icon: Users },
+        ].map(({ key, label, icon: Icon }) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === key ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+          >
+            <Icon className="w-4 h-4" /> {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "windows" && (
+        <MaintenanceWindowsTab
+          windows={windows}
+          workers={workerNames}
+          admin={admin}
+          weekStart={weekStart}
+          setWeekStart={setWeekStart}
+          monthStr={monthStr}
+          shiftMonth={shiftMonth}
+          tasksByDate={tasksByDate}
+        />
+      )}
+
+      {tab === "workers" && (
+        <MaintenanceWorkersTab windows={windows} weekDates={buildWeekDates(weekStart)} admin={admin} />
+      )}
+
       {/* View toggle */}
-      <div className="flex items-center gap-1 bg-muted p-1 rounded-lg w-fit">
+      <div className={`items-center gap-1 bg-muted p-1 rounded-lg w-fit ${tab === "tasks" ? "flex" : "hidden"}`}>
         <button onClick={() => setView("week")} className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${view === "week" ? "bg-card shadow-sm" : "text-muted-foreground"}`}>
           <List className="w-4 h-4" /> שבועי
         </button>
@@ -200,7 +259,7 @@ export default function MaintenancePlan() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className={`flex-wrap items-center gap-2 ${tab === "tasks" ? "flex" : "hidden"}`}>
         {view === "week" ? (
           <div className="flex items-center gap-1">
             <Button size="icon" variant="outline" className="h-9 w-9" onClick={() => setWeekStart(addDays(weekStart, -7))}><ChevronRight className="w-4 h-4" /></Button>
@@ -247,7 +306,7 @@ export default function MaintenancePlan() {
       </div>
 
       {/* Approval banner */}
-      {canApprove && viewPending.length > 0 && (
+      {tab === "tasks" && canApprove && viewPending.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-2 border-2 border-amber-300 bg-amber-50 rounded-xl p-3">
           <div className="flex items-center gap-2">
             <Clock4 className="w-5 h-5 text-amber-600" />
@@ -263,7 +322,7 @@ export default function MaintenancePlan() {
       )}
 
       {/* Board */}
-      {isLoading ? (
+      {tab !== "tasks" ? null : isLoading ? (
         <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16 border-2 border-dashed rounded-xl">
@@ -274,6 +333,18 @@ export default function MaintenancePlan() {
       ) : view === "week" ? (
         activeWeekDays.length === 0 ? (
           <div className="text-center py-12 text-sm text-muted-foreground">אין ימים עם משימות בשבוע זה — נווט לשבוע אחר או הוסף משימה.</div>
+        ) : activeWeekDays.length === 1 ? (
+          <div className="space-y-2">
+            <p className="text-sm font-semibold">{formatHebrewDate(activeWeekDays[0].date)} · {activeWeekDays[0].tasks.length} משימות</p>
+            <MaintenanceTasksTable
+              tasks={activeWeekDays[0].tasks}
+              windows={windows}
+              onEdit={(t) => { setEditing(t); setFormOpen(true); }}
+              onDelete={(id) => deleteMutation.mutate(id)}
+              onStatus={setStatus}
+              admin={admin}
+            />
+          </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {activeWeekDays.map(({ date, tasks: dayTasks }) => (
@@ -334,6 +405,8 @@ export default function MaintenancePlan() {
           source_ticket_id: fromTicket.id, source_ticket_title: fromTicket.ticket_number,
         } : null)}
         defaultDate={dateParam || addDays(weekStart, 0)}
+        windows={windows}
+        workers={workerNames}
       />
       <ExtractTasksDialog open={extractOpen} onClose={() => setExtractOpen(false)} onImport={handleImport} />
     </div>

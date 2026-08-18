@@ -1,0 +1,94 @@
+{
+  "name": "MaintenanceWindow",
+  "type": "object",
+  "properties": {
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "\u05ea\u05d0\u05e8\u05d9\u05da \u05d4\u05d7\u05dc\u05d5\u05df"
+    },
+    "week_start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "\u05ea\u05d7\u05d9\u05dc\u05ea \u05d4\u05e9\u05d1\u05d5\u05e2 \u05e9\u05dc \u05d4\u05d7\u05dc\u05d5\u05df"
+    },
+    "start_time": {
+      "type": "string",
+      "default": "09:00",
+      "description": "\u05e9\u05e2\u05ea \u05d4\u05ea\u05d7\u05dc\u05d4 (HH:MM)"
+    },
+    "end_time": {
+      "type": "string",
+      "default": "12:00",
+      "description": "\u05e9\u05e2\u05ea \u05e1\u05d9\u05d5\u05dd (HH:MM)"
+    },
+    "availability": {
+      "type": "string",
+      "enum": [
+        "available",
+        "unavailable"
+      ],
+      "default": "available",
+      "description": "\u05d6\u05de\u05d9\u05df (\u05d9\u05e8\u05d5\u05e7) / \u05dc\u05d0 \u05d6\u05de\u05d9\u05df (\u05d0\u05d3\u05d5\u05dd)"
+    },
+    "available_workers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u05e9\u05de\u05d5\u05ea \u05e2\u05d5\u05d1\u05d3\u05d9\u05dd \u05d4\u05d6\u05de\u05d9\u05e0\u05d9\u05dd \u05d1\u05d7\u05dc\u05d5\u05df \u05d6\u05d4"
+    },
+    "note": {
+      "type": "string",
+      "description": "\u05d4\u05e2\u05e8\u05d4"
+    },
+    "copied_from_week": {
+      "type": "string",
+      "description": "\u05d4\u05d5\u05e2\u05ea\u05e7 \u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9\u05ea \u05de\u05e9\u05d1\u05d5\u05e2 \u05e7\u05d5\u05d3\u05dd"
+    }
+  },
+  "required": [
+    "date"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "operations_manager"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "maintenance_manager"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

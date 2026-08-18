@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MAINTENANCE_CATEGORIES, MAINTENANCE_STATUSES, MAINTENANCE_PRIORITIES, DEFAULT_WORKER } from "@/lib/maintenanceConfig";
+import { workerWindowsForDate, findMatchingWindow } from "@/lib/maintenanceWindows";
 
 const EMPTY = {
   title: "", description: "", planned_date: "", start_time: "09:00", duration_minutes: 60,
@@ -13,7 +14,7 @@ const EMPTY = {
   assigned_maintenance_worker: DEFAULT_WORKER, location: "", notes: "", recurring: "one_time",
 };
 
-export default function MaintenanceTaskForm({ open, onClose, onSave, initial, defaultDate }) {
+export default function MaintenanceTaskForm({ open, onClose, onSave, initial, defaultDate, windows = [], workers = [] }) {
   const [form, setForm] = useState(EMPTY);
 
   useEffect(() => {
@@ -21,8 +22,14 @@ export default function MaintenanceTaskForm({ open, onClose, onSave, initial, de
   }, [open, initial, defaultDate]);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const worker = form.assigned_maintenance_worker || DEFAULT_WORKER;
+  const dayWindows = workerWindowsForDate(windows, form.planned_date, worker);
+  const matchingWindow = findMatchingWindow(windows, form.planned_date, form.start_time, worker);
+  const scheduleOk = !!matchingWindow;
+
   const submit = () => {
-    if (!form.title?.trim() || !form.planned_date) return;
+    if (!form.title?.trim() || !form.planned_date || !scheduleOk) return;
     onSave(form);
   };
 
@@ -64,13 +71,40 @@ export default function MaintenanceTaskForm({ open, onClose, onSave, initial, de
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label>איש תחזוקה</Label>
-              <Input value={form.assigned_maintenance_worker} onChange={e => set("assigned_maintenance_worker", e.target.value)} />
+              <Select value={worker} onValueChange={v => set("assigned_maintenance_worker", v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {(workers.length ? workers : [DEFAULT_WORKER]).map(w => <SelectItem key={w} value={w}>{w}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1">
               <Label>משך (דקות)</Label>
               <Input type="number" value={form.duration_minutes} onChange={e => set("duration_minutes", Number(e.target.value))} />
             </div>
           </div>
+          {/* Scheduling windows for the chosen date + worker */}
+          <div className={`rounded-lg border p-2.5 text-xs space-y-1.5 ${scheduleOk ? "bg-green-50 border-green-300" : "bg-red-50 border-red-300"}`}>
+            <p className="font-medium">חלונות שיבוץ זמינים ל{worker}</p>
+            {dayWindows.length === 0 ? (
+              <p className="text-red-700">אין חלון זמין בתאריך זה לעובד זה — יש להגדיר חלון שיבוץ ירוק (טאב חלונות שיבוץ) לפני שיבוץ.</p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {dayWindows.map(w => (
+                  <button
+                    key={w.id}
+                    type="button"
+                    onClick={() => set("start_time", w.start_time)}
+                    className={`px-2 py-1 rounded border ${matchingWindow?.id === w.id ? "bg-green-200 border-green-500 text-green-900" : "bg-card"}`}
+                  >
+                    {w.start_time}–{w.end_time}
+                  </button>
+                ))}
+              </div>
+            )}
+            {dayWindows.length > 0 && !scheduleOk && <p className="text-red-700">שעת ההתחלה אינה בתוך חלון זמין — בחר חלון מהרשימה.</p>}
+          </div>
+
           <div className="space-y-1">
             <Label>מיקום / חדר</Label>
             <Input value={form.location} onChange={e => set("location", e.target.value)} placeholder="לדוגמה: חדר 12 / אזור מזרחי" />
@@ -107,7 +141,7 @@ export default function MaintenanceTaskForm({ open, onClose, onSave, initial, de
         </div>
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={onClose}>ביטול</Button>
-          <Button onClick={submit} disabled={!form.title?.trim() || !form.planned_date}>שמור משימה</Button>
+          <Button onClick={submit} disabled={!form.title?.trim() || !form.planned_date || !scheduleOk}>שמור משימה</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
