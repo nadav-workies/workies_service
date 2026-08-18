@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Plus, Trash2, UserCheck, UserX } from "lucide-react";
+import { Loader2, Plus, Trash2, UserCheck, UserX, CalendarRange } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { openWindowsForDate } from "@/lib/maintenanceWindows";
+import { openWindowsForDate, normalizeSchedule } from "@/lib/maintenanceWindows";
+import WorkerScheduleDialog from "@/components/maintenance/WorkerScheduleDialog";
+import { WEEKDAYS } from "@/lib/maintenanceConfig";
 
 export default function MaintenanceWorkersTab({ windows, weekDates, admin }) {
   const queryClient = useQueryClient();
   const [newName, setNewName] = useState("");
+  const [scheduleWorker, setScheduleWorker] = useState(null);
 
   const { data: workers = [], isLoading } = useQuery({
     queryKey: ["maintenance-workers"],
@@ -51,6 +54,17 @@ export default function MaintenanceWorkersTab({ windows, weekDates, admin }) {
                   <div>
                     <p className="font-semibold">{w.name}</p>
                     <p className="text-xs text-muted-foreground">{count > 0 ? `${count} חלונות זמינים בשבוע הנבחר` : "אין חלונות זמינים בשבוע הנבחר"}</p>
+                    <div className="flex flex-wrap gap-1 pt-1.5">
+                      {normalizeSchedule(w.work_schedule).map(row => (
+                        <span
+                          key={row.day_of_week}
+                          className={`text-[11px] px-1.5 py-0.5 rounded border ${row.is_working ? "bg-green-50 border-green-300 text-green-800" : "bg-muted text-muted-foreground border-transparent"}`}
+                          title={row.is_working ? `${row.start_time}–${row.end_time}` : "לא עובד"}
+                        >
+                          {WEEKDAYS[row.day_of_week].label.slice(0, 1)} {row.is_working ? `${row.start_time}-${row.end_time}` : "—"}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                   <span className={`text-xs px-2 py-0.5 rounded flex items-center gap-1 ${active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
                     {active ? <UserCheck className="w-3 h-3" /> : <UserX className="w-3 h-3" />}
@@ -59,6 +73,9 @@ export default function MaintenanceWorkersTab({ windows, weekDates, admin }) {
                 </div>
                 {admin && (
                   <div className="flex items-center gap-2 pt-2 mt-2 border-t">
+                    <Button size="sm" variant="outline" className="h-8 text-xs gap-1" onClick={() => setScheduleWorker(w)}>
+                      <CalendarRange className="w-3.5 h-3.5" /> יומן עבודה
+                    </Button>
                     <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => updateMutation.mutate({ id: w.id, data: { is_active: !active } })}>
                       {active ? "סמן כלא זמין" : "סמן כזמין"}
                     </Button>
@@ -72,6 +89,14 @@ export default function MaintenanceWorkersTab({ windows, weekDates, admin }) {
           })}
         </div>
       )}
+
+      <WorkerScheduleDialog
+        open={!!scheduleWorker}
+        worker={scheduleWorker}
+        saving={updateMutation.isPending}
+        onClose={() => setScheduleWorker(null)}
+        onSave={(rows) => updateMutation.mutate({ id: scheduleWorker.id, data: { work_schedule: rows } }, { onSuccess: () => setScheduleWorker(null) })}
+      />
     </div>
   );
 }

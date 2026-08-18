@@ -8,6 +8,35 @@ export const toMinutes = (t) => {
   return h * 60 + (m || 0);
 };
 
+/** Weekly work calendar helpers (per worker: days + hours) */
+export const DEFAULT_SHIFT = { start_time: "09:00", end_time: "17:00" };
+
+export const normalizeSchedule = (schedule) =>
+  Array.from({ length: 7 }, (_, d) => {
+    const row = (schedule || []).find(r => Number(r.day_of_week) === d);
+    return {
+      day_of_week: d,
+      is_working: row ? !!row.is_working : d >= 0 && d <= 4,
+      start_time: row?.start_time || DEFAULT_SHIFT.start_time,
+      end_time: row?.end_time || DEFAULT_SHIFT.end_time,
+    };
+  });
+
+/** The worker's shift on a given date, or null when they don't work that day */
+export const workerShiftForDate = (workerRecord, date) => {
+  if (!date) return null;
+  const day = new Date(`${date}T00:00:00`).getDay();
+  const row = normalizeSchedule(workerRecord?.work_schedule)[day];
+  return row?.is_working ? row : null;
+};
+
+export const isWithinShift = (shift, startTime) => {
+  if (!shift) return false;
+  const s = toMinutes(startTime), ws = toMinutes(shift.start_time), we = toMinutes(shift.end_time);
+  if (s === null || ws === null || we === null) return true;
+  return s >= ws && s < we;
+};
+
 export const weekDates = (weekStart) => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
 export const windowsForDate = (windows, date) =>

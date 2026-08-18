@@ -407,6 +407,7 @@ export default function MaintenancePlan() {
         defaultDate={dateParam || addDays(weekStart, 0)}
         windows={windows}
         workers={workerNames}
+        workerRecords={workerRecords}
       />
       <ExtractTasksDialog open={extractOpen} onClose={() => setExtractOpen(false)} onImport={handleImport} />
     </div>

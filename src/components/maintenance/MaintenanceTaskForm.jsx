@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MAINTENANCE_CATEGORIES, MAINTENANCE_STATUSES, MAINTENANCE_PRIORITIES, DEFAULT_WORKER } from "@/lib/maintenanceConfig";
-import { workerWindowsForDate, findMatchingWindow } from "@/lib/maintenanceWindows";
+import { workerWindowsForDate, findMatchingWindow, workerShiftForDate, isWithinShift } from "@/lib/maintenanceWindows";
 
 const EMPTY = {
   title: "", description: "", planned_date: "", start_time: "09:00", duration_minutes: 60,
@@ -14,7 +14,7 @@ const EMPTY = {
   assigned_maintenance_worker: DEFAULT_WORKER, location: "", notes: "", recurring: "one_time",
 };
 
-export default function MaintenanceTaskForm({ open, onClose, onSave, initial, defaultDate, windows = [], workers = [] }) {
+export default function MaintenanceTaskForm({ open, onClose, onSave, initial, defaultDate, windows = [], workers = [], workerRecords = [] }) {
   const [form, setForm] = useState(EMPTY);
 
   useEffect(() => {
@@ -26,7 +26,10 @@ export default function MaintenanceTaskForm({ open, onClose, onSave, initial, de
   const worker = form.assigned_maintenance_worker || DEFAULT_WORKER;
   const dayWindows = workerWindowsForDate(windows, form.planned_date, worker);
   const matchingWindow = findMatchingWindow(windows, form.planned_date, form.start_time, worker);
-  const scheduleOk = !!matchingWindow;
+  const workerRecord = workerRecords.find(w => w.name === worker);
+  const shift = workerShiftForDate(workerRecord, form.planned_date);
+  const shiftOk = isWithinShift(shift, form.start_time);
+  const scheduleOk = !!matchingWindow && shiftOk;
 
   const submit = () => {
     if (!form.title?.trim() || !form.planned_date || !scheduleOk) return;
@@ -86,6 +89,13 @@ export default function MaintenanceTaskForm({ open, onClose, onSave, initial, de
           {/* Scheduling windows for the chosen date + worker */}
           <div className={`rounded-lg border p-2.5 text-xs space-y-1.5 ${scheduleOk ? "bg-green-50 border-green-300" : "bg-red-50 border-red-300"}`}>
             <p className="font-medium">חלונות שיבוץ זמינים ל{worker}</p>
+            {shift ? (
+              <p className={shiftOk ? "text-green-700" : "text-red-700"}>
+                יומן עבודה: {shift.start_time}–{shift.end_time}{!shiftOk && " — שעת ההתחלה מחוץ לשעות העבודה"}
+              </p>
+            ) : (
+              <p className="text-red-700">{worker} לא עובד ביום זה לפי יומן העבודה (טאב עובדים).</p>
+            )}
             {dayWindows.length === 0 ? (
               <p className="text-red-700">אין חלון זמין בתאריך זה לעובד זה — יש להגדיר חלון שיבוץ ירוק (טאב חלונות שיבוץ) לפני שיבוץ.</p>
             ) : (
