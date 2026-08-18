@@ -8,6 +8,7 @@ import { Loader2, Save, CheckCircle2, Trash2 } from "lucide-react";
 import ContentAIActions from "./ContentAIActions";
 import ContentAIChat from "./ContentAIChat";
 import AIRecommendationsView from "./AIRecommendationsView";
+import ContentAttachments from "./ContentAttachments";
 import ExecutionControls from "./ExecutionControls";
 import { PLATFORM_LABELS, getWeekStart } from "@/lib/communityConfig";
 import {
@@ -19,7 +20,7 @@ const EMPTY = {
   title: "", topic: "", output_type: "post", source_type: "", planned_date: "",
   platform: "", related_customer_name: "", status: "idea", source_text: "",
   post_draft: "", image_prompt: "", hashtags: [], final_content: "", source_note: "",
-  ai_recommendations: null,
+  ai_recommendations: null, attachments: [],
 };
 
 export default function ContentItemDrawer({ item, onClose, onSaved, onDeleted }) {
@@ -30,7 +31,7 @@ export default function ContentItemDrawer({ item, onClose, onSaved, onDeleted })
 
   useEffect(() => {
     if (item) {
-      setForm({ ...EMPTY, ...item, status: normalizeStatus(item.status), hashtags: item.hashtags || [] });
+      setForm({ ...EMPTY, ...item, status: normalizeStatus(item.status), hashtags: item.hashtags || [], attachments: item.attachments || [] });
       setThread(item.ai_thread_notes || []);
     }
   }, [item?.id]);
@@ -48,6 +49,7 @@ export default function ContentItemDrawer({ item, onClose, onSaved, onDeleted })
       platform: form.platform || undefined, related_customer_name: form.related_customer_name,
       status: form.status, source_text: form.source_text, post_draft: form.post_draft,
       image_prompt: form.image_prompt, hashtags: form.hashtags, source_note: form.source_note,
+      attachments: form.attachments || [],
     };
     if (form.ai_recommendations) payload.ai_recommendations = form.ai_recommendations;
     if (form.planned_date) {
@@ -160,6 +162,8 @@ export default function ContentItemDrawer({ item, onClose, onSaved, onDeleted })
               placeholder="הדביקו כאן תמלול ראיון, סיכום פגישה, תוצאות סקר או כל טקסט מקור..."
               className="mt-1 text-sm" />
           </div>
+
+          <ContentAttachments attachments={form.attachments} onChange={(a) => set("attachments", a)} />
 
           <ContentAIActions form={form} setForm={setForm} />
 
