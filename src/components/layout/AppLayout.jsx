@@ -1,10 +1,10 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { LayoutDashboard, Ticket, AlertTriangle, Plus, Settings, Users, LogOut, Menu, X, Bell, MapPin, Star, Archive, Sparkles, Shield, CalendarDays, GraduationCap, Megaphone } from "lucide-react";
+import { LayoutDashboard, Ticket, AlertTriangle, Plus, Settings, Users, LogOut, Menu, X, Bell, MapPin, Star, Archive, Sparkles, Shield, CalendarDays, GraduationCap, Megaphone, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { isAdmin, isManagerOrAdmin, canManagePermissions, canManageCustomers } from "@/lib/permissions";
+import { isAdmin, isManagerOrAdmin, canManagePermissions, canManageCustomers, canManageMaintenancePlan } from "@/lib/permissions";
 
 export default function AppLayout() {
   const location = useLocation();
@@ -31,6 +31,7 @@ export default function AppLayout() {
   { label: "הגדרות התראות", path: "/notification-settings", icon: Bell, adminOnly: true },
   { label: "ניהול לקוחות", path: "/users", icon: Users, managerOnly: true },
   { label: "קהילה ותוכן", path: "/community-content", icon: Megaphone, managerOnly: true },
+  { label: "תוכנית תחזוקה", path: "/maintenance-plan", icon: Wrench, maintenanceAccess: true },
   { label: "אירועים והרשמות", path: "/events", icon: CalendarDays, managerOnly: true },
   { label: "קליטת עובד", path: "/onboarding", icon: GraduationCap, managerOnly: true },
   { label: "ניהול הרשאות", path: "/permissions", icon: Shield, adminOnly: true },
@@ -38,6 +39,7 @@ export default function AppLayout() {
   filter((item) => {
     if (item.adminOnly && !adminRole) return false;
     if (item.managerOnly && !mgrOrAdmin) return false;
+    if (item.maintenanceAccess && !canManageMaintenancePlan(user)) return false;
     return true;
   });
 

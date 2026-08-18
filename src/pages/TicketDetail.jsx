@@ -15,7 +15,7 @@ import { StatusBadge, PriorityBadge, SlaBadge } from "@/components/tickets/Ticke
 import { isManagerOrAdmin } from "@/lib/slaUtils";
 import { getTimeRemainingLabel, getDeadlineMs, getOpenedAtMs, isTicketSlaBreached as isTicketBreached } from "@/lib/slaAgent.js";
 import { format } from "date-fns";
-import { ArrowRight, User, Phone, MapPin, Clock, Shield, MessageSquare, Loader2, CheckCircle, AlertTriangle, Star, ExternalLink, Send, Building2, RefreshCw, Mail, Printer } from "lucide-react";
+import { ArrowRight, User, Phone, MapPin, Clock, Shield, MessageSquare, Loader2, CheckCircle, AlertTriangle, Star, ExternalLink, Send, Building2, RefreshCw, Mail, Printer, Wrench } from "lucide-react";
 import FeedbackModal from "@/components/tickets/FeedbackModal";
 import AttachmentUploader from "@/components/tickets/AttachmentUploader";
 import SlaExclusionDialog from "@/components/tickets/SlaExclusionDialog";
@@ -443,6 +443,9 @@ export default function TicketDetail() {
                   <Separator />
                   <Button className="w-full gap-1 text-sm" onClick={() => setCloseDialog(true)}>
                     <CheckCircle className="w-4 h-4" />סגור קריאה
+                  </Button>
+                  <Button variant="outline" className="w-full gap-1 text-sm justify-start" onClick={() => navigate(`/maintenance-plan?from_ticket=${ticket.id}`)}>
+                    <Wrench className="w-4 h-4" />צור משימת תחזוקה
                   </Button>
                 </CardContent>
               </Card>

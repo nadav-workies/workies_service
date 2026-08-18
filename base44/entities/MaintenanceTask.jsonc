@@ -1,0 +1,195 @@
+{
+  "name": "MaintenanceTask",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "\u05db\u05d5\u05ea\u05e8\u05ea \u05de\u05e9\u05d9\u05de\u05ea \u05d4\u05ea\u05d7\u05d6\u05d5\u05e7\u05d4"
+    },
+    "description": {
+      "type": "string",
+      "description": "\u05ea\u05d9\u05d0\u05d5\u05e8 / \u05e4\u05e8\u05d8\u05d9 \u05d4\u05de\u05e9\u05d9\u05de\u05d4"
+    },
+    "planned_date": {
+      "type": "string",
+      "format": "date",
+      "description": "\u05ea\u05d0\u05e8\u05d9\u05da \u05de\u05ea\u05d5\u05db\u05e0\u05df \u05dc\u05d1\u05d9\u05e6\u05d5\u05e2"
+    },
+    "start_time": {
+      "type": "string",
+      "description": "\u05e9\u05e2\u05ea \u05d4\u05ea\u05d7\u05dc\u05d4 (HH:MM)"
+    },
+    "duration_minutes": {
+      "type": "number",
+      "default": 60,
+      "description": "\u05de\u05e9\u05da \u05de\u05e9\u05d5\u05e2\u05e8 \u05d1\u05d3\u05e7\u05d5\u05ea"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "general",
+        "electrical",
+        "plumbing",
+        "cleaning",
+        "ac",
+        "repairs",
+        "inspection",
+        "safety",
+        "other"
+      ],
+      "default": "general",
+      "description": "\u05e7\u05d8\u05d2\u05d5\u05e8\u05d9\u05d9\u05ea \u05ea\u05d7\u05d6\u05d5\u05e7\u05d4"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "planned",
+        "in_progress",
+        "done",
+        "not_done",
+        "checked",
+        "cancelled"
+      ],
+      "default": "planned",
+      "description": "\u05e1\u05d8\u05d8\u05d5\u05e1 \u05d1\u05d9\u05e6\u05d5\u05e2"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "default": "medium",
+      "description": "\u05e2\u05d3\u05d9\u05e4\u05d5\u05ea"
+    },
+    "assigned_maintenance_worker": {
+      "type": "string",
+      "default": "\u05e2\u05d8\u05d9\u05d4",
+      "description": "\u05d0\u05d9\u05e9 \u05ea\u05d7\u05d6\u05d5\u05e7\u05d4 \u05de\u05d5\u05e7\u05e6\u05d4 (\u05d1\u05e8\u05d9\u05e8\u05ea \u05de\u05d7\u05d3\u05dc: \u05e2\u05d8\u05d9\u05d4)"
+    },
+    "location": {
+      "type": "string",
+      "description": "\u05de\u05d9\u05e7\u05d5\u05dd / \u05d7\u05d3\u05e8 / \u05d0\u05d6\u05d5\u05e8"
+    },
+    "source_ticket_id": {
+      "type": "string",
+      "description": "\u05de\u05d6\u05d4\u05d4 \u05e7\u05e8\u05d9\u05d0\u05ea \u05e9\u05d9\u05e8\u05d5\u05ea \u05de\u05e7\u05d5\u05e8 (\u05d0\u05dd \u05d4\u05d5\u05de\u05e8\u05d4 \u05de\u05e7\u05e8\u05d9\u05d0\u05d4)"
+    },
+    "source_ticket_title": {
+      "type": "string",
+      "description": "\u05de\u05e1\u05e4\u05e8/\u05db\u05d5\u05ea\u05e8\u05ea \u05e7\u05e8\u05d9\u05d0\u05ea \u05e9\u05d9\u05e8\u05d5\u05ea \u05de\u05e7\u05d5\u05e8"
+    },
+    "notes": {
+      "type": "string",
+      "description": "\u05d4\u05e2\u05e8\u05d5\u05ea"
+    },
+    "execution_note": {
+      "type": "string",
+      "description": "\u05e1\u05d9\u05d1\u05ea \u05d0\u05d9 \u05d1\u05d9\u05e6\u05d5\u05e2 / \u05d4\u05e2\u05e8\u05ea \u05d1\u05d9\u05e6\u05d5\u05e2"
+    },
+    "checked_by": {
+      "type": "string",
+      "description": "\u05de\u05d9 \u05d1\u05d9\u05e7\u05e8 \u05d0\u05ea \u05d4\u05d1\u05d9\u05e6\u05d5\u05e2"
+    },
+    "checked_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u05de\u05d5\u05e2\u05d3 \u05d1\u05e7\u05e8\u05d4"
+    },
+    "recurring": {
+      "type": "string",
+      "enum": [
+        "one_time",
+        "daily",
+        "weekly",
+        "monthly"
+      ],
+      "default": "one_time",
+      "description": "\u05e1\u05d5\u05d2 \u05d7\u05d6\u05e8\u05ea\u05d9\u05d5\u05ea"
+    }
+  },
+  "required": [
+    "title",
+    "planned_date"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "operations_manager"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "maintenance_manager"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "operations_manager"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "maintenance_manager"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "operations_manager"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "maintenance_manager"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

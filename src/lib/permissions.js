@@ -71,3 +71,9 @@ export function canEditTicket(user) {
 export function canCloseTicket(user) {
   return isManagerOrAdmin(user);
 }
+
+// ── תוכנית תחזוקה — Admin + Manager + מנהל תפעול + מנהל תחזוקה ─────────
+
+export function canManageMaintenancePlan(user) {
+  return ["admin", "manager", "operations_manager", "maintenance_manager"].includes(user?.role);
+}

@@ -32,6 +32,7 @@ import OnboardingDetail from '@/pages/OnboardingDetail';
 import MyOnboarding from '@/pages/MyOnboarding';
 import OnboardingAccessPage from '@/pages/OnboardingAccessPage';
 import CommunityContent from '@/pages/CommunityContent';
+import MaintenancePlan from '@/pages/MaintenancePlan';
 
 const PUBLIC_ROUTES = ['/event-registration', '/feedback', '/onboarding/access'];
 
@@ -79,6 +80,7 @@ const AuthenticatedApp = () => {
           <Route path="/onboarding/:id" element={<OnboardingDetail />} />
           <Route path="/my-onboarding" element={<MyOnboarding />} />
           <Route path="/community-content" element={<CommunityContent />} />
+          <Route path="/maintenance-plan" element={<MaintenancePlan />} />
         </Route>
       </Route>
       <Route path="/onboarding/access/:token" element={<OnboardingAccessPage />} />
