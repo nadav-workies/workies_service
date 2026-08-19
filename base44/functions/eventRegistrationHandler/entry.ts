@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { escapeHtml } from '../../shared/security.ts';
 
 function normalizeEmail(val) {
   return String(val || '').trim().toLowerCase();
@@ -156,7 +157,7 @@ Deno.serve(async (req) => {
       // Send confirmation email
       const emailBody = `<div dir="rtl" style="font-family: Arial, sans-serif; line-height: 1.6;">
   <h2>הרשמתך התקבלה</h2>
-  <p>שלום ${full_name},</p>
+  <p>שלום ${escapeHtml(full_name)},</p>
   <p>נרשמת בהצלחה לאירוע:</p>
   <ul>
     <li><strong>אירוע:</strong> ${event.event_name}</li>

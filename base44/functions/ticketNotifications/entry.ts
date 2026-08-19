@@ -308,7 +308,9 @@ Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   const now = new Date();
 
-  const { action, ticket, newStatus, rating, comment } = await req.json();
+  const reqBody = await req.json();
+  const { action, newStatus, rating, comment } = reqBody;
+  let ticket = reqBody.ticket;
 
   if (!action) {
     return Response.json({ error: 'missing action' }, { status: 400 });
@@ -317,6 +319,37 @@ Deno.serve(async (req) => {
   const ACTIONS_WITHOUT_TICKET = ['check_sla', 'check_post_closure', 'ensure_defaults'];
   if (!ticket && !ACTIONS_WITHOUT_TICKET.includes(action)) {
     return Response.json({ error: 'missing ticket' }, { status: 400 });
+  }
+
+  // Security: ticket-bearing actions require an authenticated caller, and the
+  // ticket data is never trusted from the request body — the server-side record
+  // is loaded by id and overrides any client-supplied fields (including
+  // feedback_token), so no service-role write can be driven by forged data.
+  let user = null;
+  try { user = await base44.auth.me(); } catch (_e) { user = null; }
+  const isManager = !!user && (user.role === 'admin' || user.role === 'manager');
+
+  if (ticket) {
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (!ticket.id) {
+      return Response.json({ error: 'missing ticket id' }, { status: 400 });
+    }
+    let serverTicket = null;
+    try {
+      const serverTickets = await base44.asServiceRole.entities.ServiceTicket.filter({ id: ticket.id });
+      serverTicket = serverTickets[0] || null;
+    } catch (_e) {
+      serverTicket = null;
+    }
+    if (!serverTicket) {
+      return Response.json({ error: 'ticket not found' }, { status: 404 });
+    }
+    if (!isManager && serverTicket.created_by !== user.email) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    ticket = { ...ticket, ...serverTicket };
   }
 
   // Ensure defaults on every call

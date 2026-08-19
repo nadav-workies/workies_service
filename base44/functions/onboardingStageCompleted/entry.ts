@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
+import { escapeHtml } from '../../shared/security.ts';
 
-Deno.serve(async (req) => {
+export default async function(req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
 
@@ -19,11 +20,29 @@ Deno.serve(async (req) => {
       return Response.json({ skipped: true, reason: 'was already completed' });
     }
 
+    // Security: never trust the request payload. Load the stage server-side and
+    // verify it is genuinely completed — all email content and recipients are
+    // derived from the server-side record only.
+    const stageId = data.id || (event && event.entity_id) || '';
+    if (!stageId) {
+      return Response.json({ skipped: true, reason: 'no stage id' });
+    }
+    let stage = null;
+    try {
+      const stages = await base44.asServiceRole.entities.OnboardingStage.filter({ id: stageId });
+      stage = stages[0] || null;
+    } catch (_e) {
+      stage = null;
+    }
+    if (!stage || stage.status !== 'completed') {
+      return Response.json({ skipped: true, reason: 'stage not found or not completed' });
+    }
+
     // Get the onboarding track for context (non-fatal if lookup fails)
     let onboarding = null;
-    if (data.onboarding_id) {
+    if (stage.onboarding_id) {
       try {
-        const tracks = await base44.asServiceRole.entities.EmployeeOnboarding.filter({ id: data.onboarding_id });
+        const tracks = await base44.asServiceRole.entities.EmployeeOnboarding.filter({ id: stage.onboarding_id });
         onboarding = tracks[0] || null;
       } catch (_e) {
         // Continue without track context
@@ -33,8 +52,8 @@ Deno.serve(async (req) => {
     // Determine recipients: assigned mentor user first, otherwise all managers/admins
     let recipients = [];
 
-    if (data.mentor_user_id) {
-      const mentorUsers = await base44.asServiceRole.entities.User.filter({ id: data.mentor_user_id });
+    if (stage.mentor_user_id) {
+      const mentorUsers = await base44.asServiceRole.entities.User.filter({ id: stage.mentor_user_id });
       if (mentorUsers[0] && mentorUsers[0].email) {
         recipients.push(mentorUsers[0]);
       }
@@ -49,14 +68,15 @@ Deno.serve(async (req) => {
       return Response.json({ sent: 0, reason: 'no recipients found' });
     }
 
-    const employeeName = data.employee_name || (onboarding && onboarding.employee_name) || 'משתמש/ת';
-    const stageTitle = data.title || 'שלב חפיפה';
-    const quizScore = data.quiz_score;
-    const attempts = data.quiz_attempts || 0;
-    const dayNumber = data.day_number;
-    const category = data.category;
-    const mentorName = data.mentor_name || (onboarding && onboarding.current_manager_name) || '—';
-    const roleTitle = (onboarding && onboarding.role_title) || '—';
+    // All fields HTML-escaped before interpolation into the email body
+    const employeeName = escapeHtml(stage.employee_name || (onboarding && onboarding.employee_name) || 'משתמש/ת');
+    const stageTitle = escapeHtml(stage.title || 'שלב חפיפה');
+    const quizScore = stage.quiz_score;
+    const attempts = stage.quiz_attempts || 0;
+    const dayNumber = stage.day_number;
+    const category = escapeHtml(stage.category || '—');
+    const mentorName = escapeHtml(stage.mentor_name || (onboarding && onboarding.current_manager_name) || '—');
+    const roleTitle = escapeHtml((onboarding && onboarding.role_title) || '—');
 
     // Generate recommendations based on score and attempts
     const recommendations = [];
@@ -79,13 +99,13 @@ Deno.serve(async (req) => {
       recommendations.push('⚠️ בוצעו 3 ניסיונות. נדרשת למידה מחדש עם החונך לפני פתיחת המבדק מחדש.');
     }
 
-    if (data.requires_mentor_first_session && !data.first_session_done) {
+    if (stage.requires_mentor_first_session && !stage.first_session_done) {
       recommendations.push('⚠️ השלב דורש מפגש ראשון עם החונך שטרם סומן כבוצע.');
     }
 
     recommendations.push('מומלץ לתעד שיחת סיכום ולבדוק מוכנות לשלב הבא.');
 
-    const subject = 'סיום שלב חפיפה | ' + employeeName + ' | ' + stageTitle + ' | Workies';
+    const subject = 'סיום שלב חפיפה | ' + (stage.employee_name || 'משתמש/ת') + ' | ' + (stage.title || 'שלב חפיפה') + ' | Workies';
 
     // Build summary text outside template literal to avoid nesting issues
     const dayText = dayNumber ? ' (יום ' + dayNumber + ')' : '';
@@ -108,7 +128,7 @@ Deno.serve(async (req) => {
           '<tr><td style="padding:6px;font-weight:bold;">תפקיד</td><td>' + roleTitle + '</td></tr>' +
           '<tr><td style="padding:6px;font-weight:bold;">שלב</td><td>' + stageTitle + '</td></tr>' +
           '<tr><td style="padding:6px;font-weight:bold;">יום</td><td>' + (dayNumber || '—') + '</td></tr>' +
-          '<tr><td style="padding:6px;font-weight:bold;">קטגוריה</td><td>' + (category || '—') + '</td></tr>' +
+          '<tr><td style="padding:6px;font-weight:bold;">קטגוריה</td><td>' + category + '</td></tr>' +
           '<tr><td style="padding:6px;font-weight:bold;">חונך</td><td>' + mentorName + '</td></tr>' +
           scoreRow +
           '<tr><td style="padding:6px;font-weight:bold;">ניסיונות מבדק</td><td>' + attempts + '</td></tr>' +
@@ -136,13 +156,13 @@ Deno.serve(async (req) => {
     }
 
     // Log to audit trail
-    if (data.onboarding_id) {
+    if (stage.onboarding_id) {
       await base44.asServiceRole.entities.OnboardingAuditLog.create({
-        onboarding_id: data.onboarding_id,
-        employee_id: data.employee_id,
-        employee_name: data.employee_name,
-        stage_id: data.id || (event && event.entity_id) || '',
-        stage_title: stageTitle,
+        onboarding_id: stage.onboarding_id,
+        employee_id: stage.employee_id,
+        employee_name: stage.employee_name,
+        stage_id: stage.id,
+        stage_title: stage.title || 'שלב חפיפה',
         actor_name: 'מערכת אוטומטית',
         action: 'סיום שלב — נשלח מייל סיכום והמלצות ל-' + sent + ' נמענים',
         old_value: (old_data && old_data.status) || '—',
@@ -154,4 +174,4 @@ Deno.serve(async (req) => {
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
-});
+}

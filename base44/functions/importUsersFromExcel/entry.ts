@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import * as XLSX from 'npm:xlsx@0.18.5';
+import { assertSafeFileUrl } from '../../shared/security.ts';
 
 // --- Helpers ---
 
@@ -80,6 +81,13 @@ Deno.serve(async (req) => {
     const { file_url, dry_run, file_name } = await req.json();
     if (!file_url) {
       return Response.json({ error: 'file_url is required' }, { status: 400 });
+    }
+
+    // --- SSRF guard: only public https URLs are fetched ---
+    try {
+      assertSafeFileUrl(file_url);
+    } catch (urlErr) {
+      return Response.json({ error: 'Invalid file_url: ' + urlErr.message }, { status: 400 });
     }
 
     // --- Fetch and parse the file directly (handles both Excel and CSV) ---

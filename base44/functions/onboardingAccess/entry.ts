@@ -1,4 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.40";
+import { gradeQuiz } from "../../shared/onboardingQuizKeys.ts";
 
 async function hashToken(token) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token));
@@ -137,10 +138,16 @@ Deno.serve(async (req) => {
       if (!stage || stage.onboarding_id !== link.onboarding_id)
         return Response.json({ ok: false, error: "not_found" }, { status: 404 });
 
+      // Security: never trust client-supplied passed/score — grade the submitted
+      // answers server-side against the answer key for this stage.
+      const grading = gradeQuiz(stage.template_stage_id, body.answers);
+      if (!grading) {
+        return Response.json({ ok: false, error: "quiz_not_found" }, { status: 400 });
+      }
+
       const attemptNumber = (stage.quiz_attempts || 0) + 1;
-      const passed = body.passed;
-      const maxAttempts = body.max_attempts || 3;
-      const newStatus = passed ? "completed" : (attemptNumber >= maxAttempts ? "relearning" : "failed");
+      const passed = grading.passed;
+      const newStatus = passed ? "completed" : (attemptNumber >= grading.max_attempts ? "relearning" : "failed");
 
       await base44.asServiceRole.entities.QuizAttempt.create({
         onboarding_id: link.onboarding_id,
@@ -153,16 +160,16 @@ Deno.serve(async (req) => {
         started_at: body.started_at,
         submitted_at: new Date().toISOString(),
         duration_seconds: body.duration_seconds,
-        correct_answers: body.correct_answers,
-        total_questions: body.total_questions,
-        score_1_to_10: body.score_1_to_10,
+        correct_answers: grading.correct,
+        total_questions: grading.total,
+        score_1_to_10: grading.score,
         passed,
-        answers: body.answers || [],
+        answers: grading.answers,
       });
 
       await base44.asServiceRole.entities.OnboardingStage.update(stage.id, {
         status: newStatus,
-        quiz_score: body.score_1_to_10,
+        quiz_score: grading.score,
         quiz_attempts: attemptNumber,
         completed_at: passed ? new Date().toISOString() : null,
       });
@@ -174,10 +181,10 @@ Deno.serve(async (req) => {
         stage_id: stage.id,
         stage_title: stage.title,
         actor_name: link.employee_name,
-        action: `מבדק ${passed ? "עבר" : "נכשל"} — ציון ${body.score_1_to_10}`,
+        action: `מבדק ${passed ? "עבר" : "נכשל"} — ציון ${grading.score}`,
       });
 
-      return Response.json({ ok: true, passed, status: newStatus, attemptNumber });
+      return Response.json({ ok: true, passed, status: newStatus, attemptNumber, score: grading.score, correct: grading.correct, total: grading.total });
     }
 
     if (action === "submitClarification") {

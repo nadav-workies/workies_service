@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { escapeHtml } from '../../shared/security.ts';
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
@@ -9,6 +10,15 @@ Deno.serve(async (req) => {
   }
 
   const { ticket, type } = await req.json();
+  if (!ticket || typeof ticket !== 'object') {
+    return Response.json({ error: 'missing ticket' }, { status: 400 });
+  }
+
+  // HTML-escape all ticket fields before interpolating into the email body
+  const t = {};
+  for (const [key, value] of Object.entries(ticket)) {
+    t[key] = typeof value === 'string' ? escapeHtml(value) : value;
+  }
 
   // Get all managers and admins
   const allUsers = await base44.asServiceRole.entities.User.list();
@@ -19,9 +29,9 @@ Deno.serve(async (req) => {
   }
 
   const subjects = {
-    urgent: `קריאת שירות דחופה נפתחה | ${ticket.ticket_number} | Workies AIO`,
-    warning: `תזכורת SLA לפני חריגה | ${ticket.ticket_number} | Workies AIO`,
-    breach: `חריגת SLA בקריאת שירות | ${ticket.ticket_number} | Workies AIO`,
+    urgent: `קריאת שירות דחופה נפתחה | ${t.ticket_number} | Workies AIO`,
+    warning: `תזכורת SLA לפני חריגה | ${t.ticket_number} | Workies AIO`,
+    breach: `חריגת SLA בקריאת שירות | ${t.ticket_number} | Workies AIO`,
   };
 
   const bodiesHtml = {
@@ -29,15 +39,15 @@ Deno.serve(async (req) => {
       <div dir="rtl" style="font-family: sans-serif; max-width: 600px; margin: auto;">
         <h2 style="color:#f97316;">⚠️ קריאת שירות דחופה נפתחה</h2>
         <table style="width:100%;border-collapse:collapse;">
-          <tr><td style="padding:6px;font-weight:bold;">מספר קריאה</td><td>${ticket.ticket_number}</td></tr>
-          <tr><td style="padding:6px;font-weight:bold;">לקוח</td><td>${ticket.customer_name}</td></tr>
-          <tr><td style="padding:6px;font-weight:bold;">חדר</td><td>${ticket.room_number}</td></tr>
-          <tr><td style="padding:6px;font-weight:bold;">טלפון</td><td>${ticket.phone}</td></tr>
-          <tr><td style="padding:6px;font-weight:bold;">סוג קריאה</td><td>${ticket.ticket_type || '—'}</td></tr>
-          <tr><td style="padding:6px;font-weight:bold;">מהות התקלה</td><td>${ticket.issue_description}</td></tr>
-          <tr><td style="padding:6px;font-weight:bold;">אזור</td><td>${ticket.area}</td></tr>
-          <tr><td style="padding:6px;font-weight:bold;">דחיפות</td><td>${ticket.priority}</td></tr>
-          <tr><td style="padding:6px;font-weight:bold;">יעד SLA</td><td>${ticket.sla_label || '—'}</td></tr>
+          <tr><td style="padding:6px;font-weight:bold;">מספר קריאה</td><td>${t.ticket_number}</td></tr>
+          <tr><td style="padding:6px;font-weight:bold;">לקוח</td><td>${t.customer_name}</td></tr>
+          <tr><td style="padding:6px;font-weight:bold;">חדר</td><td>${t.room_number}</td></tr>
+          <tr><td style="padding:6px;font-weight:bold;">טלפון</td><td>${t.phone}</td></tr>
+          <tr><td style="padding:6px;font-weight:bold;">סוג קריאה</td><td>${t.ticket_type || '—'}</td></tr>
+          <tr><td style="padding:6px;font-weight:bold;">מהות התקלה</td><td>${t.issue_description}</td></tr>
+          <tr><td style="padding:6px;font-weight:bold;">אזור</td><td>${t.area}</td></tr>
+          <tr><td style="padding:6px;font-weight:bold;">דחיפות</td><td>${t.priority}</td></tr>
+          <tr><td style="padding:6px;font-weight:bold;">יעד SLA</td><td>${t.sla_label || '—'}</td></tr>
         </table>
         <p style="margin-top:20px;"><strong>נדרש: כניסה למערכת ושיוך / טיפול בקריאה.</strong></p>
       </div>`,
@@ -45,12 +55,12 @@ Deno.serve(async (req) => {
       <div dir="rtl" style="font-family: sans-serif; max-width: 600px; margin: auto;">
         <h2 style="color:#f59e0b;">⏰ קריאה מתקרבת לחריגת SLA</h2>
         <table style="width:100%;border-collapse:collapse;">
-          <tr><td style="padding:6px;font-weight:bold;">מספר קריאה</td><td>${ticket.ticket_number}</td></tr>
-          <tr><td style="padding:6px;font-weight:bold;">לקוח</td><td>${ticket.customer_name}</td></tr>
-          <tr><td style="padding:6px;font-weight:bold;">חדר</td><td>${ticket.room_number}</td></tr>
-          <tr><td style="padding:6px;font-weight:bold;">סוג קריאה</td><td>${ticket.ticket_type || '—'}</td></tr>
-          <tr><td style="padding:6px;font-weight:bold;">SLA</td><td>${ticket.sla_label || '—'}</td></tr>
-          <tr><td style="padding:6px;font-weight:bold;">אחראי טיפול</td><td>${ticket.assigned_to || 'לא שויך'}</td></tr>
+          <tr><td style="padding:6px;font-weight:bold;">מספר קריאה</td><td>${t.ticket_number}</td></tr>
+          <tr><td style="padding:6px;font-weight:bold;">לקוח</td><td>${t.customer_name}</td></tr>
+          <tr><td style="padding:6px;font-weight:bold;">חדר</td><td>${t.room_number}</td></tr>
+          <tr><td style="padding:6px;font-weight:bold;">סוג קריאה</td><td>${t.ticket_type || '—'}</td></tr>
+          <tr><td style="padding:6px;font-weight:bold;">SLA</td><td>${t.sla_label || '—'}</td></tr>
+          <tr><td style="padding:6px;font-weight:bold;">אחראי טיפול</td><td>${t.assigned_to || 'לא שויך'}</td></tr>
         </table>
         <p style="margin-top:20px;"><strong>נדרש: בדיקת סטטוס טיפול ועדכון הקריאה.</strong></p>
       </div>`,
@@ -58,13 +68,13 @@ Deno.serve(async (req) => {
       <div dir="rtl" style="font-family: sans-serif; max-width: 600px; margin: auto;">
         <h2 style="color:#ef4444;">🚨 קריאת שירות חרגה מ-SLA</h2>
         <table style="width:100%;border-collapse:collapse;">
-          <tr><td style="padding:6px;font-weight:bold;">מספר קריאה</td><td>${ticket.ticket_number}</td></tr>
-          <tr><td style="padding:6px;font-weight:bold;">לקוח</td><td>${ticket.customer_name}</td></tr>
-          <tr><td style="padding:6px;font-weight:bold;">חדר</td><td>${ticket.room_number}</td></tr>
-          <tr><td style="padding:6px;font-weight:bold;">סוג קריאה</td><td>${ticket.ticket_type || '—'}</td></tr>
-          <tr><td style="padding:6px;font-weight:bold;">SLA שהוגדר</td><td>${ticket.sla_label || '—'}</td></tr>
-          <tr><td style="padding:6px;font-weight:bold;">סטטוס נוכחי</td><td>${ticket.status}</td></tr>
-          <tr><td style="padding:6px;font-weight:bold;">אחראי טיפול</td><td>${ticket.assigned_to || 'לא שויך'}</td></tr>
+          <tr><td style="padding:6px;font-weight:bold;">מספר קריאה</td><td>${t.ticket_number}</td></tr>
+          <tr><td style="padding:6px;font-weight:bold;">לקוח</td><td>${t.customer_name}</td></tr>
+          <tr><td style="padding:6px;font-weight:bold;">חדר</td><td>${t.room_number}</td></tr>
+          <tr><td style="padding:6px;font-weight:bold;">סוג קריאה</td><td>${t.ticket_type || '—'}</td></tr>
+          <tr><td style="padding:6px;font-weight:bold;">SLA שהוגדר</td><td>${t.sla_label || '—'}</td></tr>
+          <tr><td style="padding:6px;font-weight:bold;">סטטוס נוכחי</td><td>${t.status}</td></tr>
+          <tr><td style="padding:6px;font-weight:bold;">אחראי טיפול</td><td>${t.assigned_to || 'לא שויך'}</td></tr>
         </table>
         <p style="margin-top:20px;"><strong>נדרש: טיפול מיידי, תיעוד סיבת חריגה ועדכון לקוח.</strong></p>
       </div>`,
