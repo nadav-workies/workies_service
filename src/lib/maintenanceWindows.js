@@ -65,6 +65,15 @@ export const findMatchingWindow = (windows, date, startTime, worker) => {
 export const isScheduleAllowed = (windows, date, startTime, worker) =>
   !!findMatchingWindow(windows, date, startTime, worker);
 
+/** Upcoming dates (from fromDate, inclusive) that have an open window for the worker */
+export const upcomingWindowDates = (windows, worker, fromDate, limit = 6) =>
+  Array.from(new Set(
+    windows
+      .filter(w => w.date >= fromDate && (w.availability || "available") === "available")
+      .filter(w => !w.available_workers?.length || w.available_workers.includes(worker))
+      .map(w => w.date)
+  )).sort().slice(0, limit);
+
 /** Latest earlier week that has windows defined — used for weekly carry-forward */
 export const latestDefinedWeekBefore = (windows, weekStart) => {
   const weeks = Array.from(new Set(windows.map(w => w.week_start_date || getWeekStart(w.date))))

@@ -6,7 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MAINTENANCE_CATEGORIES, MAINTENANCE_STATUSES, MAINTENANCE_PRIORITIES, DEFAULT_WORKER } from "@/lib/maintenanceConfig";
-import { workerWindowsForDate, findMatchingWindow, workerShiftForDate, isWithinShift } from "@/lib/maintenanceWindows";
+import { workerWindowsForDate, findMatchingWindow, workerShiftForDate, isWithinShift, upcomingWindowDates } from "@/lib/maintenanceWindows";
+import { formatHebrewDate } from "@/lib/maintenanceConfig";
 
 const EMPTY = {
   title: "", description: "", planned_date: "", start_time: "09:00", duration_minutes: 60,
@@ -30,6 +31,12 @@ export default function MaintenanceTaskForm({ open, onClose, onSave, initial, de
   const shift = workerShiftForDate(workerRecord, form.planned_date);
   const shiftOk = isWithinShift(shift, form.start_time);
   const scheduleOk = !!matchingWindow && shiftOk;
+  const today = new Date().toISOString().slice(0, 10);
+  const nextDates = upcomingWindowDates(windows, worker, today).filter(d => d !== form.planned_date);
+  const jumpToDate = (d) => {
+    const first = workerWindowsForDate(windows, d, worker)[0];
+    setForm(f => ({ ...f, planned_date: d, start_time: first?.start_time || f.start_time }));
+  };
 
   const submit = () => {
     if (!form.title?.trim() || !form.planned_date || !scheduleOk) return;
@@ -97,7 +104,11 @@ export default function MaintenanceTaskForm({ open, onClose, onSave, initial, de
               <p className="text-red-700">{worker} לא עובד ביום זה לפי יומן העבודה (טאב עובדים).</p>
             )}
             {dayWindows.length === 0 ? (
-              <p className="text-red-700">אין חלון זמין בתאריך זה לעובד זה — יש להגדיר חלון שיבוץ ירוק (טאב חלונות שיבוץ) לפני שיבוץ.</p>
+              <p className="text-red-700">
+                {nextDates.length > 0
+                  ? "אין חלון זמין בתאריך שנבחר — בחר תאריך זמין מהרשימה למטה."
+                  : "אין חלונות שיבוץ קרובים לעובד זה — יש להגדיר חלון שיבוץ ירוק (טאב חלונות שיבוץ) לפני שיבוץ."}
+              </p>
             ) : (
               <div className="flex flex-wrap gap-1.5">
                 {dayWindows.map(w => (
@@ -113,6 +124,18 @@ export default function MaintenanceTaskForm({ open, onClose, onSave, initial, de
               </div>
             )}
             {dayWindows.length > 0 && !scheduleOk && <p className="text-red-700">שעת ההתחלה אינה בתוך חלון זמין — בחר חלון מהרשימה.</p>}
+            {nextDates.length > 0 && (
+              <div className="pt-1 border-t border-current/10">
+                <p className="text-muted-foreground mb-1">תאריכים קרובים עם חלון זמין ל{worker}:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {nextDates.map(d => (
+                    <button key={d} type="button" onClick={() => jumpToDate(d)} className="px-2 py-1 rounded border bg-card hover:bg-green-50 hover:border-green-400">
+                      {formatHebrewDate(d)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="space-y-1">

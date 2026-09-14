@@ -17,7 +17,7 @@ import MaintenanceMonthCalendar from "@/components/maintenance/MaintenanceMonthC
 import MaintenanceTasksTable from "@/components/maintenance/MaintenanceTasksTable";
 import MaintenanceWindowsTab from "@/components/maintenance/MaintenanceWindowsTab";
 import MaintenanceWorkersTab from "@/components/maintenance/MaintenanceWorkersTab";
-import { DEFAULT_WORKERS, weekDates as buildWeekDates } from "@/lib/maintenanceWindows";
+import { DEFAULT_WORKERS, weekDates as buildWeekDates, upcomingWindowDates } from "@/lib/maintenanceWindows";
 
 export default function MaintenancePlan() {
   const navigate = useNavigate();
@@ -183,6 +183,7 @@ export default function MaintenancePlan() {
 
   if (!user) return <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
   const admin = isAdmin(user);
+  const todayStr = new Date().toISOString().slice(0, 10);
 
   const monthLabel = new Date(monthStr + "-01T00:00:00").toLocaleDateString("he-IL", { month: "long", year: "numeric" });
 
@@ -404,7 +405,7 @@ export default function MaintenancePlan() {
           location: fromTicket.room_number ? `חדר ${fromTicket.room_number}` : "",
           source_ticket_id: fromTicket.id, source_ticket_title: fromTicket.ticket_number,
         } : null)}
-        defaultDate={dateParam || addDays(weekStart, 0)}
+        defaultDate={dateParam || upcomingWindowDates(windows, DEFAULT_WORKER, weekStart > todayStr ? weekStart : todayStr, 1)[0] || weekStart}
         windows={windows}
         workers={workerNames}
         workerRecords={workerRecords}
