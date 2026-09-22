@@ -12,15 +12,28 @@ export function daysUntilBirthday(birthdate) {
   return Math.round((next - today) / 86400000);
 }
 
+/** The registered user matching a tenant (by email, then by room) */
+export function tenantUser(t, users) {
+  const email = normalizeEmail(t.email);
+  const byEmail = email && users.find(u => normalizeEmail(u.email) === email);
+  if (byEmail) return byEmail;
+  const rn = String(t.room_number || "").trim();
+  return (rn && users.find(u => String(u.default_room_number || u.room_number || "").trim() === rn)) || null;
+}
+
 /** Resolve a tenant's birthdate — own field, or the matching registered user's */
 export function tenantBirthdate(t, users) {
-  if (t.birthdate) return t.birthdate;
-  const email = normalizeEmail(t.email);
-  const byEmail = users.find(u => normalizeEmail(u.email) === email && u.birthdate);
-  if (email && byEmail) return byEmail.birthdate;
-  const rn = String(t.room_number || "").trim();
-  const byRoom = users.find(u => String(u.default_room_number || u.room_number || "").trim() === rn && u.birthdate);
-  return rn && byRoom ? byRoom.birthdate : null;
+  return t.birthdate || tenantUser(t, users)?.birthdate || null;
+}
+
+/** The person's name (never the company name) */
+export function tenantPersonName(t, users) {
+  const contact = String(t.contact_name || "").trim();
+  const company = String(t.customer_name || "").trim();
+  if (contact && contact !== company) return contact;
+  const u = tenantUser(t, users);
+  if (u?.full_name) return u.full_name;
+  return contact || company || "—";
 }
 
 /** Unified birthday rows for contacts + employees */
@@ -31,7 +44,7 @@ export function buildBirthdayRows(tenants, employees, users) {
     if (!bd) continue;
     rows.push({
       key: `t-${t.id}`, kind: "contact", tenant: t, birthdate: bd,
-      name: t.contact_name || t.customer_name || "—",
+      name: tenantPersonName(t, users),
       customer: t.customer_name || "", room: t.room_label || t.room_number || "",
       email: t.email || "", phone: t.phone || "",
     });
