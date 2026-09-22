@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Cake, Loader2, Search, Bell, Clock, CalendarDays, Mail, Phone, Pencil } from "lucide-react";
 import { buildBirthdayRows, MONTHS_HE } from "@/lib/birthdays";
 import EditTenantDialog from "@/components/users/EditTenantDialog";
+import { isActiveTenant } from "@/lib/tenantStatus";
 
 export default function BirthdaysTab() {
   const qc = useQueryClient();
@@ -12,7 +13,8 @@ export default function BirthdaysTab() {
   const [search, setSearch] = useState("");
   const [editingTenant, setEditingTenant] = useState(null);
 
-  const { data: tenants = [], isLoading } = useQuery({ queryKey: ["room-tenants"], queryFn: () => base44.entities.RoomTenant.list("-created_date", 2000) });
+  const { data: allTenants = [], isLoading } = useQuery({ queryKey: ["room-tenants"], queryFn: () => base44.entities.RoomTenant.list("-created_date", 2000) });
+  const tenants = allTenants.filter(isActiveTenant);
   const { data: employees = [] } = useQuery({ queryKey: ["customer-employees-all"], queryFn: () => base44.entities.CustomerEmployee.list("name", 2000) });
   const { data: users = [] } = useQuery({ queryKey: ["users-for-tenants"], queryFn: () => base44.entities.User.list("-created_date", 500) });
 

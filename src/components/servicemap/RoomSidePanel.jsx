@@ -14,7 +14,7 @@ export default function RoomSidePanel({ room, roomStatus, onClose }) {
 
   const { data: tenants = [] } = useQuery({
     queryKey: ['room-tenants-panel', room.room_number],
-    queryFn: () => base44.entities.RoomTenant.filter({ room_number: String(room.room_number), matched_room: true }, '-created_date', 20),
+    queryFn: () => base44.entities.RoomTenant.filter({ room_number: String(room.room_number), matched_room: true, customer_status: 'active' }, '-created_date', 20),
     staleTime: 60000,
   });
 

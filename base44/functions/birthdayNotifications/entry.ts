@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
     const people = [
       ...users.map(u => ({ birthdate: u.birthdate, full_name: u.full_name, email: u.email })),
       ...tenants
-        .filter(t => t.birthdate && !userEmails.has(String(t.email || '').toLowerCase()))
+        .filter(t => t.birthdate && String(t.customer_status || '').toLowerCase() !== 'archived' && !userEmails.has(String(t.email || '').toLowerCase()))
         .map(t => ({ birthdate: t.birthdate, full_name: `${t.contact_name || t.customer_name} (${t.customer_name || 'לקוח'})`, email: t.email })),
       ...employees.map(e => ({ birthdate: e.birthdate, full_name: `${e.name} (עובד/ת — ${e.customer_name || ''})`, email: e.email })),
     ];

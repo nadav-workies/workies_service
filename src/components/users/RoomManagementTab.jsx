@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { WORKIES_ROOMS } from "@/lib/workiesRooms";
 import { format } from "date-fns";
+import { isActiveTenant } from "@/lib/tenantStatus";
 
 const ROOM_STATUS_LABELS = {
   active: "פעיל",
@@ -125,7 +126,7 @@ export default function RoomManagementTab({ currentUser }) {
   });
 
   const tenantsByRoom = {};
-  roomTenants.forEach(t => {
+  roomTenants.filter(isActiveTenant).forEach(t => {
     const rn = String(t.room_number || "");
     if (!rn) return;
     if (!tenantsByRoom[rn]) tenantsByRoom[rn] = [];

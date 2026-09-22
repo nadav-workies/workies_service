@@ -10,6 +10,7 @@ import {
 import { WORKIES_ROOMS } from "@/lib/workiesRooms";
 import EditTenantDialog from "@/components/users/EditTenantDialog";
 import CustomerDrawer from "@/components/community/CustomerDrawer";
+import { isActiveTenant, tenantRoomDisplay } from "@/lib/tenantStatus";
 
 const MAX_BULK_INVITE = 10;
 
@@ -50,10 +51,13 @@ export default function CustomersAndRoomsTab() {
   const [editingTenant, setEditingTenant] = useState(null);
   const [drawerTenant, setDrawerTenant] = useState(null);
 
-  const { data: tenants = [], isLoading } = useQuery({
+  const { data: allTenants = [], isLoading } = useQuery({
     queryKey: ["room-tenants"],
     queryFn: () => base44.entities.RoomTenant.list("-created_date", 2000),
   });
+
+  // Archived customers live in their own tab — this tab shows active ones only.
+  const tenants = allTenants.filter(isActiveTenant);
 
   const { data: users = [] } = useQuery({
     queryKey: ["users-for-tenants"],
@@ -396,7 +400,7 @@ export default function CustomersAndRoomsTab() {
                         <td className="p-2 text-xs" dir="ltr">{t.email || "—"}</td>
                         <td className="p-2 text-xs" dir="ltr">{t.phone || "—"}</td>
                         <td className="p-2 text-xs">
-                          {room?.room_label || t.room_label || t.room_number || "—"}
+                          {room?.room_label || tenantRoomDisplay(t)}
                         </td>
                         <td className="p-2 text-xs" dir="ltr">{t.room_code || "—"}</td>
                         <td className="p-2 text-xs text-center">{t.desk_count != null ? t.desk_count : "—"}</td>

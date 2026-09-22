@@ -80,7 +80,21 @@
     },
     "customer_status": {
       "type": "string",
-      "description": "\u05e1\u05d8\u05d8\u05d5\u05e1 \u05dc\u05e7\u05d5\u05d7, \u05dc\u05d3\u05d5\u05d2\u05de\u05d4 active"
+      "description": "\u05e1\u05d8\u05d8\u05d5\u05e1 \u05dc\u05e7\u05d5\u05d7: active (\u05e4\u05e2\u05d9\u05dc \u05d1\u05de\u05e9\u05e8\u05d3\u05d9\u05dd) \u05d0\u05d5 archived (\u05d0\u05e8\u05db\u05d9\u05d5\u05df)"
+    },
+    "archived_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u05de\u05d5\u05e2\u05d3 \u05d4\u05e2\u05d1\u05e8\u05d4 \u05dc\u05d0\u05e8\u05db\u05d9\u05d5\u05df"
+    },
+    "archived_reason": {
+      "type": "string",
+      "description": "\u05e1\u05d9\u05d1\u05ea \u05d4\u05d4\u05e2\u05d1\u05e8\u05d4 \u05dc\u05d0\u05e8\u05db\u05d9\u05d5\u05df"
+    },
+    "has_room": {
+      "type": "boolean",
+      "default": true,
+      "description": "\u05d4\u05d0\u05dd \u05d4\u05dc\u05e7\u05d5\u05d7 \u05de\u05e9\u05d5\u05d9\u05da \u05dc\u05d7\u05d3\u05e8 \u05de\u05de\u05d5\u05e1\u05e4\u05e8 (false = \u05d0\u05e7\u05d5\u05d5\u05e8\u05d9\u05d5\u05dd / free-pass)"
     },
     "auto_charge_day": {
       "type": "number"
