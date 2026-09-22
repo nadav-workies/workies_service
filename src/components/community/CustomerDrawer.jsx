@@ -9,6 +9,7 @@ import { Loader2, Plus, MessageSquare, Lightbulb, Phone, Mail, MapPin, Briefcase
 import AddConversationDialog from "@/components/community/AddConversationDialog";
 import CustomerEditForm from "@/components/community/CustomerEditForm";
 import ContentRecommendationsTab from "@/components/community/ContentRecommendationsTab";
+import TenantEmployeesSection from "@/components/users/TenantEmployeesSection";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   CONVERSATION_TYPE_LABELS, CONVERSATION_TYPE_COLORS,
@@ -139,6 +140,8 @@ export default function CustomerDrawer({ tenant, open, onClose, onNavigateToCont
               )}
             </div>
           )}
+
+          <TenantEmployeesSection tenant={currentTenant} />
 
           <Button className="w-full gap-2" onClick={() => setShowAddConv(true)}>
             <Plus className="w-4 h-4" /> הוסף סיכום שיחה

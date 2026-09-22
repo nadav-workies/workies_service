@@ -8,6 +8,7 @@ import ImportUsersDialog from "@/components/users/ImportUsersDialog";
 import ImportTenantsDialog from "@/components/users/ImportTenantsDialog";
 import CustomersAndRoomsTab from "@/components/users/CustomersAndRoomsTab";
 import RoomManagementTab from "@/components/users/RoomManagementTab";
+import BirthdaysTab from "@/components/users/BirthdaysTab";
 import { canManageCustomers } from "@/lib/permissions";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -61,12 +62,16 @@ export default function UsersManagement() {
         <TabsList>
           <TabsTrigger value="customers">לקוחות וחדרים</TabsTrigger>
           <TabsTrigger value="rooms">ניהול חדרים</TabsTrigger>
+          <TabsTrigger value="birthdays">ימי הולדת</TabsTrigger>
         </TabsList>
         <TabsContent value="customers">
           <CustomersAndRoomsTab />
         </TabsContent>
         <TabsContent value="rooms">
           <RoomManagementTab currentUser={currentUser} />
+        </TabsContent>
+        <TabsContent value="birthdays">
+          <BirthdaysTab />
         </TabsContent>
       </Tabs>
 

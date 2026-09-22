@@ -26,7 +26,19 @@ Deno.serve(async (req) => {
       return (bd.getMonth() + 1) === todayMonth && bd.getDate() === todayDay;
     });
 
-    const birthdaysTomorrow = users.filter(u => {
+    // Manager reminder covers registered users, customer contacts and customer employees
+    const tenants = await base44.asServiceRole.entities.RoomTenant.list('-created_date', 2000);
+    const employees = await base44.asServiceRole.entities.CustomerEmployee.list('name', 2000);
+    const userEmails = new Set(users.map(u => String(u.email || '').toLowerCase()));
+    const people = [
+      ...users.map(u => ({ birthdate: u.birthdate, full_name: u.full_name, email: u.email })),
+      ...tenants
+        .filter(t => t.birthdate && !userEmails.has(String(t.email || '').toLowerCase()))
+        .map(t => ({ birthdate: t.birthdate, full_name: `${t.contact_name || t.customer_name} (${t.customer_name || 'לקוח'})`, email: t.email })),
+      ...employees.map(e => ({ birthdate: e.birthdate, full_name: `${e.name} (עובד/ת — ${e.customer_name || ''})`, email: e.email })),
+    ];
+
+    const birthdaysTomorrow = people.filter(u => {
       if (!u.birthdate) return false;
       const bd = new Date(u.birthdate + "T00:00:00");
       return (bd.getMonth() + 1) === tomorrowMonth && bd.getDate() === tomorrowDay;
