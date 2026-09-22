@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Loader2, Search, MessageSquare, Users, Lightbulb, Sparkles, Link2, ListChecks, UserX, Cake, ChevronLeft } from "lucide-react";
 import CustomerDrawer from "@/components/community/CustomerDrawer";
+import { isActiveTenant } from "@/lib/tenantStatus";
 
 const FILTERS = {
   all: { label: "הכל", icon: Users },
@@ -48,10 +49,11 @@ export default function CustomersTab({ onNavigateToContent }) {
   const [search, setSearch] = useState("");
   const [selectedTenant, setSelectedTenant] = useState(null);
 
-  const { data: tenants = [], isLoading } = useQuery({
+  const { data: allTenants = [], isLoading } = useQuery({
     queryKey: ["room-tenants"],
     queryFn: () => base44.entities.RoomTenant.list("-created_date", 2000),
   });
+  const tenants = useMemo(() => allTenants.filter(isActiveTenant), [allTenants]);
   const { data: conversations = [] } = useQuery({
     queryKey: ["community-conversations"],
     queryFn: () => base44.entities.CustomerConversation.list("-conversation_date", 500),
