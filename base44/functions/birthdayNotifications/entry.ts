@@ -4,6 +4,12 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
+    const caller = await base44.auth.me();
+    if (!caller) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (caller.role !== 'admin' && caller.role !== 'manager') {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     // Get all users with birthdate
     const users = await base44.asServiceRole.entities.User.list('-created_date', 500);
 
@@ -60,7 +66,7 @@ Deno.serve(async (req) => {
         });
         results.greetingsSent++;
       } catch (e) {
-        results.errors.push(`greeting ${user.email}: ${e.message}`);
+        results.errors.push(`greeting failed: ${e.message}`);
       }
     }
 
@@ -90,7 +96,7 @@ Deno.serve(async (req) => {
           });
           results.managerAlertsSent++;
         } catch (e) {
-          results.errors.push(`manager alert ${email}: ${e.message}`);
+          results.errors.push(`manager alert failed: ${e.message}`);
         }
       }
     }

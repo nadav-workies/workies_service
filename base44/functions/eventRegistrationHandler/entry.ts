@@ -172,8 +172,16 @@ Deno.serve(async (req) => {
   <p>נתראה ב־Workies!</p>
 </div>`;
 
+      // Only email addresses that belong to a known tenant contact or a registered app user —
+      // never an arbitrary caller-supplied address (prevents using the app as an open mail relay).
+      const registeredUsers = await base44.asServiceRole.entities.User.list('-created_date', 500);
+      const isKnownAddress = matchedBy === 'email'
+        || tenants.some(t => normalizeEmail(t.email) === normEmail)
+        || registeredUsers.some(u => normalizeEmail(u.email) === normEmail);
+
       let emailSent = false;
       try {
+        if (!isKnownAddress) throw new Error('unverified recipient');
         await base44.asServiceRole.integrations.Core.SendEmail({
           to: email,
           subject: 'הרשמתך לאירוע Workies התקבלה',

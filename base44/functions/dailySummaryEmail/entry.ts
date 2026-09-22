@@ -6,6 +6,12 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
+    const caller = await base44.auth.me();
+    if (!caller) return Response.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    if (caller.role !== "admin" && caller.role !== "manager") {
+      return Response.json({ ok: false, error: "Forbidden" }, { status: 403 });
+    }
+
     // ─── Calculate yesterday & day-before ranges (local Israel time) ───
     const now = new Date();
     const yesterdayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0, 0);
@@ -243,7 +249,6 @@ Deno.serve(async (req) => {
       ok: true,
       date: yesterdayLabel,
       recipients: recipients.length,
-      managerEmails: recipients,
       summary: {
         opened: openedYesterday.length,
         closed: closedYesterday.length,
