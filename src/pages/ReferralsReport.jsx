@@ -12,6 +12,7 @@ import ReferralKpis from "@/components/referral/ReferralKpis";
 import ReferralReportCard from "@/components/referral/ReferralReportCard";
 import ReferralStatusDialog from "@/components/referral/ReferralStatusDialog";
 import ReferralTermsDialog from "@/components/referral/ReferralTermsDialog";
+import ReferralShareCard from "@/components/referral/ReferralShareCard";
 
 export default function ReferralsReport() {
   const navigate = useNavigate();
@@ -62,6 +63,7 @@ export default function ReferralsReport() {
         </div>
         <Button variant="outline" size="sm" className="gap-1.5" onClick={() => exportReferralsCsv(filtered)}><Download className="w-4 h-4" />ייצוא לאקסל</Button>
       </div>
+      <ReferralShareCard />
       <ReferralKpis referrals={referrals} active={filter} onSelect={(k) => setFilter(filter === k ? "all" : k)} />
       <div className="flex gap-1 flex-wrap">
         {[["all", "הכל"], ...Object.entries(REFERRAL_STATUSES).map(([k, s]) => [k, s.label])].map(([k, label]) => (

@@ -5,6 +5,7 @@ import { Gift, FileText } from "lucide-react";
 import ReferralForm from "@/components/referral/ReferralForm";
 import MyReferralsList from "@/components/referral/MyReferralsList";
 import ReferralTermsDialog from "@/components/referral/ReferralTermsDialog";
+import ReferralShareCard from "@/components/referral/ReferralShareCard";
 
 export default function ReferralPage() {
   const [user, setUser] = useState(null);
@@ -29,6 +30,7 @@ export default function ReferralPage() {
         </button>
       </div>
       <ReferralForm user={user} onSubmitted={refetch} onOpenTerms={() => setTermsOpen(true)} />
+      <ReferralShareCard />
       <MyReferralsList referrals={referrals} />
       <ReferralTermsDialog open={termsOpen} onClose={() => setTermsOpen(false)} />
     </div>

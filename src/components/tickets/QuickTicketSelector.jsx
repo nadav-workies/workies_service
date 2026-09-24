@@ -3,6 +3,7 @@ import { QUICK_TICKET_LIST, PRIORITY_COLORS_MAP, QUICK_TICKET_HELP } from "@/lib
 import { PRIORITY_COLORS } from "@/lib/slaUtils";
 import { cn } from "@/lib/utils";
 import { Zap, Printer } from "lucide-react";
+import ReferralQuickCard from "@/components/referral/ReferralQuickCard";
 
 function InfoTooltip({ text }) {
   const [open, setOpen] = useState(false);
@@ -40,6 +41,7 @@ function InfoTooltip({ text }) {
 export default function QuickTicketSelector({ onSelect, selectedId }) {
   return (
     <div className="space-y-3">
+      <ReferralQuickCard />
       <div className="flex items-center gap-2">
         <Zap className="w-4 h-4 text-primary" />
         <h3 className="font-semibold text-sm">פתיחה מהירה</h3>

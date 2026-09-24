@@ -35,8 +35,9 @@ import CommunityContent from '@/pages/CommunityContent';
 import MaintenancePlan from '@/pages/MaintenancePlan';
 import ReferralPage from '@/pages/ReferralPage';
 import ReferralsReport from '@/pages/ReferralsReport';
+import PublicReferralPage from '@/pages/PublicReferralPage';
 
-const PUBLIC_ROUTES = ['/event-registration', '/feedback', '/onboarding/access'];
+const PUBLIC_ROUTES = ['/event-registration', '/feedback', '/onboarding/access', '/referral-share'];
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -90,6 +91,7 @@ const AuthenticatedApp = () => {
       <Route path="/onboarding/access/:token" element={<OnboardingAccessPage />} />
       <Route path="/feedback/:token" element={<FeedbackSurvey />} />
       <Route path="/event-registration" element={<EventRegistration />} />
+      <Route path="/referral-share" element={<PublicReferralPage />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

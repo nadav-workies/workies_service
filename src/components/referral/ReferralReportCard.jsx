@@ -21,6 +21,8 @@ export default function ReferralReportCard({ referral: r, isDuplicate, onEdit })
       {r.details && <p className="text-xs bg-muted/50 rounded p-2 whitespace-pre-wrap">{r.details}</p>}
       {r.status_note && <p className="text-xs text-muted-foreground">הערה אחרונה: {r.status_note}</p>}
       <div className="flex flex-wrap items-center gap-2 text-[11px]">
+        {r.source === "public_link" && <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">קישור ציבורי</span>}
+        {r.referrer_is_tenant === false && <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">ממליץ לא זוהה כדייר</span>}
         {isDuplicate && <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 inline-flex items-center gap-1"><AlertTriangle className="w-3 h-3" />טלפון הומלץ קודם</span>}
         <span className={`px-2 py-0.5 rounded-full ${r.crm_registered ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}>{r.crm_registered ? "רשום ב-CRM" : "לא רשום ב-CRM"}</span>
         {r.voucher_amount > 0 && <span className="px-2 py-0.5 rounded-full bg-teal-100 text-teal-700">שובר {r.voucher_amount} ₪</span>}
