@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
+import { roomsByNumber } from '../../shared/rooms.ts';
 
 const CAMPAIGN_END = new Date('2026-10-15T23:59:59+03:00');
 
@@ -27,44 +28,47 @@ export default async function (req) {
       return Response.json({ error: 'המבצע הסתיים ולא ניתן לשלוח המלצות חדשות' }, { status: 400 });
     }
 
-    const referrer_name = clean(body.referrer_name, 100);
-    const referrer_phone = clean(body.referrer_phone, 30);
-    const referrer_email = clean(body.referrer_email, 150).toLowerCase();
+    const roomNumber = clean(body.referrer_room, 10);
+    const isDesk = roomNumber === 'desk';
+    const room = isDesk ? null : roomsByNumber.get(roomNumber);
     const friend_name = clean(body.friend_name, 100);
     const friend_phone = clean(body.friend_phone, 30);
     const details = clean(body.details, 2000);
 
-    if (!referrer_name || normPhone(referrer_phone).length < 9 || !friend_name || normPhone(friend_phone).length < 9) {
-      return Response.json({ error: 'נא למלא שם וטלפון תקינים לממליץ/ה ולחבר/ה' }, { status: 400 });
+    if ((!isDesk && !room) || !friend_name || normPhone(friend_phone).length < 9) {
+      return Response.json({ error: 'נא לבחור משרד/עמדה ולמלא שם וטלפון תקינים של החבר/ה' }, { status: 400 });
     }
     if (!body.terms_accepted) {
       return Response.json({ error: 'יש לאשר את תקנון המבצע' }, { status: 400 });
     }
 
-    // Match referrer to an active tenant (by email, then phone)
-    const tenants = await base44.asServiceRole.entities.RoomTenant.filter({ customer_status: 'active' }, '-created_date', 2000);
-    const rp = normPhone(referrer_phone);
-    const tenant = (referrer_email && tenants.find(t => (t.email || '').toLowerCase() === referrer_email))
-      || tenants.find(t => normPhone(t.phone) === rp) || null;
+    // Match referrer to the active tenant of the selected office
+    const tenants = room
+      ? await base44.asServiceRole.entities.RoomTenant.filter({ customer_status: 'active', room_number: roomNumber }, '-created_date', 50)
+      : [];
+    const tenant = tenants.find(t => t.is_primary_contact !== false) || tenants[0] || null;
 
     const now = new Date();
-    const referrerRoom = tenant?.room_number ? `${tenant.room_label || tenant.room_number} (${tenant.room_number})` : '';
+    const referrerRoom = isDesk ? 'עמדה (ללא משרד)' : `${room.l} (${roomNumber})`;
+    const referrer_name = tenant?.customer_name || (isDesk ? 'דייר/ת עמדה' : `דייר/ת משרד ${roomNumber}`);
+    const referrer_phone = tenant?.phone || '';
+    const referrer_email = tenant?.email || '';
 
     const ticket = await base44.asServiceRole.entities.ServiceTicket.create({
       ticket_number: ticketNumber(),
       ticket_type: 'חבר מביא חבר',
       request_type: 'חבר מביא חבר',
-      customer_name: tenant?.customer_name ? `${referrer_name} — ${tenant.customer_name}` : referrer_name,
+      customer_name: referrer_name,
       phone: referrer_phone,
       email: referrer_email,
       issue_description: `חבר מביא חבר: ${friend_name} (${friend_phone})`,
       notes: details,
       area: 'אחר',
       priority: 'רגילה',
-      location_type: tenant?.room_number ? 'room' : 'none',
-      room_number: tenant?.room_number || null,
-      room_label: tenant?.room_label || null,
-      room_area: tenant?.room_area || null,
+      location_type: room ? 'room' : 'none',
+      room_number: room ? roomNumber : null,
+      room_label: room ? room.l : null,
+      room_area: room ? room.a : null,
       status: 'פתוחה',
       opened_at: now.toISOString(),
       opened_at_ms: now.getTime(),

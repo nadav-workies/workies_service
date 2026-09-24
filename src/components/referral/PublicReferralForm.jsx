@@ -5,8 +5,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Loader2, Send, CheckCircle2 } from "lucide-react";
+import { WORKIES_ROOMS } from "@/lib/workiesRooms";
 
-const EMPTY = { referrer_name: "", referrer_phone: "", referrer_email: "", friend_name: "", friend_phone: "", details: "" };
+const EMPTY = { referrer_room: "", friend_name: "", friend_phone: "", details: "" };
+const OFFICES = WORKIES_ROOMS.filter(r => r.room_area === "משרדים");
 const phoneOk = (p) => p.replace(/\D/g, "").length >= 9;
 
 export default function PublicReferralForm({ onOpenTerms }) {
@@ -16,7 +18,7 @@ export default function PublicReferralForm({ onOpenTerms }) {
   const [error, setError] = useState("");
   const [done, setDone] = useState(null);
   const update = (k, v) => setForm(f => ({ ...f, [k]: v }));
-  const valid = form.referrer_name.trim() && phoneOk(form.referrer_phone) && form.friend_name.trim() && phoneOk(form.friend_phone) && accepted;
+  const valid = form.referrer_room && form.friend_name.trim() && phoneOk(form.friend_phone) && accepted;
 
   const submit = async (e) => {
     e.preventDefault();
@@ -55,10 +57,13 @@ export default function PublicReferralForm({ onOpenTerms }) {
   return (
     <form onSubmit={submit} className="space-y-4">
       <div className="space-y-2">
-        <p className="text-sm font-bold text-teal-400">הפרטים שלך</p>
-        {field("referrer_name", "שם מלא *")}
-        {field("referrer_phone", "טלפון *", { type: "tel", dir: "ltr", placeholder: "050-0000000" })}
-        {field("referrer_email", "מייל (מומלץ לזיהוי כדייר)", { type: "email", dir: "ltr" })}
+        <p className="text-sm font-bold text-teal-400">דייר/ת Workies — המשרד שלך</p>
+        <select value={form.referrer_room} onChange={e => update("referrer_room", e.target.value)}
+          className="w-full h-10 rounded-md bg-white text-zinc-950 px-3 text-sm">
+          <option value="">בחירת משרד / עמדה *</option>
+          {OFFICES.map(r => <option key={r.room_number} value={r.room_number}>משרד {r.room_number} — {r.room_label}</option>)}
+          <option value="desk">עמדה (ללא משרד)</option>
+        </select>
       </div>
       <div className="space-y-2">
         <p className="text-sm font-bold text-teal-400">פרטי החבר/ה</p>
