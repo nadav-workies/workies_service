@@ -14,6 +14,7 @@ import DateRangeFilter from "@/components/dashboard/DateRangeFilter";
 import TicketTable from "@/components/tickets/TicketTable";
 import TicketCard from "@/components/tickets/TicketCard";
 import RoomPickerModal from "@/components/user/RoomPickerModal";
+import ReferralPopup from "@/components/referral/ReferralPopup";
 import { isManagerOrAdmin } from "@/lib/slaUtils";
 import { isTicketSlaBreached, calculateMonthlySlaMetrics, getLiveTickets, getLiveSurveyResponses, isTicketTerminal } from "@/lib/slaAgent.js";
 import { getTodayRange, filterTicketsByDateRange, filterSurveyResponsesBySubmittedDate } from "@/lib/dateRangeUtils";
@@ -50,6 +51,7 @@ function UserDashboard({ user, onUserUpdated }) {
         onClose={() => setShowRoomPicker(false)}
         onSaved={onUserUpdated}
       />
+      {!showRoomPicker && <ReferralPopup />}
 
       <div className="flex items-center justify-between">
         <div>

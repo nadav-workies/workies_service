@@ -1,0 +1,155 @@
+{
+  "name": "Referral",
+  "type": "object",
+  "properties": {
+    "friend_name": {
+      "type": "string",
+      "description": "\u05e9\u05dd \u05d4\u05d7\u05d1\u05e8/\u05d4 \u05d4\u05de\u05d5\u05de\u05dc\u05e5/\u05ea"
+    },
+    "friend_phone": {
+      "type": "string",
+      "description": "\u05d8\u05dc\u05e4\u05d5\u05df \u05d4\u05d7\u05d1\u05e8/\u05d4"
+    },
+    "friend_phone_normalized": {
+      "type": "string",
+      "description": "\u05d8\u05dc\u05e4\u05d5\u05df \u05de\u05e0\u05d5\u05e8\u05de\u05dc \u05dc\u05d6\u05d9\u05d4\u05d5\u05d9 \u05db\u05e4\u05d9\u05dc\u05d5\u05d9\u05d5\u05ea"
+    },
+    "details": {
+      "type": "string",
+      "description": "\u05e4\u05e8\u05d8\u05d9\u05dd \u05e0\u05d5\u05e1\u05e4\u05d9\u05dd (\u05d8\u05e7\u05e1\u05d8 \u05d7\u05d5\u05e4\u05e9\u05d9)"
+    },
+    "referrer_name": {
+      "type": "string",
+      "description": "\u05e9\u05dd \u05d4\u05de\u05de\u05dc\u05d9\u05e5/\u05d4"
+    },
+    "referrer_email": {
+      "type": "string",
+      "description": "\u05de\u05d9\u05d9\u05dc \u05d4\u05de\u05de\u05dc\u05d9\u05e5/\u05d4"
+    },
+    "referrer_phone": {
+      "type": "string",
+      "description": "\u05d8\u05dc\u05e4\u05d5\u05df \u05d4\u05de\u05de\u05dc\u05d9\u05e5/\u05d4"
+    },
+    "referrer_room": {
+      "type": "string",
+      "description": "\u05d7\u05d3\u05e8 / \u05de\u05e9\u05e8\u05d3 \u05d4\u05de\u05de\u05dc\u05d9\u05e5/\u05d4"
+    },
+    "ticket_id": {
+      "type": "string",
+      "description": "\u05de\u05d6\u05d4\u05d4 \u05e7\u05e8\u05d9\u05d0\u05ea \u05d4\u05e9\u05d9\u05e8\u05d5\u05ea \u05e9\u05e0\u05e4\u05ea\u05d7\u05d4"
+    },
+    "ticket_number": {
+      "type": "string",
+      "description": "\u05de\u05e1\u05e4\u05e8 \u05e7\u05e8\u05d9\u05d0\u05ea \u05d4\u05e9\u05d9\u05e8\u05d5\u05ea"
+    },
+    "terms_accepted": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05d0\u05d9\u05e9\u05d5\u05e8 \u05ea\u05e7\u05e0\u05d5\u05df"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "contacted",
+        "tour",
+        "signed",
+        "eligible",
+        "voucher_given",
+        "not_relevant",
+        "existing_lead",
+        "duplicate"
+      ],
+      "default": "new",
+      "description": "\u05e1\u05d8\u05d8\u05d5\u05e1 \u05d4\u05d4\u05de\u05dc\u05e6\u05d4"
+    },
+    "status_note": {
+      "type": "string",
+      "description": "\u05d4\u05e2\u05e8\u05ea \u05e1\u05d8\u05d8\u05d5\u05e1 \u05d0\u05d7\u05e8\u05d5\u05e0\u05d4"
+    },
+    "crm_registered": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05e0\u05e8\u05e9\u05dd \u05d1\u05de\u05e2\u05e8\u05db\u05ea \u05d4-CRM"
+    },
+    "offices_count": {
+      "type": "number",
+      "default": 0,
+      "description": "\u05de\u05e1\u05e4\u05e8 \u05de\u05e9\u05e8\u05d3\u05d9\u05dd \u05e9\u05e0\u05e9\u05db\u05e8\u05d5 \u05d1\u05e4\u05d5\u05e2\u05dc"
+    },
+    "voucher_amount": {
+      "type": "number",
+      "default": 0,
+      "description": "\u05e1\u05db\u05d5\u05dd \u05e9\u05d5\u05d1\u05e8 (500 \u20aa \u05dc\u05db\u05dc \u05de\u05e9\u05e8\u05d3)"
+    },
+    "voucher_given_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u05de\u05d5\u05e2\u05d3 \u05de\u05e1\u05d9\u05e8\u05ea \u05d4\u05e9\u05d5\u05d1\u05e8"
+    },
+    "status_history": {
+      "type": "array",
+      "description": "\u05d4\u05d9\u05e1\u05d8\u05d5\u05e8\u05d9\u05d9\u05ea \u05e1\u05d8\u05d8\u05d5\u05e1\u05d9\u05dd",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "user": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "friend_name",
+    "friend_phone"
+  ],
+  "rls": {
+    "create": {},
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
