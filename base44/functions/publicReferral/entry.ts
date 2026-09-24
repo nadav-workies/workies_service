@@ -49,7 +49,7 @@ export default async function (req) {
     const tenant = tenants.find(t => t.is_primary_contact !== false) || tenants[0] || null;
 
     const now = new Date();
-    const referrerRoom = isDesk ? 'עמדה (ללא משרד)' : `${room.l} (${roomNumber})`;
+    const referrerRoom = isDesk ? 'עמדה (ללא משרד)' : `${room.room_label} (${roomNumber})`;
     const referrer_name = tenant?.customer_name || (isDesk ? 'דייר/ת עמדה' : `דייר/ת משרד ${roomNumber}`);
     const referrer_phone = tenant?.phone || '';
     const referrer_email = tenant?.email || '';
@@ -67,8 +67,8 @@ export default async function (req) {
       priority: 'רגילה',
       location_type: room ? 'room' : 'none',
       room_number: room ? roomNumber : null,
-      room_label: room ? room.l : null,
-      room_area: room ? room.a : null,
+      room_label: room ? room.room_label : null,
+      room_area: room ? room.room_area : null,
       status: 'פתוחה',
       opened_at: now.toISOString(),
       opened_at_ms: now.getTime(),

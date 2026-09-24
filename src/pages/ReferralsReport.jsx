@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2, Search, Download, FileText } from "lucide-react";
 import { isManagerOrAdmin } from "@/lib/permissions";
-import { REFERRAL_STATUSES, TERMINAL_REFERRAL_STATUSES, normalizePhone } from "@/lib/referralConfig";
+import { TERMINAL_REFERRAL_STATUSES, normalizePhone } from "@/lib/referralConfig";
 import { exportReferralsCsv } from "@/lib/referralService";
 import ReferralKpis from "@/components/referral/ReferralKpis";
 import ReferralReportCard from "@/components/referral/ReferralReportCard";
@@ -65,11 +65,6 @@ export default function ReferralsReport() {
       </div>
       <ReferralShareCard />
       <ReferralKpis referrals={referrals} active={filter} onSelect={(k) => setFilter(filter === k ? "all" : k)} />
-      <div className="flex gap-1 flex-wrap">
-        {[["all", "הכל"], ...Object.entries(REFERRAL_STATUSES).map(([k, s]) => [k, s.label])].map(([k, label]) => (
-          <button key={k} onClick={() => setFilter(k)} className={`px-2.5 py-1 rounded-full text-xs border ${filter === k ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}>{label}</button>
-        ))}
-      </div>
       <div className="relative">
         <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="חיפוש לפי שם, טלפון, ממליץ או מספר קריאה" className="pr-9" />
