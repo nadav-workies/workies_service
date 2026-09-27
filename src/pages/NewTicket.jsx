@@ -144,13 +144,23 @@ export default function NewTicket() {
 
     base44.auth.me().then(u => {
       setUser(u);
+      // מנהלים ואדמין — ברירת מחדל: Workies, קבלה (ניתן לשנות לחדר)
+      if (!urlRoom && !urlPublicAreaKey && isManagerOrAdmin(u)) {
+        setForm(f => ({
+          ...f,
+          room_number: null, room_label: null, room_area: "חללים משותפים",
+          public_area_key: "reception", public_area_label: "קבלה", location_type: "public_area",
+        }));
+        return;
+      }
       // Auto-fill room from user profile (only if not already set via URL)
-      if (!urlRoom && !urlPublicAreaKey && u?.default_location_type === "room" && u?.default_room_number) {
+      if (!urlRoom && !urlPublicAreaKey && u?.default_room_number) {
         setForm(f => ({
           ...f,
           room_number: u.default_room_number,
           room_label: u.default_room_label,
           room_area: u.default_room_area,
+          location_type: "room",
         }));
       }
     }).catch(() => {});
@@ -238,7 +248,7 @@ export default function NewTicket() {
       }
 
       // For regular users, use their own name if no customer_name given
-      const customerName = data.customer_name || user?.full_name || "";
+      const customerName = data.customer_name || (isMgr ? "Workies" : user?.full_name) || "";
 
       // Build public area label with near-room / location info
       let publicAreaLabel = data.public_area_label;
@@ -366,7 +376,10 @@ export default function NewTicket() {
                 {locationDisplay && <span className="text-xs text-primary font-medium">✓ {locationDisplay}</span>}
               </div>
               {/* If user has a default room, show it with option to change */}
-              {!isMgr && user?.default_location_type === "room" && user?.default_room_number && (
+              {isMgr && form.public_area_key === "reception" && (
+                <p className="text-xs text-muted-foreground">הקריאה נפתחת בשם Workies (קבלה). ניתן לבחור חדר ספציפי למטה.</p>
+              )}
+              {!isMgr && user?.default_room_number && form.room_number && (
                 <div className="flex items-center gap-2">
                   <div className="flex-1 p-2 rounded-lg bg-muted text-sm">
                     חדר {user.default_room_label} ({user.default_room_number})
@@ -377,7 +390,7 @@ export default function NewTicket() {
                 </div>
               )}
               {/* Show selector if: manager, public area fault, user without default room, or user chose to change */}
-              {(isMgr || isPublicFault || !user?.default_location_type || user?.default_location_type === "none" || user?.default_location_type !== "room" || !form.room_number) && (
+              {(isMgr || isPublicFault || !user?.default_room_number || !form.room_number) && (
                 <RoomSelector value={form} onChange={handleLocationChange} forcePublicMode={isPublicFault} />
               )}
             </div>

@@ -12,6 +12,7 @@ import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import AppLayout from '@/components/layout/AppLayout';
 import Dashboard from '@/pages/Dashboard';
+import Home from '@/pages/Home';
 import Tickets from '@/pages/Tickets';
 import NewTicket from '@/pages/NewTicket';
 import TicketDetail from '@/pages/TicketDetail';
@@ -65,7 +66,8 @@ const AuthenticatedApp = () => {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route element={<AppLayout />}>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/tickets" element={<Tickets />} />
           <Route path="/tickets/new" element={<NewTicket />} />
           <Route path="/tickets/:id" element={<TicketDetail />} />

@@ -92,6 +92,7 @@ export const WORKIES_ROOMS = [
 ];
 
 export const WORKIES_PUBLIC_AREAS = [
+  { area_key: "reception", area_label: "קבלה", room_area: "חללים משותפים" },
   { area_key: "corridor_a", area_label: "מעבר A", room_area: "מעברים", requires_near_room: true },
   { area_key: "corridor_b", area_label: "מעבר B", room_area: "מעברים", requires_near_room: true },
   { area_key: "corridor_c", area_label: "מעבר C", room_area: "מעברים", requires_near_room: true },

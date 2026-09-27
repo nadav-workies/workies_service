@@ -20,9 +20,9 @@ export default function AppLayout() {
   const mgrOrAdmin = isManagerOrAdmin(user);
 
   const navItems = [
-  { label: "דשבורד", path: "/", icon: LayoutDashboard },
+  { label: "פתיחת קריאה מהירה", path: "/", icon: Plus },
+  { label: "דשבורד", path: "/dashboard", icon: LayoutDashboard },
   { label: "כל הקריאות", path: "/tickets", icon: Ticket, managerOnly: true },
-  { label: "פתיחת קריאה", path: "/tickets/new", icon: Plus },
   { label: "חבר מביא חבר", path: "/friend-referral", icon: Gift },
   { label: "דוח חבר מביא חבר", path: "/referrals-report", icon: ClipboardList, managerOnly: true },
   { label: "מפת שירות", path: "/service-map", icon: MapPin, managerOnly: true },
