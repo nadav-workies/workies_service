@@ -113,10 +113,18 @@ export default function MaintenancePlan() {
       source_ticket_id: editing?.source_ticket_id || fromTicket?.id || "",
       source_ticket_title: editing?.source_ticket_title || fromTicket?.ticket_number || "",
     };
-    if (editing?.id) await updateMutation.mutateAsync({ id: editing.id, data: payload });
-    else await createMutation.mutateAsync(payload);
-    setFormOpen(false); setEditing(null); setFromTicket(null);
-    if (ticketIdParam) navigate("/maintenance-plan", { replace: true });
+    if (editing?.id) {
+      await updateMutation.mutateAsync({ id: editing.id, data: payload });
+      setFormOpen(false); setEditing(null); setFromTicket(null);
+      if (ticketIdParam) navigate("/maintenance-plan", { replace: true });
+      return null;
+    }
+    // בקשה חדשה — נשארים בטופס להצגת דוח זמינות
+    return await createMutation.mutateAsync({ ...payload, approval_status: "pending_approval" });
+  };
+
+  const handleAssign = async (id, updates) => {
+    await updateMutation.mutateAsync({ id, data: updates });
   };
 
   const handleImport = async (drafts) => {
@@ -399,6 +407,9 @@ export default function MaintenancePlan() {
         open={formOpen}
         onClose={() => { setFormOpen(false); setEditing(null); setFromTicket(null); if (ticketIdParam) navigate("/maintenance-plan", { replace: true }); }}
         onSave={handleSave}
+        onAssign={handleAssign}
+        canApprove={canApprove}
+        approverName={user?.full_name || user?.email || "מנהל תפעול"}
         initial={editing || (fromTicket ? {
           title: fromTicket.issue_description ? `תחזוקה: ${fromTicket.issue_description}` : "משימת תחזוקה",
           description: fromTicket.issue_description || "",

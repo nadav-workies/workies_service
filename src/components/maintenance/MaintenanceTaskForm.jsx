@@ -6,8 +6,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MAINTENANCE_CATEGORIES, MAINTENANCE_STATUSES, MAINTENANCE_PRIORITIES, DEFAULT_WORKER } from "@/lib/maintenanceConfig";
-import { workerWindowsForDate, findMatchingWindow, workerShiftForDate, isWithinShift, upcomingWindowDates } from "@/lib/maintenanceWindows";
-import { formatHebrewDate } from "@/lib/maintenanceConfig";
+import { Loader2 } from "lucide-react";
+import AvailabilityReport from "@/components/maintenance/AvailabilityReport";
+import SubmittedReport from "@/components/maintenance/SubmittedReport";
 
 const EMPTY = {
   title: "", description: "", planned_date: "", start_time: "09:00", duration_minutes: 60,
@@ -15,8 +16,10 @@ const EMPTY = {
   assigned_maintenance_worker: DEFAULT_WORKER, location: "", notes: "", recurring: "one_time",
 };
 
-export default function MaintenanceTaskForm({ open, onClose, onSave, initial, defaultDate, windows = [], workers = [], workerRecords = [] }) {
+export default function MaintenanceTaskForm({ open, onClose, onSave, onAssign, canApprove, approverName, initial, defaultDate, windows = [], workers = [], workerRecords = [] }) {
   const [form, setForm] = useState(EMPTY);
+  const [saving, setSaving] = useState(false);
+  const [submitted, setSubmitted] = useState(null);
 
   useEffect(() => {
     if (open) setForm({ ...EMPTY, planned_date: defaultDate || "", ...(initial || {}) });
@@ -25,26 +28,31 @@ export default function MaintenanceTaskForm({ open, onClose, onSave, initial, de
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   const worker = form.assigned_maintenance_worker || DEFAULT_WORKER;
-  const dayWindows = workerWindowsForDate(windows, form.planned_date, worker);
-  const matchingWindow = findMatchingWindow(windows, form.planned_date, form.start_time, worker);
-  const workerRecord = workerRecords.find(w => w.name === worker);
-  const shift = workerShiftForDate(workerRecord, form.planned_date);
-  const shiftOk = isWithinShift(shift, form.start_time);
-  const scheduleOk = !!matchingWindow && shiftOk;
-  const today = new Date().toISOString().slice(0, 10);
-  const nextDates = upcomingWindowDates(windows, worker, today).filter(d => d !== form.planned_date);
-  const jumpToDate = (d) => {
-    const first = workerWindowsForDate(windows, d, worker)[0];
-    setForm(f => ({ ...f, planned_date: d, start_time: first?.start_time || f.start_time }));
+  const canSubmit = !!form.title?.trim() && !!form.planned_date && !saving;
+
+  const submit = async () => {
+    if (!canSubmit) return;
+    setSaving(true);
+    const created = await onSave(form);
+    setSaving(false);
+    if (created) setSubmitted(created);
   };
 
-  const submit = () => {
-    if (!form.title?.trim() || !form.planned_date || !scheduleOk) return;
-    onSave(form);
-  };
+  const close = () => { setSubmitted(null); onClose(); };
+
+  if (submitted) {
+    return (
+      <Dialog open={open} onOpenChange={close}>
+        <DialogContent dir="rtl" className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <SubmittedReport task={submitted} setTask={setSubmitted} onClose={close} onAssign={onAssign}
+            canApprove={canApprove} approverName={approverName} windows={windows} workers={workers} workerRecords={workerRecords} />
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={close}>
       <DialogContent dir="rtl" className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{initial?.id ? "עריכת משימת תחזוקה" : "משימת תחזוקה חדשה"}</DialogTitle></DialogHeader>
         <div className="space-y-3">
@@ -93,50 +101,10 @@ export default function MaintenanceTaskForm({ open, onClose, onSave, initial, de
               <Input type="number" value={form.duration_minutes} onChange={e => set("duration_minutes", Number(e.target.value))} />
             </div>
           </div>
-          {/* Scheduling windows for the chosen date + worker */}
-          <div className={`rounded-lg border p-2.5 text-xs space-y-1.5 ${scheduleOk ? "bg-green-50 border-green-300" : "bg-red-50 border-red-300"}`}>
-            <p className="font-medium">חלונות שיבוץ זמינים ל{worker}</p>
-            {shift ? (
-              <p className={shiftOk ? "text-green-700" : "text-red-700"}>
-                יומן עבודה: {shift.start_time}–{shift.end_time}{!shiftOk && " — שעת ההתחלה מחוץ לשעות העבודה"}
-              </p>
-            ) : (
-              <p className="text-red-700">{worker} לא עובד ביום זה לפי יומן העבודה (טאב עובדים).</p>
-            )}
-            {dayWindows.length === 0 ? (
-              <p className="text-red-700">
-                {nextDates.length > 0
-                  ? "אין חלון זמין בתאריך שנבחר — בחר תאריך זמין מהרשימה למטה."
-                  : "אין חלונות שיבוץ קרובים לעובד זה — יש להגדיר חלון שיבוץ ירוק (טאב חלונות שיבוץ) לפני שיבוץ."}
-              </p>
-            ) : (
-              <div className="flex flex-wrap gap-1.5">
-                {dayWindows.map(w => (
-                  <button
-                    key={w.id}
-                    type="button"
-                    onClick={() => set("start_time", w.start_time)}
-                    className={`px-2 py-1 rounded border ${matchingWindow?.id === w.id ? "bg-green-200 border-green-500 text-green-900" : "bg-card"}`}
-                  >
-                    {w.start_time}–{w.end_time}
-                  </button>
-                ))}
-              </div>
-            )}
-            {dayWindows.length > 0 && !scheduleOk && <p className="text-red-700">שעת ההתחלה אינה בתוך חלון זמין — בחר חלון מהרשימה.</p>}
-            {nextDates.length > 0 && (
-              <div className="pt-1 border-t border-current/10">
-                <p className="text-muted-foreground mb-1">תאריכים קרובים עם חלון זמין ל{worker}:</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {nextDates.map(d => (
-                    <button key={d} type="button" onClick={() => jumpToDate(d)} className="px-2 py-1 rounded border bg-card hover:bg-green-50 hover:border-green-400">
-                      {formatHebrewDate(d)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          {initial?.id && (
+            <AvailabilityReport windows={windows} workerRecords={workerRecords} workers={[worker]} worker={worker}
+              date={form.planned_date} time={form.start_time} />
+          )}
 
           <div className="space-y-1">
             <Label>מיקום / חדר</Label>
@@ -173,8 +141,10 @@ export default function MaintenanceTaskForm({ open, onClose, onSave, initial, de
           </div>
         </div>
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose}>ביטול</Button>
-          <Button onClick={submit} disabled={!form.title?.trim() || !form.planned_date || !scheduleOk}>שמור משימה</Button>
+          <Button variant="outline" onClick={close}>ביטול</Button>
+          <Button onClick={submit} disabled={!canSubmit} className="gap-1">
+            {saving && <Loader2 className="w-4 h-4 animate-spin" />}{initial?.id ? "שמור משימה" : "שליחת בקשה"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
