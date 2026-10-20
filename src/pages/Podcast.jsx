@@ -5,7 +5,7 @@ export default function Podcast() {
   return <main dir="rtl" className="podcast-theme bg-background text-foreground font-body">
     <div className="podcast-content">
       <header className="podcast-hero">
-        <img src="https://media.base44.com/images/public/6a1d5a36316988d9f113f88e/18733a748_generated_43f93bd7.jpg" alt="אולפן הפודקאסט של וורקיז, כורסאות טורקיז ומיקרופונים מול קיר עץ" fetchPriority="high" />
+        <img src="https://media.base44.com/images/public/6a1d5a36316988d9f113f88e/aed3050d1_IMG-20261016-WA00121.jpg" alt="אולפן הפודקאסט של וורקיז, כורסאות טורקיז ומיקרופונים מול קיר עץ" fetchPriority="high" />
         <div className="podcast-scrim" />
         <div className="podcast-top">
           <div className="podcast-brand" dir="ltr" aria-label="Workies">Work<span>i</span>es</div>
