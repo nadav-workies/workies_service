@@ -14,7 +14,7 @@ import ReferralStatusDialog from "@/components/referral/ReferralStatusDialog";
 import ReferralTermsDialog from "@/components/referral/ReferralTermsDialog";
 import ReferralShareCard from "@/components/referral/ReferralShareCard";
 
-export default function ReferralsReport() {
+export default function ReferralsReport({ embedded = false }) {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [filter, setFilter] = useState("all");
@@ -63,7 +63,7 @@ export default function ReferralsReport() {
         </div>
         <Button variant="outline" size="sm" className="gap-1.5" onClick={() => exportReferralsCsv(filtered)}><Download className="w-4 h-4" />ייצוא לאקסל</Button>
       </div>
-      <ReferralShareCard />
+      {!embedded && <ReferralShareCard />}
       <ReferralKpis referrals={referrals} active={filter} onSelect={(k) => setFilter(filter === k ? "all" : k)} />
       <div className="relative">
         <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />

@@ -6,6 +6,7 @@ import ReferralStatusBadge from "@/components/referral/ReferralStatusBadge";
 export default function ReferralReportCard({ referral: r, isDuplicate, onEdit }) {
   return (
     <div className="p-3 rounded-lg border bg-card space-y-2">
+      <span className="inline-block rounded-full bg-primary/10 text-primary px-2 py-1 text-xs">חבר מביא חבר</span>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="font-semibold text-sm">{r.friend_name}</p>

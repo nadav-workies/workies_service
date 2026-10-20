@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CheckCircle2, Loader2 } from "lucide-react";
+import campaigns from "@/components/landing/campaigns";
 
-export default function DailyOfficeLeadForm() {
+export default function DailyOfficeLeadForm({ campaign = "office" }) {
+  const config = campaigns[campaign];
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
@@ -18,12 +20,12 @@ export default function DailyOfficeLeadForm() {
     if (!name || !/^\+?[\d\s()-]+$/.test(phone) || phone.replace(/\D/g, "").length < 9) { setError("יש למלא שם ומספר טלפון תקין."); return; }
     setBusy(true); setError("");
     try {
-      await base44.entities.DailyOfficeLead.create({ name, phone, status: "new" });
+      await base44.entities[config.entity].create({ name, phone, status: "new" });
       setDone(true);
     } catch { setError("הפנייה לא נשלחה. נסו שוב בעוד רגע."); }
     finally { setBusy(false); }
   }
-  if (done) return <div role="status" className="office-success office-fade office-delay-3 text-center py-8 space-y-3"><CheckCircle2 className="w-12 h-12 text-primary mx-auto" /><h2 className="text-2xl font-bold">הפנייה נקלטה!</h2><p className="text-muted-foreground">ניצור קשר לתיאום ההתנסות במשרד היומי.</p></div>;
+  if (done) return <div role="status" className="office-success office-fade office-delay-3 text-center py-8 space-y-3"><CheckCircle2 className="w-12 h-12 text-primary mx-auto" /><h2 className="text-2xl font-bold">הפנייה נקלטה!</h2><p className="opacity-80">{config.confirmation}</p></div>;
   return (
     <form onSubmit={submit} className="office-form office-fade office-delay-3">
       <div><h2>נרשמים להתנסות</h2><p className="office-lead">משאירים שם וטלפון, ונחזור לתיאום.</p></div>

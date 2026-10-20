@@ -100,6 +100,20 @@
   --font-heading: 'Rubik', sans-serif;
 }
 
+.podcast-theme,
+.dark .podcast-theme {
+  --background: 45 25% 97%;
+  --foreground: 190 88% 12%;
+  --primary: 181 100% 39%;
+  --primary-foreground: 190 88% 12%;
+  --secondary: 190 88% 12%;
+  --secondary-foreground: 0 0% 100%;
+  --muted-foreground: 190 17% 35%;
+  --input: 185 18% 74%;
+  --border: 185 19% 87%;
+  --ring: 181 100% 39%;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
