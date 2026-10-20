@@ -102,16 +102,23 @@
 
 .podcast-theme,
 .dark .podcast-theme {
-  --background: 45 25% 97%;
-  --foreground: 190 88% 12%;
-  --primary: 181 100% 39%;
-  --primary-foreground: 190 88% 12%;
-  --secondary: 190 88% 12%;
-  --secondary-foreground: 0 0% 100%;
-  --muted-foreground: 190 17% 35%;
-  --input: 185 18% 74%;
-  --border: 185 19% 87%;
-  --ring: 181 100% 39%;
+  --background: 192 11.111111% 8.823529%;
+  --foreground: 35.294118 48.571429% 93.137255%;
+  --primary: 25.544554 54.594595% 63.72549%;
+  --primary-foreground: 192 11.111111% 8.823529%;
+  --secondary: 188.571429 11.111111% 12.352941%;
+  --secondary-foreground: 35.294118 48.571429% 93.137255%;
+  --muted-foreground: 35.294118 48.571429% 93.137255%;
+  --input: 25.544554 54.594595% 63.72549%;
+  --border: 25.544554 54.594595% 63.72549%;
+  --ring: 25.544554 54.594595% 63.72549%;
+  --font-body: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --font-heading: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --podcast-surface: #141819;
+  --podcast-text: #F6EFE5;
+  --podcast-copper: #D59C70;
+  --podcast-field: #1c2223;
+  --podcast-hover: #e2ae85;
 }
 
 @layer base {
