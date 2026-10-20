@@ -85,15 +85,17 @@
 .daily-office-theme,
 .dark .daily-office-theme {
   --background: 0 0% 100%;
-  --foreground: 0 0% 7%;
+  --foreground: 190 88% 12%;
   --card: 0 0% 100%;
-  --card-foreground: 0 0% 7%;
-  --primary: 185 48% 23%;
-  --primary-foreground: 0 0% 100%;
-  --muted-foreground: 185 9% 35%;
-  --border: 185 15% 85%;
-  --input: 185 15% 78%;
-  --ring: 185 48% 23%;
+  --card-foreground: 190 88% 12%;
+  --primary: 181 100% 39%;
+  --primary-foreground: 190 88% 12%;
+  --secondary: 190 88% 12%;
+  --secondary-foreground: 0 0% 100%;
+  --muted-foreground: 190 17% 35%;
+  --border: 185 19% 87%;
+  --input: 185 18% 74%;
+  --ring: 190 88% 12%;
   --font-body: 'Rubik', sans-serif;
   --font-heading: 'Rubik', sans-serif;
 }
