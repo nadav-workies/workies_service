@@ -18,7 +18,7 @@
 .daily-office-immersive .office-delay-4 { animation-delay: .85s; }
 @keyframes office-fi { from { opacity: 0; } to { opacity: 1; } }
 .daily-office-immersive .office-logo { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
-.daily-office-immersive .office-logo img { width: 96px; height: 66px; object-fit: contain; filter: drop-shadow(0 2px 8px rgba(0,0,0,.35)); }
+.daily-office-immersive .office-logo img { width: 96px; height: 66px; object-fit: contain; mix-blend-mode: screen; }
 .daily-office-immersive .office-location { font-size: 13px; font-weight: 500; color: #fff; opacity: .85; letter-spacing: .02em; margin: 0; }
 .daily-office-immersive .office-hero { display: flex; gap: 14px; align-items: stretch; margin-top: 34px; }
 .daily-office-immersive .office-line { width: 3px; background: #00C9CE; border-radius: 2px; flex: none; box-shadow: 0 0 14px rgba(0,201,206,.7); }

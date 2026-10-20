@@ -4,7 +4,7 @@ import "@/components/landing/DailyOffice.css";
 export default function DailyOffice() {
   return (
     <main dir="rtl" className="daily-office-immersive">
-      <img className="office-bg" src="https://media.base44.com/images/public/6a1d5a36316988d9f113f88e/5a65bd060_generated_1d0fe6fc.jpg" alt="משרד במתחם וורקיז" fetchPriority="high" />
+      <img className="office-bg" src="https://media.base44.com/images/public/6a1d5a36316988d9f113f88e/ec89027b2_2.png" alt="משרד במתחם וורקיז" fetchPriority="high" />
       <div className="office-shade" aria-hidden="true" />
       <div className="office-glow" aria-hidden="true" />
       <div className="office-content">
