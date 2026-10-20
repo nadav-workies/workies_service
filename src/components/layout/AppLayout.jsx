@@ -24,6 +24,8 @@ export default function AppLayout() {
   { label: "דשבורד", path: "/dashboard", icon: LayoutDashboard },
   { label: "כל הקריאות", path: "/tickets", icon: Ticket, managerOnly: true },
   { label: "חבר מביא חבר", path: "/friend-referral", icon: Gift },
+  { label: "עמודי נחיתה", path: "/landing-pages", icon: Megaphone, managerOnly: true },
+  { label: "דוח לידים", path: "/leads", icon: ClipboardList, managerOnly: true },
   { label: "דוח חבר מביא חבר", path: "/referrals-report", icon: ClipboardList, managerOnly: true },
   { label: "מפת שירות", path: "/service-map", icon: MapPin, managerOnly: true },
   { label: "חורגות SLA", path: "/sla-report", icon: AlertTriangle, managerOnly: true },

@@ -37,8 +37,11 @@ import MaintenancePlan from '@/pages/MaintenancePlan';
 import ReferralPage from '@/pages/ReferralPage';
 import ReferralsReport from '@/pages/ReferralsReport';
 import PublicReferralPage from '@/pages/PublicReferralPage';
+import DailyOffice from '@/pages/DailyOffice';
+import LandingPages from '@/pages/LandingPages';
+import LeadsReport from '@/pages/LeadsReport';
 
-const PUBLIC_ROUTES = ['/event-registration', '/feedback', '/onboarding/access', '/referral-share'];
+const PUBLIC_ROUTES = ['/event-registration', '/feedback', '/onboarding/access', '/referral-share', '/daily-office'];
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -88,12 +91,15 @@ const AuthenticatedApp = () => {
           <Route path="/maintenance-plan" element={<MaintenancePlan />} />
           <Route path="/friend-referral" element={<ReferralPage />} />
           <Route path="/referrals-report" element={<ReferralsReport />} />
+          <Route path="/landing-pages" element={<LandingPages />} />
+          <Route path="/leads" element={<LeadsReport />} />
         </Route>
       </Route>
       <Route path="/onboarding/access/:token" element={<OnboardingAccessPage />} />
       <Route path="/feedback/:token" element={<FeedbackSurvey />} />
       <Route path="/event-registration" element={<EventRegistration />} />
       <Route path="/referral-share" element={<PublicReferralPage />} />
+      <Route path="/daily-office" element={<DailyOffice />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
