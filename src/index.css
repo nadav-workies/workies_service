@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=Rubik:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=Rubik:wght@300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -119,6 +119,18 @@
   --podcast-copper: #D59C70;
   --podcast-field: #1c2223;
   --podcast-hover: #e2ae85;
+}
+
+.landing-font,
+.daily-office-immersive,
+.podcast-theme,
+.dark .landing-font,
+.dark .daily-office-immersive,
+.dark .podcast-theme {
+  --font-body: 'Rubik', sans-serif;
+  --font-heading: 'Rubik', sans-serif;
+  --font-display: 'Rubik', sans-serif;
+  font-family: var(--font-body);
 }
 
 @layer base {

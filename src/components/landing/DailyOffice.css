@@ -5,7 +5,7 @@
   --primary-foreground: 189 80% 12%;
   --muted-foreground: 0 0% 82%;
   position: relative; width: 100%; min-height: max(683px, 100svh); background: #062F36; overflow: hidden;
-  font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif; color: #fff; direction: rtl; box-sizing: border-box;
+  font-family: var(--font-body); color: #fff; direction: rtl; box-sizing: border-box;
 }
 .daily-office-immersive .office-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
 .daily-office-immersive .office-shade { position: absolute; inset: 0; background: linear-gradient(180deg,rgba(6,47,54,.78) 0%,rgba(6,47,54,.55) 28%,rgba(6,47,54,.82) 58%,rgba(6,47,54,.96) 100%); }

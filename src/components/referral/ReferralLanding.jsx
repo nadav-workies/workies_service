@@ -9,7 +9,7 @@ export default function ReferralLanding({ className = "" }) {
   const active = isCampaignActive();
 
   return (
-    <div className={`bg-zinc-950 text-white px-4 py-8 ${className}`} dir="rtl">
+    <div className={`landing-font bg-zinc-950 text-white px-4 py-8 ${className}`} dir="rtl">
       <div className="max-w-md mx-auto space-y-6">
         <div className="text-center space-y-2">
           <p className="text-2xl font-black tracking-tight">Workies</p>
