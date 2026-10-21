@@ -14,6 +14,7 @@ const EMPTY_FORM = {
   event_date: "",
   arrival_time: "",
   event_start_time: "",
+  registration_end_date: "",
   capacity: 80,
 };
 
@@ -75,6 +76,7 @@ export default function EventForm({ events, activeEvent, isLoading, user, onActi
       event_date: ev.event_date || "",
       arrival_time: ev.arrival_time || "",
       event_start_time: ev.event_start_time || "",
+      registration_end_date: ev.registration_end_date || "",
       capacity: ev.capacity || 80,
     });
     setError("");
@@ -147,6 +149,12 @@ export default function EventForm({ events, activeEvent, isLoading, user, onActi
                 <p className="text-sm font-medium">Workies באר שבע, אליהו נאווי 24</p>
               </div>
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="registration-end-date">תוקף ההרשמה לאירוע / פעילות</Label>
+            <Input id="registration-end-date" type="date" value={form.registration_end_date} onChange={e => setForm(f => ({ ...f, registration_end_date: e.target.value }))} />
+            <p className="text-xs text-muted-foreground">ריק: עד סוף יום האירוע. ניתן להאריך גם לאחר שהתוקף הסתיים, ללא שינוי תאריך האירוע. באירוע שאינו פעיל יש לבחור שמירה והפעלה.</p>
           </div>
 
           {/* Location info */}

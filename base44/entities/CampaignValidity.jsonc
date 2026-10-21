@@ -1,0 +1,39 @@
+{
+  "name": "CampaignValidity",
+  "type": "object",
+  "properties": {
+    "campaign": {
+      "type": "string",
+      "enum": [
+        "office",
+        "podcast",
+        "referral"
+      ]
+    },
+    "end_date": {
+      "type": "string",
+      "description": "\u05ea\u05d0\u05e8\u05d9\u05da \u05e1\u05d9\u05d5\u05dd \u05db\u05d5\u05dc\u05dc, \u05e8\u05d9\u05e7 \u05dc\u05dc\u05d0 \u05d4\u05d2\u05d1\u05dc\u05ea \u05ea\u05d5\u05e7\u05e3"
+    }
+  },
+  "required": [
+    "campaign"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

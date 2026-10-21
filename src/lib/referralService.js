@@ -1,10 +1,13 @@
 import { base44 } from "@/api/base44Client";
+import { getCampaignValidity, dateIsActive } from "@/lib/campaignValidity";
 import { generateTicketNumber, calculateSlaWarningAtMs, PRIORITY_SLA_MINUTES } from "@/lib/slaUtils";
 import { calculateSlaDeadlineWithinServiceHours } from "@/lib/slaAgent";
 import { REFERRAL_TICKET_TYPE, REFERRAL_STATUSES, TERMINAL_REFERRAL_STATUSES, VOUCHER_PER_OFFICE, normalizePhone } from "@/lib/referralConfig";
 
 // פתיחת קריאת שירות לפי מודל הקריאות + רישום ההמלצה
 export async function submitReferral(user, { friend_name, friend_phone, details }) {
+  const validity = await getCampaignValidity("referral");
+  if (!dateIsActive(validity.end_date)) throw new Error("המבצע הסתיים ולא ניתן לשלוח המלצות חדשות");
   const openedAt = new Date();
   const slaMin = PRIORITY_SLA_MINUTES["רגילה"] || null;
   let sla = {};

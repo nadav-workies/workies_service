@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { escapeHtml } from '../../shared/security.ts';
+import { dateIsActive } from '../../shared/campaignValidity.ts';
 
 function normalizeEmail(val) {
   return String(val || '').trim().toLowerCase();
@@ -22,7 +23,7 @@ function buildGcalLink(event, startDateTime, endDateTime) {
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.event_name)}&dates=${formatDateForGCal(startDateTime)}/${formatDateForGCal(endDateTime)}&details=${encodeURIComponent(event.event_description || '')}&location=${encodeURIComponent(location)}`;
 }
 
-Deno.serve(async (req) => {
+export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
@@ -35,8 +36,7 @@ Deno.serve(async (req) => {
       if (!activeEvent) return Response.json({ event: null });
 
       // Close registration after event date has passed (end of event day)
-      const eventEnd = new Date(activeEvent.event_date + 'T23:59:59');
-      if (new Date() > eventEnd) {
+      if (!dateIsActive(activeEvent.registration_end_date || activeEvent.event_date)) {
         return Response.json({ event: null, event_ended: true, event_name: activeEvent.event_name });
       }
 
@@ -85,8 +85,7 @@ Deno.serve(async (req) => {
       }
 
       // Block registration after event date
-      const eventEndDate = new Date(event.event_date + 'T23:59:59');
-      if (new Date() > eventEndDate) {
+      if (!dateIsActive(event.registration_end_date || event.event_date)) {
         return Response.json({ error: 'ההרשמה לאירוע זה כבר נסגרה' }, { status: 400 });
       }
 
@@ -214,4 +213,4 @@ Deno.serve(async (req) => {
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
-});
+}

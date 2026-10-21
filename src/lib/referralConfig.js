@@ -1,11 +1,6 @@
 export const TERMS_IMAGE_URL = "https://media.base44.com/images/public/6a1d5a36316988d9f113f88e/47e4d75f8_file_00000000b38481f6839400cfd71d7a7e.png";
-export const CAMPAIGN_END_DATE = "2026-10-15";
 export const REFERRAL_TICKET_TYPE = "חבר מביא חבר";
 export const VOUCHER_PER_OFFICE = 500;
-
-export function isCampaignActive(now = new Date()) {
-  return now <= new Date(`${CAMPAIGN_END_DATE}T23:59:59`);
-}
 
 // ticketStatus = הסטטוס שמתעדכן בקריאת השירות המקושרת
 export const REFERRAL_STATUSES = {

@@ -3,6 +3,7 @@ import { Navigate, useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { isManagerOrAdmin } from "@/lib/permissions";
 import LandingShareCard from "@/components/landing/LandingShareCard";
+import CampaignValidityEditor from "@/components/landing/CampaignValidityEditor";
 import LeadsReport from "@/pages/LeadsReport";
 import ReferralsReport from "@/pages/ReferralsReport";
 import campaigns from "@/components/landing/campaigns";
@@ -22,6 +23,7 @@ export default function LandingPages() {
       </TabsList>
       {Object.entries(campaigns).map(([key]) => <TabsContent key={key} value={key} className="space-y-6 mt-5">
         <LandingShareCard key={key} campaign={key} />
+        {user.role === "admin" && <CampaignValidityEditor campaign={key} />}
         <section id={selected === key ? "registrations" : undefined} aria-label={`פניות: ${campaigns[key].title}`} className="scroll-mt-5">
           {key === "referral" ? <ReferralsReport embedded /> : <LeadsReport key={key} campaign={key} embedded />}
         </section>

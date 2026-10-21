@@ -1,4 +1,5 @@
 import DailyOfficeLeadForm from "@/components/landing/DailyOfficeLeadForm";
+import CampaignValidityGate from "@/components/landing/CampaignValidityGate";
 import "@/components/landing/DailyOffice.css";
 
 export default function DailyOffice() {
@@ -16,7 +17,7 @@ export default function DailyOffice() {
           <div className="office-line" aria-hidden="true" />
           <div className="office-heading"><h1>משרד יומי<span>להתנסות</span></h1><p className="office-sub">ללא עלות וללא התחייבות</p></div>
         </div>
-        <DailyOfficeLeadForm />
+        <CampaignValidityGate campaign="office"><DailyOfficeLeadForm /></CampaignValidityGate>
       </div>
     </main>
   );

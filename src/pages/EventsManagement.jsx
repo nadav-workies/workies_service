@@ -89,7 +89,7 @@ export default function EventsManagement() {
             activeEvent={activeEvent}
             isLoading={eventsLoading}
             user={user}
-            onActivate={(id) => activateMutation.mutate(id)}
+            onActivate={(id) => activateMutation.mutateAsync(id)}
             activating={activateMutation.isPending}
           />
         </TabsContent>

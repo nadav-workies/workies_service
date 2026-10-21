@@ -20,7 +20,7 @@ export default function DailyOfficeLeadForm({ campaign = "office" }) {
     if (!name || !/^\+?[\d\s()-]+$/.test(phone) || phone.replace(/\D/g, "").length < 9) { setError("יש למלא שם ומספר טלפון תקין."); return; }
     setBusy(true); setError("");
     try {
-      await base44.entities[config.entity].create({ name, phone, status: "new" });
+      await base44.functions.invoke("submitCampaignLead", { campaign, name, phone });
       setDone(true);
     } catch { setError("הפנייה לא נשלחה. נסו שוב בעוד רגע."); }
     finally { setBusy(false); }

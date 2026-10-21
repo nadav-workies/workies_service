@@ -2,11 +2,11 @@ import { useState } from "react";
 import { Gift, FileText } from "lucide-react";
 import PublicReferralForm from "@/components/referral/PublicReferralForm";
 import ReferralTermsDialog from "@/components/referral/ReferralTermsDialog";
-import { isCampaignActive } from "@/lib/referralConfig";
+import CampaignValidityGate from "@/components/landing/CampaignValidityGate";
 
 export default function ReferralLanding({ className = "" }) {
   const [termsOpen, setTermsOpen] = useState(false);
-  const active = isCampaignActive();
+
 
   return (
     <div className={`landing-font bg-zinc-950 text-white px-4 py-8 ${className}`} dir="rtl">
@@ -22,8 +22,7 @@ export default function ReferralLanding({ className = "" }) {
           </button>
         </div>
         <div className="rounded-2xl bg-zinc-900 border border-zinc-800 p-4">
-          {active ? <PublicReferralForm onOpenTerms={() => setTermsOpen(true)} />
-            : <p className="text-center text-sm text-zinc-300 py-6">המבצע הסתיים ב-15.10.2026. תודה לכל הממליצים!</p>}
+          <CampaignValidityGate campaign="referral"><PublicReferralForm onOpenTerms={() => setTermsOpen(true)} /></CampaignValidityGate>
         </div>
       </div>
       <ReferralTermsDialog open={termsOpen} onClose={() => setTermsOpen(false)} />

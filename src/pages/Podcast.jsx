@@ -1,4 +1,5 @@
 import DailyOfficeLeadForm from "@/components/landing/DailyOfficeLeadForm";
+import CampaignValidityGate from "@/components/landing/CampaignValidityGate";
 import "@/components/landing/Podcast.css";
 
 export default function Podcast() {
@@ -18,7 +19,7 @@ export default function Podcast() {
         </div>
       </header>
       <section aria-label="הרשמה להתנסות בפודקאסט" className="podcast-form-section">
-        <DailyOfficeLeadForm campaign="podcast" />
+        <CampaignValidityGate campaign="podcast"><DailyOfficeLeadForm campaign="podcast" /></CampaignValidityGate>
         <p className="podcast-more">MORE THAN AN OFFICE</p>
       </section>
     </div>

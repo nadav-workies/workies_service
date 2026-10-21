@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 import { roomsByNumber } from '../../shared/rooms.ts';
 
-const CAMPAIGN_END = new Date('2026-10-15T23:59:59+03:00');
+import { campaignIsActive } from '../../shared/campaignValidity.ts';
 
 function clean(val, max) {
   return String(val ?? '').trim().slice(0, max);
@@ -24,7 +24,7 @@ export default async function (req) {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
 
-    if (new Date() > CAMPAIGN_END) {
+    if (!await campaignIsActive(base44, 'referral')) {
       return Response.json({ error: 'המבצע הסתיים ולא ניתן לשלוח המלצות חדשות' }, { status: 400 });
     }
 

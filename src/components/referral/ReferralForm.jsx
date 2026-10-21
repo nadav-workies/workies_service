@@ -6,7 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Loader2, Send, CheckCircle2 } from "lucide-react";
 import { submitReferral } from "@/lib/referralService";
-import { isCampaignActive } from "@/lib/referralConfig";
+import useCampaignValidity from "@/hooks/useCampaignValidity";
+import { formatEndDate } from "@/lib/campaignValidity";
 
 export default function ReferralForm({ user, onSubmitted, onOpenTerms }) {
   const [form, setForm] = useState({ friend_name: "", friend_phone: "", details: "" });
@@ -14,7 +15,7 @@ export default function ReferralForm({ user, onSubmitted, onOpenTerms }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(null);
-  const active = isCampaignActive();
+  const { active, endDate } = useCampaignValidity("referral");
   const update = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const phoneOk = form.friend_phone.replace(/\D/g, "").length >= 9;
   const valid = form.friend_name.trim() && phoneOk && accepted && active;
@@ -68,7 +69,7 @@ export default function ReferralForm({ user, onSubmitted, onOpenTerms }) {
           <input type="checkbox" checked={accepted} onChange={e => setAccepted(e.target.checked)} className="w-4 h-4 mt-0.5" />
           <span>קראתי ואני מאשר/ת את <button type="button" onClick={onOpenTerms} className="text-primary underline">תקנון המבצע</button></span>
         </label>
-        {!active && <p className="text-sm text-destructive">המבצע הסתיים ב-15.10.2026 ולא ניתן לשלוח המלצות חדשות.</p>}
+        {!active && <p className="text-sm text-destructive">המבצע אינו פעיל כרגע. תוקף: {formatEndDate(endDate)}.</p>}
         {error && <p className="text-sm text-destructive">{error}</p>}
         <Button type="submit" disabled={!valid || saving} className="w-full gap-2">
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
