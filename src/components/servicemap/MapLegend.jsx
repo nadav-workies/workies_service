@@ -1,7 +1,7 @@
 import { ROOM_STATUS_COLORS } from '@/lib/roomServiceStatus';
 
 const ITEMS = [
-  { status: 'clear', label: 'ללא קריאות' },
+  { status: 'clear', label: 'ללא חיווי: ללא קריאות' },
   { status: 'open', label: 'קריאה פתוחה' },
   { status: 'warning', label: 'מתקרב ל-SLA' },
   { status: 'critical', label: 'קריטי' },
@@ -17,7 +17,7 @@ export default function MapLegend() {
           <div key={item.status} className="flex items-center gap-1.5">
             <div
               className="w-4 h-4 rounded border"
-              style={{ backgroundColor: c.bg, borderColor: c.border }}
+              style={item.status === 'clear' ? undefined : { backgroundColor: c.bg, borderColor: c.border }}
             />
             <span className="text-xs text-muted-foreground">{item.label}</span>
           </div>
@@ -29,7 +29,7 @@ export default function MapLegend() {
           <span className="bg-orange-500 text-white text-[8px] font-bold px-1 rounded-full">1</span>
           <span className="bg-blue-500 text-white text-[8px] font-bold px-1 rounded-full">3</span>
         </div>
-        <span className="text-xs text-muted-foreground">מספר קריאות לפי סוג</span>
+        <span className="text-xs text-muted-foreground">מספר הקריאות הפתוחות באזור</span>
       </div>
     </div>
   );

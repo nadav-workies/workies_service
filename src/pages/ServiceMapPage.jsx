@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { isManagerOrAdmin } from '@/lib/slaUtils';
-import { getRoomServiceStatus } from '@/lib/roomServiceStatus';
+import { getPublicAreaServiceStatus } from '@/lib/roomServiceStatus';
+import { getFloorPlanRoomStatus as getRoomServiceStatus } from '@/lib/floorPlanStatus';
 import { WORKIES_ROOMS } from '@/lib/workiesRooms';
 import ServiceMap from '@/components/servicemap/ServiceMap';
 import MapLegend from '@/components/servicemap/MapLegend';
@@ -42,6 +43,8 @@ export default function ServiceMapPage() {
 
   const tickets = openTickets;
   const isLoading = loadingOpen;
+  const currentRoomStatus = selectedRoom ? getRoomServiceStatus(selectedRoom.room_number, tickets) : null;
+  const currentPublicAreaStatus = selectedPublicArea ? getPublicAreaServiceStatus(selectedPublicArea.area_key, tickets) : null;
 
   // חדרים עמוסים: לפי קריאות פתוחות בלבד (ללא היסטוריה מצטברת)
   const busyRooms = {};
@@ -141,8 +144,8 @@ export default function ServiceMapPage() {
       <MapLegend />
 
       {/* Map + side panel */}
-      <div className="flex gap-4 items-start">
-        <div className="flex-1 min-w-0 bg-card border rounded-xl p-4 overflow-x-auto">
+      <div className="flex flex-col xl:flex-row gap-4 items-start">
+        <div className="flex-1 w-full min-w-0 bg-card border rounded-xl p-3 sm:p-4 overflow-x-auto">
           <ServiceMap
             tickets={tickets}
             busyRooms={busyRooms}
@@ -154,18 +157,18 @@ export default function ServiceMapPage() {
         </div>
 
         {selectedRoom && selectedRoomStatus ? (
-          <div className="w-80 shrink-0 bg-card border rounded-xl overflow-hidden sticky top-4 max-h-[80vh] flex flex-col">
+          <div className="w-full xl:w-80 shrink-0 bg-card border rounded-xl overflow-hidden xl:sticky top-4 max-h-[80vh] flex flex-col">
             <RoomSidePanel
               room={selectedRoom}
-              roomStatus={selectedRoomStatus}
+              roomStatus={currentRoomStatus}
               onClose={() => { setSelectedRoom(null); setSelectedRoomStatus(null); }}
             />
           </div>
         ) : selectedPublicArea && selectedPublicAreaStatus ? (
-          <div className="w-80 shrink-0 bg-card border rounded-xl overflow-hidden sticky top-4 max-h-[80vh] flex flex-col">
+          <div className="w-full xl:w-80 shrink-0 bg-card border rounded-xl overflow-hidden xl:sticky top-4 max-h-[80vh] flex flex-col">
             <PublicAreaSidePanel
               area={selectedPublicArea}
-              areaStatus={selectedPublicAreaStatus}
+              areaStatus={currentPublicAreaStatus}
               onClose={() => { setSelectedPublicArea(null); setSelectedPublicAreaStatus(null); }}
             />
           </div>

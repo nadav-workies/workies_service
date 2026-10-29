@@ -1,85 +1,43 @@
-import { useMemo } from 'react';
 import { WORKIES_ROOMS, WORKIES_PUBLIC_AREAS } from '@/lib/workiesRooms';
-import { getRoomServiceStatus, getPublicAreaServiceStatus, ROOM_STATUS_COLORS } from '@/lib/roomServiceStatus';
-import RoomCell from './RoomCell';
-import PublicAreaCell from './PublicAreaCell';
+import { getPublicAreaServiceStatus } from '@/lib/roomServiceStatus';
+import { getFloorPlanRoomStatus } from '@/lib/floorPlanStatus';
+import { FLOOR_PLAN_IMAGE, FLOOR_PLAN_ROOMS, FLOOR_PLAN_PUBLIC_AREAS, FLOOR_PLAN_ROOM_NAMES } from '@/components/servicemap/floorPlanLayout';
+import FloorPlanHotspot from '@/components/servicemap/FloorPlanHotspot';
+import PublicAreaCell from '@/components/servicemap/PublicAreaCell';
 
-const AREA_GROUPS = [
-  { key: 'wing_a', label: 'כנף A — 1–25',  rooms: ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25'] },
-  { key: 'wing_b', label: 'כנף B — 26–50', rooms: ['26','27','28','29','30','31','32','33','34','35','36','37','38','39','40','41','42','43','44','45','46','47','48','49','50'] },
-  { key: 'wing_c', label: 'כנף C — 51–85', rooms: ['51','52','53','54','55','56','57','58','59','60','61','62','63','64','65','66','67','68','69','70','71','72','73','74','75','76','77','78','79','80','81','82','83','84','85'] },
-  { key: 'wing_d', label: 'כנף D — 101–105', rooms: ['101','102','103','104','105'] },
-];
-
-const ROOM_MAP = Object.fromEntries(WORKIES_ROOMS.map(r => [r.room_number, r]));
+const ROOM_MAP = Object.fromEntries(WORKIES_ROOMS.map(room => [room.room_number, { ...room,
+  room_label: FLOOR_PLAN_ROOM_NAMES[room.room_number] || `משרד ${room.room_number.padStart(2, '0')}`,
+  room_area: room.room_number === '50' ? 'אולפן פודקאסט' : room.room_number === '74' ? 'חדרי ישיבות' : room.room_area,
+}]));
+const PUBLIC_MAP = Object.fromEntries(WORKIES_PUBLIC_AREAS.map(area => [area.area_key, area]));
+const CORRIDORS = WORKIES_PUBLIC_AREAS.filter(area => area.requires_near_room);
 
 export default function ServiceMap({ tickets, onRoomSelect, selectedRoom, onPublicAreaSelect, selectedPublicArea }) {
-  const statusMap = useMemo(() => {
-    const map = {};
-    WORKIES_ROOMS.forEach(r => {
-      map[r.room_number] = getRoomServiceStatus(r.room_number, tickets);
-    });
-    return map;
-  }, [tickets]);
-
-  const publicAreaStatusMap = useMemo(() => {
-    const map = {};
-    WORKIES_PUBLIC_AREAS.forEach(a => {
-      map[a.area_key] = getPublicAreaServiceStatus(a.area_key, tickets);
-    });
-    return map;
-  }, [tickets]);
-
-  return (
-    <div className="space-y-3" dir="rtl">
-      {AREA_GROUPS.map(group => (
-        <div key={group.key}>
-          <p className="text-[11px] font-semibold text-muted-foreground mb-1.5 border-b pb-0.5">{group.label}</p>
-          <div
-            className="grid gap-1"
-            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(72px, 1fr))' }}
-          >
-            {group.rooms.map(rn => {
-              const room = ROOM_MAP[rn];
-              if (!room) return null;
-              const roomStatus = statusMap[rn] || { status: 'clear', openCount: 0, urgentCount: 0, breachedCount: 0, tickets: [], mostUrgentTicket: null, slaDisplay: null };
-              return (
-                <div key={rn} style={{ height: 52 }}>
-                  <RoomCell
-                    room={room}
-                    roomStatus={roomStatus}
-                    isSelected={selectedRoom?.room_number === rn}
-                    onClick={() => onRoomSelect(room, roomStatus)}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      ))}
-
-      {/* Public Areas */}
-      <div>
-        <p className="text-[11px] font-semibold text-muted-foreground mb-1.5 border-b pb-0.5">אזורים ציבוריים</p>
-        <div
-          className="grid gap-1"
-          style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(72px, 1fr))' }}
-        >
-          {WORKIES_PUBLIC_AREAS.map(area => {
-            const areaStatus = publicAreaStatusMap[area.area_key] || { status: 'clear', openCount: 0, urgentCount: 0, breachedCount: 0, tickets: [], mostUrgentTicket: null, slaDisplay: null };
-            return (
-              <div key={area.area_key} style={{ height: 52 }}>
-                <PublicAreaCell
-                  area={area}
-                  areaStatus={areaStatus}
-                  isSelected={selectedPublicArea?.area_key === area.area_key}
-                  onClick={() => onPublicAreaSelect?.(area, areaStatus)}
-                />
-              </div>
-            );
-          })}
-        </div>
-      </div>
+  return <div className="space-y-3" dir="rtl">
+    <p className="text-xs text-muted-foreground">לחצו על חדר או אזור להצגת הקריאות. צבעי השרטוט מציינים את סוג החלל; חיווי צבעוני ומספר מציינים קריאות פתוחות.</p>
+    <div className="overflow-x-auto rounded-lg border" dir="ltr">
+      <svg viewBox="30 138 964 486" className="block w-full min-w-[800px]" aria-label="מפת המתחם לפי השרטוט המעודכן, אוקטובר 2026">
+        <image href={FLOOR_PLAN_IMAGE} x="0" y="0" width="1024" height="750" />
+        {FLOOR_PLAN_ROOMS.map(box => {
+          const room = ROOM_MAP[box.number];
+          const serviceStatus = getFloorPlanRoomStatus(box.number, tickets);
+          return <FloorPlanHotspot key={box.number} box={box} label={room.room_label} serviceStatus={serviceStatus}
+            selected={selectedRoom?.room_number === box.number} onSelect={() => onRoomSelect(room, serviceStatus)} />;
+        })}
+        {FLOOR_PLAN_PUBLIC_AREAS.map(box => {
+          const area = PUBLIC_MAP[box.key];
+          const serviceStatus = getPublicAreaServiceStatus(box.key, tickets);
+          return <FloorPlanHotspot key={box.id} box={box} label={area.area_label} serviceStatus={serviceStatus}
+            selected={selectedPublicArea?.area_key === box.key} onSelect={() => onPublicAreaSelect?.(area, serviceStatus)} />;
+        })}
+      </svg>
     </div>
-  );
+    <p className="text-xs text-muted-foreground">שירותים, לאונג׳ וטרקלין: החיווי משותף לכל המיקומים מאותו סוג. מספר הקריאות מופיע בתוך העיגול; ! מציין חיווי קריטי או חריגה.</p>
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      {CORRIDORS.map(area => { const serviceStatus = getPublicAreaServiceStatus(area.area_key, tickets);
+        return <div key={area.area_key} className="h-14"><PublicAreaCell area={area} areaStatus={serviceStatus}
+          isSelected={selectedPublicArea?.area_key === area.area_key} onClick={() => onPublicAreaSelect?.(area, serviceStatus)} /></div>;
+      })}
+    </div>
+  </div>;
 }
