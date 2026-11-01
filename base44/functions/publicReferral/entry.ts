@@ -42,17 +42,14 @@ export default async function (req) {
       return Response.json({ error: 'יש לאשר את תקנון המבצע' }, { status: 400 });
     }
 
-    // Match referrer to the active tenant of the selected office
-    const tenants = room
-      ? await base44.asServiceRole.entities.RoomTenant.filter({ customer_status: 'active', room_number: roomNumber }, '-created_date', 50)
-      : [];
-    const tenant = tenants.find(t => t.is_primary_contact !== false) || tenants[0] || null;
-
+    // Security: anonymous submitters are not bound to a real tenant identity.
+    // Staff verify the referrer before attributing the referral.
+    const tenant = null;
     const now = new Date();
     const referrerRoom = isDesk ? 'עמדה (ללא משרד)' : `${room.room_label} (${roomNumber})`;
-    const referrer_name = tenant?.customer_name || (isDesk ? 'דייר/ת עמדה' : `דייר/ת משרד ${roomNumber}`);
-    const referrer_phone = tenant?.phone || '';
-    const referrer_email = tenant?.email || '';
+    const referrer_name = (isDesk ? 'דייר/ת עמדה' : `דייר/ת משרד ${roomNumber}`) + ' (לא מאומת)';
+    const referrer_phone = '';
+    const referrer_email = '';
 
     const ticket = await base44.asServiceRole.entities.ServiceTicket.create({
       ticket_number: ticketNumber(),

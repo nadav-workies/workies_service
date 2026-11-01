@@ -123,18 +123,16 @@ async function getServiceFollowupRecipients(base44) {
 }
 
 // ─── Feedback token + link ────────────────────────────────────────
-function getAppBaseUrl(req) {
-  const origin = req.headers.get('origin');
-  if (origin) return origin;
-  const host = req.headers.get('host');
-  if (host) return `https://${host}`;
-  return '';
+// Canonical app origin — never derived from caller-controlled headers
+const APP_BASE_URL = 'https://service.workies.co.il';
+function getAppBaseUrl(_req) {
+  return APP_BASE_URL;
 }
 
 async function ensureFeedbackFields(base44, ticket, req) {
   const token = ticket.feedback_token || crypto.randomUUID();
   const baseUrl = getAppBaseUrl(req);
-  const feedbackLink = ticket.feedback_link || `${baseUrl}/feedback/${token}`;
+  const feedbackLink = `${baseUrl}/feedback/${token}`;
   const updates = { feedback_token: token, feedback_link: feedbackLink };
   await base44.asServiceRole.entities.ServiceTicket.update(ticket.id, updates);
   return { ...ticket, ...updates };

@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { escapeHtml } from '../../shared/security.ts';
 
 function buildHtml(body) {
   return `<div dir="rtl" style="font-family:'Heebo',Arial,sans-serif;max-width:560px;margin:auto;color:#1a1a2e;">
@@ -16,12 +17,14 @@ function buildHtml(body) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const payload = await req.json();
-
-    // Called from entity automation: payload has event + data
-    const user = payload.data || payload.user;
+    // Security: never trust the request body; email only the authenticated caller, once.
+    const user = await base44.auth.me().catch((e) => (e.status === 401 ? null : Promise.reject(e)));
     if (!user?.email) {
-      return Response.json({ ok: false, reason: 'no user email' });
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const alreadySent = await base44.asServiceRole.entities.NotificationLog.filter({ notification_key: 'user_registered', recipient_email: user.email });
+    if (alreadySent.length) {
+      return Response.json({ ok: false, reason: 'already sent' });
     }
 
     // Get notification setting
@@ -31,7 +34,7 @@ Deno.serve(async (req) => {
       return Response.json({ ok: false, reason: 'notification disabled' });
     }
 
-    const userName = user.full_name || user.email;
+    const userName = escapeHtml(user.full_name || user.email);
     const subject = setting.subject_template || 'ברוך הבא למערכת קריאות השירות של Workies';
     const body = (setting.body_template || '').replace('{{full_name}}', userName).replace('{{user_name}}', userName);
 

@@ -37,6 +37,12 @@ export default async function(req: Request): Promise<Response> {
     if (!stage || stage.status !== 'completed') {
       return Response.json({ skipped: true, reason: 'stage not found or not completed' });
     }
+    // Idempotency: send the completion summary only once per completion
+    const priorLogs = await base44.asServiceRole.entities.OnboardingAuditLog.filter({ stage_id: stage.id, new_value: 'completed' }, '-created_date', 1);
+    const lastLog = priorLogs[0];
+    if (lastLog && (!stage.completed_at || new Date(lastLog.created_date) >= new Date(stage.completed_at))) {
+      return Response.json({ skipped: true, reason: 'already notified' });
+    }
 
     // Get the onboarding track for context (non-fatal if lookup fails)
     let onboarding = null;

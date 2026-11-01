@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { escapeHtml } from '../../shared/security.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -59,7 +60,7 @@ Deno.serve(async (req) => {
           to: user.email,
           subject: "🎉 יום הולדת שמח!",
           body: `<div dir="rtl" style="font-family: Heebo, Arial, sans-serif; text-align: center; padding: 40px; background: #fef3f2; border-radius: 12px;">
-            <h1 style="color: #f97316; margin-bottom: 20px;">🎉 יום הולדת שמח, ${user.full_name || ''}!</h1>
+            <h1 style="color: #f97316; margin-bottom: 20px;">🎉 יום הולדת שמח, ${escapeHtml(user.full_name || '')}!</h1>
             <p style="font-size: 18px; color: #333; line-height: 1.6;">כל צוות Workies מאחל לך שנה מוצלחת, גדושה בבריאות, אושר והצלחה! 🎂🎁</p>
             <p style="color: #666; margin-top: 30px;">שלכם תמיד,<br><strong>צוות Workies</strong></p>
           </div>`
@@ -77,7 +78,7 @@ Deno.serve(async (req) => {
 
       const birthdayList = birthdaysTomorrow.map(u => {
         const bd = new Date(u.birthdate + "T00:00:00");
-        return `• <strong>${u.full_name || u.email}</strong> — יום הולדת מחר (${bd.getDate()}/${bd.getMonth() + 1})`;
+        return `• <strong>${escapeHtml(u.full_name || u.email)}</strong> — יום הולדת מחר (${bd.getDate()}/${bd.getMonth() + 1})`;
       }).join('<br>');
 
       for (const email of managerEmails) {

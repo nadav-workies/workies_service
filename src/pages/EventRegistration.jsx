@@ -163,17 +163,6 @@ function SuccessState({ result, event, fullName }) {
         </div>
       )}
 
-      {result.is_active_tenant && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-sm text-blue-800">
-          זיהינו אותך כדייר פעיל ב־Workies! 👋
-        </div>
-      )}
-
-      {!result.email_sent && (
-        <p className="text-xs text-muted-foreground mb-4">
-          הערה: לא הצלחנו לשלוח מייל אישור, אך ההרשמה נשמרה בהצלחה.
-        </p>
-      )}
 
       <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
         <Button onClick={() => downloadICS(fullEvent)} variant="outline" className="gap-2 h-11">

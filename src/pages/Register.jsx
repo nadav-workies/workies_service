@@ -46,7 +46,7 @@ export default function Register() {
         base44.auth.setToken(result.access_token);
       }
       // Send welcome email (fire-and-forget)
-      base44.functions.invoke('userRegistered', { user: { email, full_name: email.split('@')[0] } }).catch(() => {});
+      base44.functions.invoke('userRegistered', {}).catch(() => {});
       window.location.href = "/";
     } catch (err) {
       setError(err.message || "Invalid verification code");

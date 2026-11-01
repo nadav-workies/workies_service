@@ -195,8 +195,6 @@ export default async function(req) {
         registration_id: registration.id,
         status: registrationStatus,
         is_full: isFull,
-        is_active_tenant: !!matchedTenant,
-        email_sent: emailSent,
         gcal_link: gcalLink,
         event: {
           event_name: event.event_name,
