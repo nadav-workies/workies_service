@@ -260,21 +260,3 @@
   .wai *{animation:none!important;transition:none!important}
   .wai .sk{stroke-dashoffset:0}.wai .hand{opacity:1}.wai .layer.final{clip-path:inset(0 0 0 0)}.wai .scan{display:none}
 }
-
-/* PUNCH CARD */
-.wai .punch{margin:22px 0 6px;border:2px dashed var(--claude);border-radius:16px;padding:16px 18px;background:rgba(217,119,87,.08);max-width:520px}
-.wai .pc-head{display:flex;align-items:center;gap:10px;color:var(--paper);font-size:.98rem}
-.wai .pc-head b{font-weight:800;flex:1}
-.wai .pc-day{font-family:var(--mono);font-weight:700;color:var(--claude)}
-.wai .clock{width:24px;height:24px;color:var(--claude);flex:none}
-.wai .clock .h-min{transform-origin:12px 12px;animation:wai-tick 12s linear infinite}
-.wai .clock .h-hr{transform-origin:12px 12px;animation:wai-tick 144s linear infinite}
-@keyframes wai-tick{to{transform:rotate(360deg)}}
-.wai .pc-slots{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin:14px 0 10px;direction:ltr}
-.wai .slot{aspect-ratio:1;border-radius:50%;border:2px solid #4a4a4a;display:grid;place-items:center;font-family:var(--mono);font-size:.72rem;color:#8d9799;font-weight:700}
-.wai .slot.in{background:var(--claude);border-color:var(--claude);color:var(--ink);font-size:.9rem}
-.wai .slot.next{border-color:var(--claude);color:var(--claude);animation:wai-pulse 1.8s ease-in-out infinite}
-@keyframes wai-pulse{50%{box-shadow:0 0 0 6px rgba(217,119,87,.25)}}
-.wai .pc-text{font-weight:700;font-size:.98rem;color:var(--paper);margin:0}
-@media (max-width:560px){.wai .pc-slots{gap:4px}.wai .slot{font-size:.62rem}.wai .punch{padding:14px}}
-@media (prefers-reduced-motion:reduce){.wai .clock .h-min,.wai .clock .h-hr,.wai .slot.next{animation:none}}

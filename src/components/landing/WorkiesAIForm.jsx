@@ -48,7 +48,7 @@ export default function WorkiesAIForm({ onDone }) {
         <div className="reg-check" aria-hidden="true">✓</div>
         <h3>נרשמתם.</h3>
         <p>נתראה ב{EVENT.dayLabel} בשעה 13:30, ב-{EVENT.place}.</p>
-        <p className="reg-muted">הסדנה יוצאת לדרך עם 10 נרשמים לפחות. נעדכן אתכם בטלפון או בוואטסאפ.</p>
+        <p className="reg-muted">נעדכן אתכם בטלפון או בוואטסאפ לקראת המפגש.</p>
         <a className="btn btn-line-dark" href={EVENT.calendarUrl} target="_blank" rel="noopener noreferrer">הוספה ליומן</a>
       </div>
     );
@@ -66,7 +66,7 @@ export default function WorkiesAIForm({ onDone }) {
       <label htmlFor="f-biz">שם העסק<input id="f-biz" name="business_name" type="text" autoComplete="organization" maxLength={150} required disabled={busy} /></label>
       {error && <p className="reg-err" role="alert">{error}</p>}
       <button className="btn" type="submit" disabled={busy}>{busy ? "שולחים…" : "שריון מקום"}</button>
-      <p className="reg-note">ללא תשלום ובלי כרטיס אשראי. הסדנה יוצאת לדרך עם 10 נרשמים לפחות. האירוע במימון מלא של חברת וורקיז.</p>
+      <p className="reg-note">ללא תשלום ובלי כרטיס אשראי. האירוע במימון מלא של חברת וורקיז.</p>
     </form>
   );
 }

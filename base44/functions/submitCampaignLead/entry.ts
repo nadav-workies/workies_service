@@ -9,10 +9,6 @@ export default async function(req) {
     const entity = { office: 'DailyOfficeLead', podcast: 'PodcastLead', workies_ai: 'WorkiesAILead' }[campaign];
     if (!entity) return Response.json({ error: 'קמפיין לא תקין' }, { status: 400 });
     if (!await campaignIsActive(base44, campaign)) return Response.json({ error: 'ההרשמה הסתיימה' }, { status: 400 });
-    if (campaign === 'workies_ai' && body.action === 'count') {
-      const rows = await base44.asServiceRole.entities.WorkiesAILead.filter({ session_date: '2026-11-10' }, '-created_date', 200);
-      return Response.json({ count: rows.filter((r) => r.status !== 'not_relevant').length });
-    }
     const name = String(rawName || '').trim().slice(0, 100);
     const phone = String(rawPhone || '').trim().slice(0, 30);
     if (!name || !/^\+?[\d\s()-]+$/.test(phone) || phone.replace(/\D/g, '').length < 9) return Response.json({ error: 'יש למלא שם וטלפון תקינים' }, { status: 400 });

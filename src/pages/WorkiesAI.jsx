@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { base44 } from "@/api/base44Client";
 import CampaignValidityGate from "@/components/landing/CampaignValidityGate";
 import WorkiesAIForm, { EVENT } from "@/components/landing/WorkiesAIForm";
 import "@/components/landing/WorkiesAI.css";
@@ -11,7 +10,6 @@ const BUSINESSES = ["חדר כושר", "קבלן שיפוצים", "משרד רו
 const STAGES = [["צורך", "מגדירים צורך עסקי ומאפיינים פתרון."], ["Base44", "מכירים את סביבת Base44."], ["Claude", "Claude מפתח את האפיון והתוכן."], ["גרסה ראשונה", "בונים גרסה ראשונית של העמוד."]];
 const FAQ = [
   ["כמה זה עולה?", "הסדנה ללא תשלום, והאירוע במימון מלא של חברת וורקיז. לא נדרש כרטיס אשראי."],
-  ["מתי הסדנה יוצאת לדרך?", "כשיש לפחות 10 נרשמים. כל נרשם יקבל מאיתנו עדכון בנוגע לקיום הסדנה."],
   ["ומה אם לא אוכל להגיע?", "אין חיוב. אם השתנו התוכניות, עדכנו אותנו כדי שנוכל לשחרר את המקום למישהו אחר."],
   ["צריך ידע בתכנות?", "לא. לא צריך ידע מוקדם ולא רקע טכנולוגי. רק להגיע עם העסק שלכם."],
   ["כמה מקומות יש?", "מספר המקומות מוגבל, וההרשמה מראש."],
@@ -91,36 +89,6 @@ function DateHero() {
           <b className="sec">{String(ss).padStart(2, "0")}</b><small>שניות</small>
         </div>
       )}
-    </div>
-  );
-}
-
-function PunchCard() {
-  const [count, setCount] = useState(null);
-  useEffect(() => {
-    let off = false;
-    base44.functions.invoke("submitCampaignLead", { campaign: "workies_ai", action: "count" })
-      .then((r) => { const n = Number(r?.data?.count ?? r?.count); if (!off && Number.isFinite(n)) setCount(Math.max(0, Math.min(10, Math.floor(n)))); })
-      .catch(() => {});
-    return () => { off = true; };
-  }, []);
-  const n = count ?? 0;
-  const text = n >= 10
-    ? "הסדנה יוצאת לדרך. ההרשמה עדיין פתוחה."
-    : n > 0
-      ? `נרשמו ${n}. חסרים עוד ${10 - n} כדי שהסדנה תצא לדרך.`
-      : "הסדנה יוצאת לדרך ב-10 נרשמים. היו הראשונים לסמן נוכחות.";
-  return (
-    <div className="punch" role="group" aria-label={`כרטיס נוכחות: ${n} מתוך 10 נרשמים`}>
-      <div className="pc-head">
-        <svg className="clock" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2" /><path className="h-min" d="M12 12V5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /><path className="h-hr" d="M12 12l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
-        <b>כרטיס נוכחות · סדנת Claude</b>
-        <span className="pc-day">10.11</span>
-      </div>
-      <div className="pc-slots" aria-hidden="true">
-        {Array.from({ length: 10 }, (_, i) => <span key={i} className={`slot${i < n ? " in" : ""}${i === n && n < 10 ? " next" : ""}`}>{i < n ? "✓" : String(i + 1).padStart(2, "0")}</span>)}
-      </div>
-      <p className="pc-text">{text}</p>
     </div>
   );
 }
@@ -310,7 +278,7 @@ export default function WorkiesAI() {
           <div className="hero-date"><DateHero /></div>
           <div className="hero-cta">
             <Cta>שריון מקום לסדנה</Cta>
-            <p className="hero-note">ללא תשלום, ברישום מראש<br />האירוע במימון מלא של חברת וורקיז<br /><b>הסדנה יוצאת לדרך עם 10 נרשמים לפחות</b></p>
+            <p className="hero-note">ללא תשלום, ברישום מראש<br />האירוע במימון מלא של חברת וורקיז</p>
           </div>
         </div>
       </section>
@@ -320,7 +288,6 @@ export default function WorkiesAI() {
           <div className="reg-side">
             <p className="eyebrow"><Spark />מפגש 01 · 60 דקות</p>
             <h2>יוצאים עם רעיון.<br />נוחתים עם <em>עמוד נחיתה</em>.</h2>
-            <PunchCard />
             <Ticket />
           </div>
           <div className="reg-form">
