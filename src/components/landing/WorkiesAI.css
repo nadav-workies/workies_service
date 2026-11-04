@@ -45,11 +45,12 @@
 .wai .lead{font-size:1.2rem;color:#D5DEDF;max-width:34ch}
 .wai .hero-note{font-size:.95rem;color:var(--muted-d);line-height:1.7}
 .wai .hero-note b{color:var(--claude);font-weight:800}
+.wai .hero-note b.notech{color:var(--paper)}
 .wai .hero h1 em{color:var(--claude)}
 .wai .kicker .spark,.wai .eyebrow .spark{color:var(--claude)}
 .wai .steps b{color:var(--claude)}
 .wai .hero-copy{display:flex;flex-direction:column;gap:22px;min-width:0}
-.wai .hero h1{font-size:clamp(2.3rem,4.6vw,4rem);font-weight:900;line-height:1.08;letter-spacing:-.01em}
+.wai .hero h1{font-size:clamp(2rem,3.9vw,3.4rem);font-weight:900;line-height:1.08;letter-spacing:-.01em}
 .wai .meta{display:flex;flex-wrap:wrap;gap:8px}
 .wai .meta span{font-size:.95rem;font-weight:500;color:#E1E8E9;padding:6px 12px;border:1px solid var(--line-d);border-radius:99px;background:rgba(255,255,255,.03)}
 .wai .hero .cta{font-size:1.15rem;padding:19px 32px}
@@ -244,7 +245,7 @@
   .wai .dc-digits{font-size:clamp(3.4rem,19vw,5rem);gap:4px}
   .wai .dc-time{font-size:1.35rem}
   .wai .lead{font-size:1.05rem}
-  .wai .hero h1{font-size:clamp(1.9rem,8.6vw,2.5rem)}
+  .wai .hero h1{font-size:clamp(1.75rem,7.4vw,2.3rem)}
   .wai .hero-note{text-align:center}
   .wai .cta{align-self:stretch;justify-content:center}
   .wai .fields{grid-template-columns:1fr 1fr}

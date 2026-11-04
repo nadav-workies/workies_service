@@ -272,13 +272,13 @@ export default function WorkiesAI() {
         <div className="wrap">
           <div className="hero-title">
             <p className="kicker"><Spark />סדנה מעשית לבעלי עסקים · Workies באר שבע</p>
-            <h1>סדנת <em>Claude</em>:<br />בניית עמוד נחיתה לעסק</h1>
-            <p className="lead">שעה אחת, מעשית. מתחילים ממשפט אחד ל-Claude ובונים יחד עמוד נחיתה לעסק שלכם.</p>
+            <h1>סדנת פיתוח עמודי נחיתה<br />עם <em>Claude</em></h1>
+            <p className="lead">כל משתתף יוצא עם הכשרה ותוצרים עסקיים בסוף המפגש.</p>
           </div>
           <div className="hero-date"><DateHero /></div>
           <div className="hero-cta">
             <Cta>שריון מקום לסדנה</Cta>
-            <p className="hero-note">ללא תשלום, ברישום מראש<br />האירוע במימון מלא של חברת וורקיז</p>
+            <p className="hero-note"><b className="notech">לא נדרש ידע טכנולוגי מכל סוג שהוא</b><br />ללא תשלום, ברישום מראש<br />האירוע במימון מלא של חברת וורקיז</p>
           </div>
         </div>
       </section>

@@ -8,7 +8,7 @@ export const EVENT = {
   dayLabel: "יום שלישי, 10.11",
   timeLabel: "13:30–14:30",
   place: "Workies באר שבע",
-  calendarUrl: "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent("Workies AI | בונים עמוד נחיתה עם Claude") + "&dates=20261110T113000Z/20261110T123000Z&location=" + encodeURIComponent("Workies, באר שבע"),
+  calendarUrl: "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent("סדנת פיתוח עמודי נחיתה עם Claude | וורקיז") + "&dates=20261110T113000Z/20261110T123000Z&location=" + encodeURIComponent("Workies, באר שבע"),
 };
 
 export default function WorkiesAIForm({ onDone }) {
