@@ -39,9 +39,10 @@ import Podcast from '@/pages/Podcast';
 import PublicReferralPage from '@/pages/PublicReferralPage';
 import DailyOffice from '@/pages/DailyOffice';
 import LandingPages from '@/pages/LandingPages';
+import WorkiesAI from '@/pages/WorkiesAI';
 
 
-const PUBLIC_ROUTES = ['/event-registration', '/feedback', '/onboarding/access', '/referral-share', '/daily-office', '/podcast'];
+const PUBLIC_ROUTES = ['/event-registration', '/feedback', '/onboarding/access', '/referral-share', '/daily-office', '/podcast', '/workies-ai'];
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -101,6 +102,7 @@ const AuthenticatedApp = () => {
       <Route path="/referral-share" element={<PublicReferralPage />} />
       <Route path="/daily-office" element={<DailyOffice />} />
       <Route path="/podcast" element={<Podcast />} />
+      <Route path="/workies-ai" element={<WorkiesAI />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
