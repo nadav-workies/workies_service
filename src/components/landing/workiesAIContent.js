@@ -1,7 +1,7 @@
 // Static markup for the Workies AI landing page (own content). Form is rendered in React.
 export const LOGO_URL = "https://media.base44.com/images/public/6a1d5a36316988d9f113f88e/35dda667c_wai-logo.webp";
-export const HERO_URL = "__HERO_URL__";
-export const STAGE_URL = "__STAGE_URL__";
+export const HERO_URL = "https://media.base44.com/images/public/6a1d5a36316988d9f113f88e/928ad98f9_wai-hero.webp";
+export const STAGE_URL = "https://media.base44.com/images/public/6a1d5a36316988d9f113f88e/830cac0bb_wai-stage.webp";
 const fill = (html) => html.replaceAll("__LOGO__", LOGO_URL).replaceAll("__HERO__", HERO_URL).replaceAll("__STAGE__", STAGE_URL);
 export const TOP_HTML = fill(`<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="spark" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none"><path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/></g></symbol></svg>
 
