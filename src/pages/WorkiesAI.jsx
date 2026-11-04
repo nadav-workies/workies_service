@@ -129,7 +129,7 @@ export default function WorkiesAI() {
             <p className="lead">מפגש מעשי של 60 דקות לבעלי עסקים. בונים עם Claude ו-Base44 עמוד נחיתה ראשון לעסק שלכם, גם בלי ידע בתכנות.</p>
             <dl className="ticket">
               <div><dt>מתי</dt><dd>{EVENT.dayLabel}</dd></div>
-              <div><dt>שעה</dt><dd>{EVENT.timeLabel}</dd></div>
+              <div><dt>שעה</dt><dd><bdi dir="ltr">{EVENT.timeLabel}</bdi></dd></div>
               <div><dt>איפה</dt><dd>{EVENT.place}</dd></div>
               <div><dt>עלות</dt><dd>ללא עלות</dd></div>
             </dl>
@@ -144,7 +144,7 @@ export default function WorkiesAI() {
       <section className="flow band">
         <div className="wrap">
           <div className="sec-head">
-            <p className="eyebrow"><Spark />60:00 דקות. בקשה אחת. עמוד אחד.</p>
+            <p className="eyebrow"><Spark />60 דקות. בקשה אחת. עמוד אחד.</p>
             <h2>מה קורה בתוך השעה</h2>
           </div>
           <ol className="steps">
