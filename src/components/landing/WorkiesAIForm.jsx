@@ -66,7 +66,7 @@ export default function WorkiesAIForm({ onDone }) {
       <label htmlFor="f-biz">שם העסק<input id="f-biz" name="business_name" type="text" autoComplete="organization" maxLength={150} required disabled={busy} /></label>
       <label className="consent" htmlFor="f-terms"><input id="f-terms" name="terms_accepted" type="checkbox" required disabled={busy} /><span>מאשר/ת את תנאי ההשתתפות: פיקדון בכרטיס אשראי, ללא חיוב על השתתפות, 50 ש"ח במקרה של אי הגעה.</span></label>
       {error && <p className="reg-err" role="alert">{error}</p>}
-      <button className="btn btn-primary" type="submit" disabled={busy}>{busy ? "שולחים…" : "שריון מקום"}</button>
+      <button className="btn" type="submit" disabled={busy}>{busy ? "שולחים…" : "שריון מקום"}</button>
       <p className="reg-note">מספר המקומות מוגבל.</p>
     </form>
   );
