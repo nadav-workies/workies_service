@@ -13,7 +13,7 @@
 .wai .band{margin-left:calc(-1 * max(16px,env(safe-area-inset-left,0px)));margin-right:calc(-1 * max(16px,env(safe-area-inset-right,0px)));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .wai .wrap{max-width:1120px;margin-inline:auto}
 .wai section{padding-block:72px}
-.wai .eyebrow{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.82rem;font-weight:500;color:var(--turq);margin-bottom:12px}
+.wai .eyebrow{display:flex;align-items:center;gap:8px;font-size:.9rem;font-weight:700;color:var(--turq);margin-bottom:12px}
 .wai .eyebrow.dark{color:var(--ink);justify-content:center}
 .wai .eyebrow.dark .spark{color:var(--ink)}
 .wai .sec-head{max-width:40em;margin-bottom:36px}
@@ -39,7 +39,7 @@
 .wai .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:rgba(17,17,17,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line-d)}
 .wai .top-in{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:12px}
 .wai .top img{height:28px;width:auto;display:block}
-.wai .top-date{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.85rem;color:var(--muted-d)}
+.wai .top-date{display:flex;align-items:center;gap:8px;font-weight:500;font-size:.9rem;color:var(--muted-d)}
 
 /* hero */
 .wai .hero{padding-block:44px 64px;background:radial-gradient(circle at 15% 20%,rgba(23,165,179,.16),transparent 45%),radial-gradient(#262626 1px,transparent 1.2px) 0 0/24px 24px,var(--ink)}
@@ -48,20 +48,20 @@
 .wai .hero-form{grid-area:form;min-width:0;position:sticky;top:84px}
 .wai .hero-demo{grid-area:demo;min-width:0}
 .wai .chip{display:inline-flex;align-items:center;gap:10px;font-size:.88rem;font-weight:500;padding:7px 14px;border:1px solid var(--line-d);border-radius:99px;background:#181818;color:#E6ECEC}
-.wai .hero h1{margin-top:20px;font-size:clamp(2.3rem,5.4vw,3.9rem);font-weight:800;line-height:1.08}
+.wai .hero h1{margin-top:20px;font-size:clamp(2.1rem,4.8vw,3.4rem);font-weight:800;line-height:1.08}
 .wai .hero h1 em{font-style:normal;color:var(--turq)}
 .wai .hero .lead{margin-top:18px;max-width:32em;font-size:1.14rem;color:#D3DCDD}
 .wai .ticket{margin-top:26px;display:grid;grid-template-columns:repeat(4,auto);border:1px solid var(--line-d);border-radius:10px;overflow:hidden;width:fit-content;max-width:100%}
 .wai .ticket div{padding:12px 18px;border-inline-start:1px dashed var(--line-d);min-width:0}
 .wai .ticket div:first-child{border-inline-start:0}
-.wai .ticket dt{font-family:var(--mono);font-size:.72rem;color:var(--turq)}
+.wai .ticket dt{font-size:.78rem;font-weight:500;color:var(--turq)}
 .wai .ticket dd{font-weight:700;font-size:1rem;margin-top:2px;white-space:nowrap}
 
 /* form */
-.wai .reg{background:var(--paper);color:var(--ink);border-radius:14px;padding:26px;box-shadow:0 20px 60px rgba(0,0,0,.45),0 0 0 1px rgba(23,165,179,.35);display:flex;flex-direction:column;gap:14px;scroll-margin-top:90px}
+.wai .reg{color-scheme:light;background:var(--paper);color:var(--ink);border-radius:14px;padding:26px;box-shadow:0 20px 60px rgba(0,0,0,.45),0 0 0 1px rgba(23,165,179,.35);display:flex;flex-direction:column;gap:14px;scroll-margin-top:90px}
 .wai .reg-head{display:flex;align-items:center;gap:10px}
 .wai .reg h3{font-size:1.45rem;font-weight:800}
-.wai .reg-sub{font-family:var(--mono);font-size:.84rem;color:var(--turq-deep);margin-top:-6px}
+.wai .reg-sub{font-weight:500;font-size:.9rem;color:var(--turq-deep);margin-top:-6px}
 .wai .reg label{display:flex;flex-direction:column;gap:6px;font-size:.92rem;font-weight:500;color:var(--muted)}
 .wai .reg input[type=text],.wai .reg input[type=tel]{font:500 1.02rem var(--font);color:var(--ink);background:var(--mist);border:1px solid var(--line);border-radius:8px;padding:13px 14px;width:100%;min-width:0;height:auto}
 .wai .reg input[type=tel]{direction:ltr;text-align:right}
@@ -84,11 +84,11 @@
 .wai .dots{display:flex;gap:6px;direction:ltr}
 .wai .dots i{width:10px;height:10px;border-radius:50%;background:#3a3a3a;display:block}
 .wai .demo-title{display:flex;align-items:center;gap:6px;font-weight:700;font-size:.92rem}
-.wai .demo-status{margin-inline-start:auto;font-family:var(--mono);font-size:.78rem;color:var(--turq)}
+.wai .demo-status{margin-inline-start:auto;font-size:.82rem;font-weight:500;color:var(--turq)}
 .wai .demo-body{padding:18px;display:flex;flex-direction:column;gap:12px}
 .wai .bubble{max-width:92%;border-radius:12px;padding:10px 14px;font-size:.95rem;line-height:1.5}
 .wai .bubble.user{align-self:flex-start;background:var(--night-2);border:1px solid var(--line-d)}
-.wai .bubble .who{display:block;font-family:var(--mono);font-size:.7rem;color:var(--muted-d);margin-bottom:2px}
+.wai .bubble .who{display:block;font-size:.74rem;color:var(--muted-d);margin-bottom:2px}
 .wai .bubble.ai{align-self:flex-end;display:flex;gap:10px;align-items:flex-start;background:rgba(23,165,179,.12);border:1px solid rgba(23,165,179,.4)}
 .wai .bubble.ai .spark{margin-top:3px}
 .wai .caret{display:inline-block;width:2px;height:1.05em;background:var(--turq);vertical-align:-3px;margin-inline-start:2px;animation:wai-blink 1s steps(1) infinite}
@@ -99,7 +99,7 @@
 @keyframes wai-dot{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
 .wai .site{border:1px solid var(--line-d);border-radius:10px;overflow:hidden;background:var(--paper);opacity:.35;transition:opacity .3s}
 .wai .site.on{opacity:1}
-.wai .site-url{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;background:#EEF3F3;color:var(--muted);font-family:var(--mono);font-size:.72rem}
+.wai .site-url{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;background:#EEF3F3;color:var(--muted);font-size:.74rem}
 .wai .site-url b{color:var(--turq-deep)}
 .wai .site-page{padding:14px;display:flex;flex-direction:column;gap:9px;min-height:178px}
 .wai .blk{border-radius:5px;opacity:0;transform:translateY(6px);transition:opacity .35s,transform .35s}
@@ -117,7 +117,7 @@
 .wai .blk.cards span{height:34px;background:var(--mist);border:1px solid var(--line);border-radius:6px}
 .wai .progress{height:3px;background:#E3ECEC}
 .wai .progress i{display:block;height:100%;background:var(--turq);transition:width .4s}
-.wai .demo-note{font-family:var(--mono);font-size:.7rem;color:#6f7b7d;text-align:left}
+.wai .demo-note{font-size:.74rem;color:#6f7b7d;text-align:left}
 
 /* flow */
 .wai .flow{background:#161616;border-top:1px solid var(--line-d)}
@@ -126,11 +126,11 @@
 .wai .steps li{background:var(--night);border:1px solid var(--line-d);border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:10px;min-width:0;transition:border-color .2s,transform .2s}
 .wai .steps li:hover{border-color:var(--turq);transform:translateY(-3px)}
 .wai .step-n{font-family:var(--mono);font-size:1.5rem;font-weight:700;color:var(--turq)}
-.wai .step-tag{align-self:flex-start;font-family:var(--mono);font-size:.74rem;padding:3px 10px;border-radius:99px;border:1px solid var(--line-d);color:var(--muted-d)}
+.wai .step-tag{align-self:flex-start;font-size:.78rem;padding:3px 10px;border-radius:99px;border:1px solid var(--line-d);color:var(--muted-d)}
 .wai .steps p{font-size:1rem;color:#E6ECEC}
 .wai .output{margin-top:18px;display:flex;align-items:center;gap:14px;background:var(--turq);color:var(--ink);border-radius:12px;padding:18px 22px}
 .wai .output .spark{color:var(--ink);width:1.6em;height:1.6em}
-.wai .output b{font-family:var(--mono);font-size:.8rem}
+.wai .output b{font-size:.85rem}
 .wai .output p{font-weight:700;font-size:1.12rem}
 
 /* ideas */
@@ -187,7 +187,14 @@
 }
 @media (max-width:560px){
   .wai{font-size:16px}
-  .wai .hero{padding-top:28px}
+  .wai .hero{padding-top:22px}
+  .wai .hero h1{font-size:2rem;margin-top:14px}
+  .wai .hero .lead{display:none}
+  .wai .chip{font-size:.8rem;padding:5px 12px}
+  .wai .ticket{margin-top:18px}
+  .wai .ticket div{padding:8px 12px}
+  .wai .ticket dd{font-size:.92rem}
+  .wai .hero-grid{gap:20px}
   .wai .top-date{display:none}
   .wai .ticket{grid-template-columns:1fr 1fr;width:100%}
   .wai .ticket div:nth-child(3){border-inline-start:0}
