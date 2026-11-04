@@ -60,7 +60,7 @@ export default function WorkiesAIForm({ onDone }) {
         <span className="live-dot" aria-hidden="true" />
         <h3>שריון מקום למפגש</h3>
       </div>
-      <p className="reg-sub">{EVENT.dayLabel} · {EVENT.timeLabel} · ללא עלות</p>
+      <p className="reg-sub">{EVENT.dayLabel} · <bdi dir="ltr">{EVENT.timeLabel}</bdi> · ללא עלות</p>
       <label htmlFor="f-name">שם מלא<input id="f-name" name="full_name" type="text" autoComplete="name" maxLength={100} required disabled={busy} /></label>
       <label htmlFor="f-phone">טלפון<input id="f-phone" name="phone" type="tel" inputMode="tel" autoComplete="tel" maxLength={30} required disabled={busy} /></label>
       <label htmlFor="f-biz">שם העסק<input id="f-biz" name="business_name" type="text" autoComplete="organization" maxLength={150} required disabled={busy} /></label>
