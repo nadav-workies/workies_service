@@ -1,0 +1,103 @@
+{
+  "name": "WorkiesAILead",
+  "properties": {
+    "business_name": {
+      "maxLength": 150,
+      "type": "string"
+    },
+    "deposit_status": {
+      "default": "pending",
+      "enum": [
+        "pending",
+        "secured",
+        "charged",
+        "released"
+      ],
+      "type": "string"
+    },
+    "email": {
+      "maxLength": 150,
+      "type": "string"
+    },
+    "name": {
+      "maxLength": 100,
+      "type": "string"
+    },
+    "phone": {
+      "maxLength": 30,
+      "type": "string"
+    },
+    "session": {
+      "enum": [
+        "01",
+        "02",
+        "03",
+        "04",
+        "05",
+        "06"
+      ],
+      "type": "string"
+    },
+    "status": {
+      "default": "new",
+      "enum": [
+        "new",
+        "contacted",
+        "scheduled",
+        "completed",
+        "not_relevant"
+      ],
+      "type": "string"
+    },
+    "terms_accepted": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "name",
+    "phone",
+    "email",
+    "business_name",
+    "session",
+    "terms_accepted"
+  ],
+  "rls": {
+    "create": {
+      "data.status": "new"
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    }
+  },
+  "type": "object"
+}
