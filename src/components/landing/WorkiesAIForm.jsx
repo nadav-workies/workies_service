@@ -28,10 +28,10 @@ export default function WorkiesAIForm({ onDone }) {
       business_name: String(d.get("business_name") || "").trim(),
       session: EVENT.session,
       session_date: EVENT.date,
-      terms_accepted: d.get("terms_accepted") === "on",
+      terms_accepted: true,
     };
     const phoneOk = /^\+?[\d\s()-]+$/.test(payload.phone) && payload.phone.replace(/\D/g, "").length >= 9;
-    if (!form.checkValidity() || !phoneOk) { setError("יש למלא שם, טלפון ושם העסק, ולאשר את תנאי ההשתתפות."); return; }
+    if (!form.checkValidity() || !phoneOk) { setError("יש למלא שם, טלפון ושם העסק."); return; }
     setBusy(true); setError("");
     try {
       await base44.functions.invoke("submitCampaignLead", payload);
@@ -48,7 +48,7 @@ export default function WorkiesAIForm({ onDone }) {
         <div className="reg-check" aria-hidden="true">✓</div>
         <h3>נרשמתם.</h3>
         <p>נתראה ב{EVENT.dayLabel} בשעה 13:30, ב-{EVENT.place}.</p>
-        <p className="reg-muted">נחזור אליכם להשלמת ההרשמה.</p>
+        <p className="reg-muted">הסדנה יוצאת לדרך עם 10 נרשמים לפחות. נעדכן אתכם בטלפון או בוואטסאפ.</p>
         <a className="btn btn-line-dark" href={EVENT.calendarUrl} target="_blank" rel="noopener noreferrer">הוספה ליומן</a>
       </div>
     );
@@ -60,14 +60,13 @@ export default function WorkiesAIForm({ onDone }) {
         <span className="live-dot" aria-hidden="true" />
         <h3>שריון מקום למפגש</h3>
       </div>
-      <p className="reg-sub">{EVENT.dayLabel} · <bdi dir="ltr">{EVENT.timeLabel}</bdi> · ללא עלות</p>
+      <p className="reg-sub">{EVENT.dayLabel} · <bdi dir="ltr">{EVENT.timeLabel}</bdi> · ללא תשלום</p>
       <label htmlFor="f-name">שם מלא<input id="f-name" name="full_name" type="text" autoComplete="name" maxLength={100} required disabled={busy} /></label>
       <label htmlFor="f-phone">טלפון<input id="f-phone" name="phone" type="tel" inputMode="tel" autoComplete="tel" maxLength={30} required disabled={busy} /></label>
       <label htmlFor="f-biz">שם העסק<input id="f-biz" name="business_name" type="text" autoComplete="organization" maxLength={150} required disabled={busy} /></label>
-      <label className="consent" htmlFor="f-terms"><input id="f-terms" name="terms_accepted" type="checkbox" required disabled={busy} /><span>מאשר/ת את תנאי ההשתתפות: פיקדון בכרטיס אשראי, ללא חיוב על השתתפות, 50 ש"ח במקרה של אי הגעה.</span></label>
       {error && <p className="reg-err" role="alert">{error}</p>}
       <button className="btn" type="submit" disabled={busy}>{busy ? "שולחים…" : "שריון מקום"}</button>
-      <p className="reg-note">מספר המקומות מוגבל.</p>
+      <p className="reg-note">ללא תשלום ובלי כרטיס אשראי. הסדנה יוצאת לדרך עם 10 נרשמים לפחות. האירוע במימון מלא של חברת וורקיז.</p>
     </form>
   );
 }

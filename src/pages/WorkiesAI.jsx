@@ -1,17 +1,18 @@
 import { useEffect, useRef, useState } from "react";
+import { base44 } from "@/api/base44Client";
 import CampaignValidityGate from "@/components/landing/CampaignValidityGate";
 import WorkiesAIForm, { EVENT } from "@/components/landing/WorkiesAIForm";
 import "@/components/landing/WorkiesAI.css";
 
 const LOGO_URL = "https://media.base44.com/images/public/6a1d5a36316988d9f113f88e/35dda667c_wai-logo.webp";
 
-const PHRASES = ["בנה לי עמוד נחיתה לסטודיו לפילאטיס", "בנה לי עמוד נחיתה למאפייה שלי", "בנה לי עמוד נחיתה לקליניקה שלי", "בנה לי עמוד נחיתה לעסק שלי"];
-const BUSINESSES = ["סטודיו לפילאטיס", "קבלן שיפוצים", "משרד רואי חשבון", "מאפייה שכונתית", "מאמנת כושר אישית", "צלמת אירועים", "חנות פרחים", "מורה פרטית לאנגלית", "מוסך", "קליניקה לפיזיותרפיה", "יועצת משכנתאות", "מעצבת פנים", "סוכנות נדל\"ן", "גן אירועים", "חוג רובוטיקה לילדים", "מספרה"];
+const PHRASES = ["בנה לי עמוד נחיתה לחדר כושר", "בנה לי עמוד נחיתה למאפייה שלי", "בנה לי עמוד נחיתה לקליניקה שלי", "בנה לי עמוד נחיתה לעסק שלי"];
+const BUSINESSES = ["חדר כושר", "קבלן שיפוצים", "משרד רואי חשבון", "מוסך", "מאמן כושר אישי", "צלם אירועים", "חברת הובלות", "מועדון אומנויות לחימה", "קליניקה לפיזיותרפיה", "יועץ משכנתאות", "מאפייה שכונתית", "סוכנות נדל\"ן", "גן אירועים", "חנות פרחים", "בית קפה", "מספרה"];
 const STAGES = [["צורך", "מגדירים צורך עסקי ומאפיינים פתרון."], ["Base44", "מכירים את סביבת Base44."], ["Claude", "Claude מפתח את האפיון והתוכן."], ["גרסה ראשונה", "בונים גרסה ראשונית של העמוד."]];
 const FAQ = [
-  ["כמה זה עולה?", "ההשתתפות ללא עלות, במימון מלא של Workies."],
-  ["למה צריך כרטיס אשראי?", "הכרטיס משמש כפיקדון להבטחת הגעה. הוא לא יחויב בגין השתתפות במפגש."],
-  ["ומה אם לא אגיע?", "במקרה של אי הגעה למפגש שאליו נרשמתם, יחויב הכרטיס בסך 50 ש\"ח, בהתאם לתנאי ההרשמה."],
+  ["כמה זה עולה?", "הסדנה ללא תשלום, והאירוע במימון מלא של חברת וורקיז. לא נדרש כרטיס אשראי."],
+  ["מתי הסדנה יוצאת לדרך?", "כשיש לפחות 10 נרשמים. כל נרשם יקבל מאיתנו עדכון בנוגע לקיום הסדנה."],
+  ["ומה אם לא אוכל להגיע?", "אין חיוב. אם השתנו התוכניות, עדכנו אותנו כדי שנוכל לשחרר את המקום למישהו אחר."],
   ["צריך ידע בתכנות?", "לא. לא צריך ידע מוקדם ולא רקע טכנולוגי. רק להגיע עם העסק שלכם."],
   ["כמה מקומות יש?", "מספר המקומות מוגבל, וההרשמה מראש."],
 ];
@@ -94,6 +95,36 @@ function DateHero() {
   );
 }
 
+function PunchCard() {
+  const [count, setCount] = useState(null);
+  useEffect(() => {
+    let off = false;
+    base44.functions.invoke("submitCampaignLead", { campaign: "workies_ai", action: "count" })
+      .then((r) => { const n = Number(r?.data?.count ?? r?.count); if (!off && Number.isFinite(n)) setCount(Math.max(0, Math.min(10, Math.floor(n)))); })
+      .catch(() => {});
+    return () => { off = true; };
+  }, []);
+  const n = count ?? 0;
+  const text = n >= 10
+    ? "הסדנה יוצאת לדרך. ההרשמה עדיין פתוחה."
+    : n > 0
+      ? `נרשמו ${n}. חסרים עוד ${10 - n} כדי שהסדנה תצא לדרך.`
+      : "הסדנה יוצאת לדרך ב-10 נרשמים. היו הראשונים לסמן נוכחות.";
+  return (
+    <div className="punch" role="group" aria-label={`כרטיס נוכחות: ${n} מתוך 10 נרשמים`}>
+      <div className="pc-head">
+        <svg className="clock" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2" /><path className="h-min" d="M12 12V5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /><path className="h-hr" d="M12 12l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+        <b>כרטיס נוכחות · סדנת Claude</b>
+        <span className="pc-day">10.11</span>
+      </div>
+      <div className="pc-slots" aria-hidden="true">
+        {Array.from({ length: 10 }, (_, i) => <span key={i} className={`slot${i < n ? " in" : ""}${i === n && n < 10 ? " next" : ""}`}>{i < n ? "✓" : String(i + 1).padStart(2, "0")}</span>)}
+      </div>
+      <p className="pc-text">{text}</p>
+    </div>
+  );
+}
+
 function Ticket() {
   const ref = useRef(null);
   const [tilt, setTilt] = useState("rotateY(-8deg) rotateX(4deg)");
@@ -117,7 +148,7 @@ function Ticket() {
             <div><small>תאריך</small><b>10.11</b></div>
             <div><small>המראה</small><b>13:30</b></div>
             <div><small>שער</small><b>Workies באר שבע</b></div>
-            <div><small>מחיר</small><b>ללא עלות</b></div>
+            <div><small>מחיר</small><b>ללא תשלום</b></div>
           </div>
           <div className="barcode" aria-hidden="true" />
         </div>
@@ -174,11 +205,11 @@ function Ring() {
 
 function Wall() {
   const [value, setValue] = useState("");
-  const [shown, setShown] = useState("סטודיו לפילאטיס");
+  const [shown, setShown] = useState("חדר כושר");
   const [thinking, setThinking] = useState(false);
   useEffect(() => {
     setThinking(true);
-    const t = setTimeout(() => { setShown(value.trim() || "סטודיו לפילאטיס"); setThinking(false); }, 450);
+    const t = setTimeout(() => { setShown(value.trim() || "חדר כושר"); setThinking(false); }, 450);
     return () => clearTimeout(t);
   }, [value]);
   const rows = [0, 1, 2, 3].map((r) => BUSINESSES.slice(r * 4).concat(BUSINESSES.slice(0, r * 4)));
@@ -195,7 +226,7 @@ function Wall() {
         <h2>מה <em>Claude</em> יבנה לעסק שלכם?</h2>
         <div className="ask">
           <label htmlFor="biz-try">העסק שלי:</label>
-          <input id="biz-try" type="text" maxLength={40} placeholder="למשל: סטודיו לפילאטיס" autoComplete="off" value={value} onChange={(e) => setValue(e.target.value)} />
+          <input id="biz-try" type="text" maxLength={40} placeholder="למשל: חדר כושר" autoComplete="off" value={value} onChange={(e) => setValue(e.target.value)} />
         </div>
         <div className="reply"><Spark /><span>{thinking ? "חושב…" : `בונה עמוד נחיתה ל${shown}…`}</span></div>
         <div className="mini" aria-hidden="true">
@@ -279,7 +310,7 @@ export default function WorkiesAI() {
           <div className="hero-date"><DateHero /></div>
           <div className="hero-cta">
             <Cta>שריון מקום לסדנה</Cta>
-            <p className="hero-note">ללא עלות · מספר המקומות מוגבל</p>
+            <p className="hero-note">ללא תשלום, ברישום מראש<br />האירוע במימון מלא של חברת וורקיז<br /><b>הסדנה יוצאת לדרך עם 10 נרשמים לפחות</b></p>
           </div>
         </div>
       </section>
@@ -289,6 +320,7 @@ export default function WorkiesAI() {
           <div className="reg-side">
             <p className="eyebrow"><Spark />מפגש 01 · 60 דקות</p>
             <h2>יוצאים עם רעיון.<br />נוחתים עם <em>עמוד נחיתה</em>.</h2>
+            <PunchCard />
             <Ticket />
           </div>
           <div className="reg-form">

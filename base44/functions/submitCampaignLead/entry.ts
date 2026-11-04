@@ -13,6 +13,10 @@ export default async function(req) {
     const phone = String(rawPhone || '').trim().slice(0, 30);
     if (!name || !/^\+?[\d\s()-]+$/.test(phone) || phone.replace(/\D/g, '').length < 9) return Response.json({ error: 'יש למלא שם וטלפון תקינים' }, { status: 400 });
     if (campaign === 'workies_ai') {
+      if (body.action === 'count') {
+        const rows = await base44.asServiceRole.entities.WorkiesAILead.filter({ session_date: '2026-11-10' }, '-created_date', 200);
+        return Response.json({ count: rows.filter((r) => r.status !== 'not_relevant').length });
+      }
       const email = String(body.email || '').trim().slice(0, 150);
       const business_name = String(body.business_name || '').trim().slice(0, 150);
       const session = String(body.session || '');
