@@ -42,49 +42,83 @@ function Cta({ children = "שריון מקום" }) {
   return <a className="cta" href="#register">{children} <span className="arr" aria-hidden="true">←</span></a>;
 }
 
-function HeroPrompt() {
+function FlapCell({ ch, delay, run }) {
+  if (!/\d/.test(ch)) return <span className="flap sep">{ch}</span>;
+  const target = 10 + Number(ch);
+  const [idx, setIdx] = useState(target);
+  const [anim, setAnim] = useState(false);
+  useEffect(() => {
+    if (!run) return;
+    setAnim(false);
+    setIdx(Math.floor(Math.random() * 10));
+    const t = setTimeout(() => { setAnim(true); setIdx(target); }, 60);
+    return () => clearTimeout(t);
+  }, [run, target]);
+  return (
+    <span className="flap">
+      <span className="strip" style={{ transform: `translateY(${-idx}em)`, transition: anim ? `transform 1.3s cubic-bezier(.2,.8,.2,1) ${delay}s` : "none" }}>
+        {Array.from({ length: 20 }, (_, i) => <span key={i}>{i % 10}</span>)}
+      </span>
+    </span>
+  );
+}
+
+function DateHero() {
   const reduce = useReducedMotion();
-  const [text, setText] = useState(PHRASES[0]);
-  const [sent, setSent] = useState(true);
+  const [run, setRun] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (reduce) return;
+    setRun(1);
+    const id = setInterval(() => setRun((r) => r + 1), 9000);
+    return () => clearInterval(id);
+  }, [reduce]);
+  useEffect(() => { const id = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(id); }, []);
+  const diff = Math.max(0, EVENT.start.getTime() - now);
+  const d = Math.floor(diff / 864e5), h = Math.floor(diff / 36e5) % 24, mm = Math.floor(diff / 6e4) % 60, ss = Math.floor(diff / 1e3) % 60;
+  return (
+    <div className="datecard" aria-label="המפגש הקרוב: יום שלישי 10.11 בשעה 13:30">
+      <div className="dc-top"><span className="live-dot" aria-hidden="true" />המפגש הקרוב</div>
+      <div className="dc-main">
+        <div className="dc-day">יום שלישי</div>
+        <div className="dc-digits" dir="ltr" aria-hidden="true">{"10.11".split("").map((c, i) => <FlapCell key={i} ch={c} delay={i * 0.12} run={run} />)}</div>
+        <div className="dc-time" dir="ltr" aria-hidden="true">{"13:30".split("").map((c, i) => <FlapCell key={i} ch={c} delay={0.6 + i * 0.12} run={run} />)}</div>
+      </div>
+      {diff > 0 && (
+        <div className="dc-count" aria-label="הזמן שנותר עד המפגש">
+          <span>עוד</span>
+          <b>{d}</b><small>ימים</small>
+          <b>{String(h).padStart(2, "0")}</b><small>שעות</small>
+          <b>{String(mm).padStart(2, "0")}</b><small>דקות</small>
+          <b className="sec">{String(ss).padStart(2, "0")}</b><small>שניות</small>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PageBuild() {
+  const reduce = useReducedMotion();
   const [built, setBuilt] = useState(5);
   useEffect(() => {
     if (reduce) return;
-    let alive = true;
-    const timers = [];
-    const wait = (ms) => new Promise((r) => timers.push(setTimeout(r, ms)));
-    (async () => {
-      let i = 0;
-      while (alive) {
-        const t = PHRASES[i % PHRASES.length];
-        setSent(false); setBuilt(0);
-        for (let c = 1; c <= t.length && alive; c++) { setText(t.slice(0, c)); await wait(55); }
-        await wait(450); if (!alive) break;
-        setSent(true);
-        for (let b = 1; b <= 5 && alive; b++) { await wait(380); setBuilt(b); }
-        await wait(2600);
-        i++;
-      }
-    })();
-    return () => { alive = false; timers.forEach(clearTimeout); };
+    let b = 0;
+    setBuilt(0);
+    const id = setInterval(() => { b = (b + 1) % 9; setBuilt(Math.min(5, b)); }, 650);
+    return () => clearInterval(id);
   }, [reduce]);
   return (
-    <>
-      <div className="bigprompt" aria-label="בקשה לדוגמה ל-Claude">
-        <Spark />
-        <div className="ptext"><span>{text}</span>{!sent && <i className="caret" />}</div>
-        <div className={`send ${sent ? "go" : ""}`} aria-hidden="true">←</div>
+    <div className="persp" aria-hidden="true">
+      <div className="page3d">
+        <div className="pb-prompt"><Spark /><span>בנה לי עמוד נחיתה לעסק שלי</span></div>
+        <div className={`b nav ${built >= 1 ? "on" : ""}`} />
+        <div className={`b hero ${built >= 2 ? "on" : ""}`}><i /></div>
+        <div className={`b line ${built >= 3 ? "on" : ""}`} />
+        <div className={`b btn ${built >= 4 ? "on" : ""}`} />
+        <div className={`b grid ${built >= 5 ? "on" : ""}`}><span /><span /><span /></div>
+        <span className={`built ${built >= 5 ? "on" : ""}`}><Spark />העמוד מוכן</span>
       </div>
-      <div className="persp" aria-hidden="true">
-        <div className="page3d">
-          <div className={`b nav ${built >= 1 ? "on" : ""}`} />
-          <div className={`b hero ${built >= 2 ? "on" : ""}`}><i /></div>
-          <div className={`b line ${built >= 3 ? "on" : ""}`} />
-          <div className={`b btn ${built >= 4 ? "on" : ""}`} />
-          <div className={`b grid ${built >= 5 ? "on" : ""}`}><span /><span /><span /></div>
-          <span className={`built ${built >= 5 ? "on" : ""}`}><Spark />העמוד מוכן</span>
-        </div>
-      </div>
-    </>
+    </div>
   );
 }
 
@@ -265,13 +299,13 @@ export default function WorkiesAI() {
 
       <section className="hero band" ref={heroRef}>
         <div className="wrap">
-          <HeroPrompt />
           <div className="hero-copy">
-            <p className="kick"><span className="live-dot" aria-hidden="true" />ההרשמה פתוחה · מספר המקומות מוגבל</p>
+            <DateHero />
             <h1>משפט אחד ל-<em>Claude</em>.<br />עמוד נחיתה אחד לעסק.</h1>
-            <p className="meta"><span>יום שלישי 10.11</span><span>13:30</span><span>Workies באר שבע</span><span>ללא עלות</span></p>
-            <Cta />
+            <p className="meta"><span>60 דקות</span><span>Workies באר שבע</span><span>ללא עלות</span><span>מספר המקומות מוגבל</span></p>
+            <Cta>שריון מקום ל-10.11</Cta>
           </div>
+          <PageBuild />
         </div>
       </section>
 
