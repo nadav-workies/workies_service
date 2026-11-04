@@ -2,6 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 import { roomsByNumber } from '../../shared/rooms.ts';
 
 import { campaignIsActive } from '../../shared/campaignValidity.ts';
+import { notifyNewLead } from '../../shared/leadNotify.ts';
 
 function clean(val, max) {
   return String(val ?? '').trim().slice(0, max);
@@ -90,6 +91,8 @@ export default async function (req) {
       status: 'new',
       status_history: [{ date: now.toISOString(), status: 'new', user: referrer_name, note: 'ההמלצה נשלחה מהקישור הציבורי' }],
     });
+
+    await notifyNewLead(base44, 'חבר מביא חבר', { 'שם החבר/ה': friend_name, 'טלפון': friend_phone, 'ממליץ/ה': referrerRoom, 'פרטים': details, 'מספר קריאה': ticket.ticket_number });
 
     return Response.json({ success: true, ticket_number: ticket.ticket_number });
   } catch (error) {

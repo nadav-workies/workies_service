@@ -43,6 +43,10 @@ function Cta({ children = "שריון מקום" }) {
 
 function FlapCell({ ch, delay, run }) {
   if (!/\d/.test(ch)) return <span className="flap sep">{ch}</span>;
+  return <FlapDigit ch={ch} delay={delay} run={run} />;
+}
+
+function FlapDigit({ ch, delay, run }) {
   const target = 10 + Number(ch);
   const [idx, setIdx] = useState(target);
   const [anim, setAnim] = useState(false);

@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { campaignIsActive } from '../../shared/campaignValidity.ts';
+import { notifyNewLead } from '../../shared/leadNotify.ts';
 
 export default async function(req) {
   try {
@@ -19,9 +20,11 @@ export default async function(req) {
       const session_date = /^\d{4}-\d{2}-\d{2}$/.test(String(body.session_date || '')) ? String(body.session_date) : '';
       if ((email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) || !business_name || !['01', '02', '03', '04', '05', '06'].includes(session) || body.terms_accepted !== true) return Response.json({ error: 'יש למלא את כל השדות ולאשר את תנאי ההשתתפות.' }, { status: 400 });
       await base44.asServiceRole.entities.WorkiesAILead.create({ name, phone, ...(email ? { email } : {}), business_name, session, ...(session_date ? { session_date } : {}), terms_accepted: true, status: 'new' });
+      await notifyNewLead(base44, 'Workies AI', { 'שם': name, 'טלפון': phone, 'מייל': email, 'שם העסק': business_name, 'תאריך מפגש': session_date });
       return Response.json({ success: true });
     }
     await base44.asServiceRole.entities[entity].create({ name, phone, status: 'new' });
+    await notifyNewLead(base44, campaign === 'office' ? 'התנסות במשרד יומי' : 'התנסות באולפן הפודקאסט', { 'שם': name, 'טלפון': phone });
     return Response.json({ success: true });
   } catch (error) { return Response.json({ error: error.message }, { status: 500 }); }
 }
