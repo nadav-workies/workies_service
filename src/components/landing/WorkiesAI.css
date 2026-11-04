@@ -37,18 +37,24 @@
 
 /* HERO: date focus */
 .wai .hero{padding-block:44px 72px;background:radial-gradient(circle at 85% 0%,rgba(23,165,179,.22),transparent 50%),radial-gradient(#222 1px,transparent 1.3px) 0 0/24px 24px,var(--ink)}
-.wai .hero .wrap{display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);gap:56px;align-items:center;justify-content:space-between}
+.wai .hero .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,440px);grid-template-areas:"title date" "cta date";gap:28px 64px;align-items:center}
+.wai .hero-title{grid-area:title;align-self:end;display:flex;flex-direction:column;gap:16px;min-width:0}
+.wai .hero-date{grid-area:date;min-width:0}
+.wai .hero-cta{grid-area:cta;align-self:start;display:flex;flex-direction:column;gap:12px}
+.wai .kicker{display:flex;align-items:center;gap:8px;font-weight:700;font-size:1rem;color:var(--turq)}
+.wai .lead{font-size:1.2rem;color:#D5DEDF;max-width:34ch}
+.wai .hero-note{font-size:.95rem;color:var(--muted-d)}
 .wai .hero-copy{display:flex;flex-direction:column;gap:22px;min-width:0}
-.wai .hero h1{font-size:clamp(2rem,3.6vw,3rem);font-weight:900;line-height:1.08;letter-spacing:-.01em}
+.wai .hero h1{font-size:clamp(2.3rem,4.6vw,4rem);font-weight:900;line-height:1.08;letter-spacing:-.01em}
 .wai .meta{display:flex;flex-wrap:wrap;gap:8px}
 .wai .meta span{font-size:.95rem;font-weight:500;color:#E1E8E9;padding:6px 12px;border:1px solid var(--line-d);border-radius:99px;background:rgba(255,255,255,.03)}
 .wai .hero .cta{font-size:1.15rem;padding:19px 32px}
 .wai .datecard{border:2px solid var(--turq);border-radius:22px;background:linear-gradient(160deg,rgba(23,165,179,.16),rgba(17,17,17,.9) 55%);box-shadow:0 0 0 8px rgba(23,165,179,.07),0 30px 80px rgba(0,0,0,.45);padding:20px 24px 18px;display:flex;flex-direction:column;gap:12px}
 .wai .dc-top{display:flex;align-items:center;gap:10px;font-weight:700;font-size:.95rem;color:var(--turq)}
-.wai .dc-main{display:grid;grid-template-columns:auto auto;grid-template-areas:"day time" "digits digits";justify-content:space-between;align-items:end;gap:6px 16px}
+.wai .dc-main{display:grid;grid-template-columns:auto auto;grid-template-areas:"day time" "digits digits";justify-content:space-between;align-items:baseline;gap:10px 16px}
 .wai .dc-day{grid-area:day;font-size:clamp(1.5rem,3vw,2.1rem);font-weight:900;line-height:1}
-.wai .dc-digits{grid-area:digits;display:flex;gap:6px;justify-content:flex-end;font-family:var(--mono);font-weight:700;font-size:clamp(4.2rem,9vw,7.4rem);line-height:1}
-.wai .dc-time{grid-area:time;display:flex;gap:4px;font-family:var(--mono);font-weight:700;font-size:clamp(1.6rem,3vw,2.3rem);line-height:1;color:var(--turq)}
+.wai .dc-digits{grid-area:digits;display:flex;gap:6px;justify-content:center;font-family:var(--mono);font-weight:700;font-size:clamp(3.8rem,6vw,5.4rem);line-height:1}
+.wai .dc-time{grid-area:time;font-weight:800;font-size:clamp(1.5rem,2.6vw,2rem);line-height:1;color:var(--turq)}
 .wai .flap{position:relative;display:inline-block;height:1em;line-height:1;overflow:hidden;background:#1d1d1d;border:1px solid #303030;border-radius:.12em;padding:0 .08em;min-width:.72em;text-align:center}
 .wai .flap::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.6)}
 .wai .flap.sep{background:none;border:0;min-width:0;padding:0;color:var(--turq)}
@@ -220,7 +226,8 @@
 .wai .float-cta{position:fixed;z-index:30;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--turq);color:var(--ink);text-decoration:none;font-size:.95rem;padding:14px 18px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.45);max-width:560px;margin-inline:auto}
 
 @media (max-width:900px){
-  .wai .hero .wrap{grid-template-columns:1fr;gap:36px}
+  .wai .hero .wrap{grid-template-columns:1fr;grid-template-areas:"title" "date" "cta";gap:24px}
+  .wai .hero-title{align-self:auto}
   .wai .reg-grid,.wai .ring-grid,.wai .sketch-grid,.wai .faq-grid{grid-template-columns:1fr;gap:32px}
   .wai .reg-form{order:-1}
   .wai .ringbox,.wai .board{order:-1}
@@ -231,7 +238,10 @@
   .wai .hero{padding-block:24px 48px}
   .wai .datecard{padding:16px 16px 14px;border-radius:18px}
   .wai .dc-digits{font-size:clamp(3.4rem,19vw,5rem);gap:4px}
-  .wai .dc-time{font-size:1.5rem}
+  .wai .dc-time{font-size:1.35rem}
+  .wai .lead{font-size:1.05rem}
+  .wai .hero h1{font-size:clamp(1.9rem,8.6vw,2.5rem)}
+  .wai .hero-note{text-align:center}
   .wai .cta{align-self:stretch;justify-content:center}
   .wai .fields{grid-template-columns:1fr 1fr}
   .wai .reg{padding:20px}

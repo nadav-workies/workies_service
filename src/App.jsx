@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
@@ -6,39 +7,39 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import Login from '@/pages/Login';
-import Register from '@/pages/Register';
-import ForgotPassword from '@/pages/ForgotPassword';
-import ResetPassword from '@/pages/ResetPassword';
+const Login = lazy(() => import('@/pages/Login'));
+const Register = lazy(() => import('@/pages/Register'));
+const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 import AppLayout from '@/components/layout/AppLayout';
-import Dashboard from '@/pages/Dashboard';
-import Home from '@/pages/Home';
-import Tickets from '@/pages/Tickets';
-import NewTicket from '@/pages/NewTicket';
-import TicketDetail from '@/pages/TicketDetail';
-import SLAReport from '@/pages/SLAReport';
-import SLASettings from '@/pages/SLASettings';
-import NotificationSettings from '@/pages/NotificationSettings';
-import ServiceMapPage from '@/pages/ServiceMapPage';
-import FeedbackSurvey from '@/pages/FeedbackSurvey';
-import SurveyResponses from '@/pages/SurveyResponses';
-import ResetTestData from '@/pages/ResetTestData';
-import CleaningReport from '@/pages/CleaningReport';
-import UsersManagement from '@/pages/UsersManagement';
-import PermissionsManagement from '@/pages/PermissionsManagement';
-import EventsManagement from '@/pages/EventsManagement';
-import EventRegistration from '@/pages/EventRegistration';
-import OnboardingManagement from '@/pages/OnboardingManagement';
-import OnboardingDetail from '@/pages/OnboardingDetail';
-import MyOnboarding from '@/pages/MyOnboarding';
-import OnboardingAccessPage from '@/pages/OnboardingAccessPage';
-import CommunityContent from '@/pages/CommunityContent';
-import MaintenancePlan from '@/pages/MaintenancePlan';
-import ReferralPage from '@/pages/ReferralPage';
-import Podcast from '@/pages/Podcast';
-import PublicReferralPage from '@/pages/PublicReferralPage';
-import DailyOffice from '@/pages/DailyOffice';
-import LandingPages from '@/pages/LandingPages';
+const Dashboard = lazy(() => import('@/pages/Dashboard'));
+const Home = lazy(() => import('@/pages/Home'));
+const Tickets = lazy(() => import('@/pages/Tickets'));
+const NewTicket = lazy(() => import('@/pages/NewTicket'));
+const TicketDetail = lazy(() => import('@/pages/TicketDetail'));
+const SLAReport = lazy(() => import('@/pages/SLAReport'));
+const SLASettings = lazy(() => import('@/pages/SLASettings'));
+const NotificationSettings = lazy(() => import('@/pages/NotificationSettings'));
+const ServiceMapPage = lazy(() => import('@/pages/ServiceMapPage'));
+const FeedbackSurvey = lazy(() => import('@/pages/FeedbackSurvey'));
+const SurveyResponses = lazy(() => import('@/pages/SurveyResponses'));
+const ResetTestData = lazy(() => import('@/pages/ResetTestData'));
+const CleaningReport = lazy(() => import('@/pages/CleaningReport'));
+const UsersManagement = lazy(() => import('@/pages/UsersManagement'));
+const PermissionsManagement = lazy(() => import('@/pages/PermissionsManagement'));
+const EventsManagement = lazy(() => import('@/pages/EventsManagement'));
+const EventRegistration = lazy(() => import('@/pages/EventRegistration'));
+const OnboardingManagement = lazy(() => import('@/pages/OnboardingManagement'));
+const OnboardingDetail = lazy(() => import('@/pages/OnboardingDetail'));
+const MyOnboarding = lazy(() => import('@/pages/MyOnboarding'));
+const OnboardingAccessPage = lazy(() => import('@/pages/OnboardingAccessPage'));
+const CommunityContent = lazy(() => import('@/pages/CommunityContent'));
+const MaintenancePlan = lazy(() => import('@/pages/MaintenancePlan'));
+const ReferralPage = lazy(() => import('@/pages/ReferralPage'));
+const Podcast = lazy(() => import('@/pages/Podcast'));
+const PublicReferralPage = lazy(() => import('@/pages/PublicReferralPage'));
+const DailyOffice = lazy(() => import('@/pages/DailyOffice'));
+const LandingPages = lazy(() => import('@/pages/LandingPages'));
 import WorkiesAI from '@/pages/WorkiesAI';
 
 
@@ -49,7 +50,8 @@ const AuthenticatedApp = () => {
   const location = useLocation();
   const isPublicRoute = PUBLIC_ROUTES.some(p => location.pathname.startsWith(p));
 
-  if (isLoadingPublicSettings || (isLoadingAuth && !isPublicRoute)) {
+  const isStaticLanding = location.pathname.startsWith('/workies-ai');
+  if (!isStaticLanding && (isLoadingPublicSettings || (isLoadingAuth && !isPublicRoute))) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
@@ -57,12 +59,17 @@ const AuthenticatedApp = () => {
     );
   }
 
+  if (isStaticLanding) return <WorkiesAI />;
+
   if (authError && !isPublicRoute) {
     if (authError.type === 'user_not_registered') return <UserNotRegisteredError />;
     if (authError.type === 'auth_required') { navigateToLogin(); return null; }
   }
 
   return (
+    <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center bg-background">
+          <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+        </div>}>
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
@@ -105,6 +112,7 @@ const AuthenticatedApp = () => {
       <Route path="/workies-ai" element={<WorkiesAI />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
+    </Suspense>
   );
 };
 
