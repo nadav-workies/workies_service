@@ -759,7 +759,7 @@ Deno.serve(async (req) => {
 
   // ── check_sla ─────────────────────────────────────────────────
   if (action === 'check_sla') {
-    const openTickets = await base44.asServiceRole.entities.ServiceTicket.filter({ status__ne: 'נסגרה' });
+    const openTickets = await base44.asServiceRole.entities.ServiceTicket.filter({ status: { $nin: ['נסגרה', 'הושלם', 'בוטל'] } });
     let reminders = 0, breaches = 0;
     const allUsers = await base44.asServiceRole.entities.User.list();
     const managers = allUsers.filter(u => u.role === 'admin' || u.role === 'manager');
@@ -804,6 +804,36 @@ Deno.serve(async (req) => {
     }
     results.reminders_sent = reminders;
     results.breaches_sent = breaches;
+
+    // ── Operations manager alerts: 15 min before SLA deadline + high priority ──
+    const opsEmails = [...new Set([
+      'maintenance@workies.co.il',
+      ...allUsers.filter(u => u.internal_role === 'operations_manager' && u.email).map(u => u.email),
+    ])];
+    const alreadySent = async (ticketId, key) =>
+      (await base44.asServiceRole.entities.NotificationLog.filter({ ticket_id: ticketId, notification_key: key, status: 'sent' })).length > 0;
+    const sendOps = async (t, key, subject, body) => {
+      let ok = false;
+      for (const to of opsEmails) {
+        if (await sendAndLog(base44, { key, toEmail: to, subject, bodyHtml: buildHtml(body), ticket: t, recipientType: 'managers' })) ok = true;
+      }
+      return ok;
+    };
+    const details = (t) => `מספר קריאה: ${e(t.ticket_number)}\nלקוח: ${e(t.customer_name)}\nמיקום: ${e(t.room_label || t.room_number || t.area)}\nסוג קריאה: ${e(t.ticket_type)}\nדחיפות: ${e(t.priority)}\nסטטוס: ${e(t.status)}\n\n${APP_BASE_URL}/tickets/${e(t.id)}`;
+    let opsSla = 0, opsUrgent = 0;
+    for (const t of openTickets) {
+      if (['הושלם', 'בוטל', 'נסגרה', 'טופלה'].includes(t.status) || t.sla_excluded || t.no_sla) continue;
+      const deadlineMs = t.sla_deadline_ms ? Number(t.sla_deadline_ms) : (t.sla_deadline ? new Date(t.sla_deadline).getTime() : null);
+      if (deadlineMs && deadlineMs > nowMs && deadlineMs - nowMs <= 15 * 60 * 1000 && !(await alreadySent(t.id, 'ops_sla_15min'))) {
+        const when = new Date(deadlineMs).toLocaleTimeString('he-IL', { timeZone: 'Asia/Jerusalem', hour: '2-digit', minute: '2-digit' });
+        if (await sendOps(t, 'ops_sla_15min', `התראה: קריאה ${t.ticket_number} תחרוג מ-SLA בעוד פחות מ-15 דקות`, `קריאת שירות עומדת לחרוג מזמן ה-SLA בשעה ${when}.\n\n${details(t)}`)) opsSla++;
+      }
+      if (['גבוהה', 'קריטית'].includes(t.priority) && !(await alreadySent(t.id, 'ops_high_priority'))) {
+        if (await sendOps(t, 'ops_high_priority', `קריאה בדחיפות ${t.priority}: ${t.ticket_number}`, `קריאת שירות בדחיפות ${e(t.priority)} ממתינה לטיפול.\n\n${details(t)}`)) opsUrgent++;
+      }
+    }
+    results.ops_sla_alerts = opsSla;
+    results.ops_urgent_alerts = opsUrgent;
   }
 
   return Response.json({ ok: true, action, results });

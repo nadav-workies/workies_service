@@ -5,6 +5,9 @@
   min-height:100vh;margin:0;direction:rtl;text-align:right;background:var(--ink);color:var(--paper);font-family:var(--font);font-size:17px;line-height:1.6;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0;color-scheme:dark}
 .wai,.wai *{box-sizing:border-box}
+.wai{overflow-x:clip}
+.wai .ringbox{padding:28px}
+@media (max-width:640px){.wai .fields{gap:10px}.wai .route b{font-size:1.15rem}.wai .ticket,.wai .datecard{max-width:100%}}
 .wai h1,.wai h2,.wai h3{margin:0;line-height:1.1;text-wrap:balance}
 .wai p{margin:0}
 .wai ul,.wai ol{margin:0;padding:0;list-style:none}
