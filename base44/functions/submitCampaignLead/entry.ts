@@ -9,20 +9,20 @@ export default async function(req) {
     const entity = { office: 'DailyOfficeLead', podcast: 'PodcastLead', workies_ai: 'WorkiesAILead' }[campaign];
     if (!entity) return Response.json({ error: 'קמפיין לא תקין' }, { status: 400 });
     if (!await campaignIsActive(base44, campaign)) return Response.json({ error: 'ההרשמה הסתיימה' }, { status: 400 });
+    if (campaign === 'workies_ai' && body.action === 'count') {
+      const rows = await base44.asServiceRole.entities.WorkiesAILead.filter({ session_date: '2026-11-10' }, '-created_date', 200);
+      return Response.json({ count: rows.filter((r) => r.status !== 'not_relevant').length });
+    }
     const name = String(rawName || '').trim().slice(0, 100);
     const phone = String(rawPhone || '').trim().slice(0, 30);
     if (!name || !/^\+?[\d\s()-]+$/.test(phone) || phone.replace(/\D/g, '').length < 9) return Response.json({ error: 'יש למלא שם וטלפון תקינים' }, { status: 400 });
     if (campaign === 'workies_ai') {
-      if (body.action === 'count') {
-        const rows = await base44.asServiceRole.entities.WorkiesAILead.filter({ session_date: '2026-11-10' }, '-created_date', 200);
-        return Response.json({ count: rows.filter((r) => r.status !== 'not_relevant').length });
-      }
       const email = String(body.email || '').trim().slice(0, 150);
       const business_name = String(body.business_name || '').trim().slice(0, 150);
       const session = String(body.session || '');
       const session_date = /^\d{4}-\d{2}-\d{2}$/.test(String(body.session_date || '')) ? String(body.session_date) : '';
       if ((email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) || !business_name || !['01', '02', '03', '04', '05', '06'].includes(session) || body.terms_accepted !== true) return Response.json({ error: 'יש למלא את כל השדות ולאשר את תנאי ההשתתפות.' }, { status: 400 });
-      await base44.asServiceRole.entities.WorkiesAILead.create({ name, phone, ...(email ? { email } : {}), business_name, session, ...(session_date ? { session_date } : {}), terms_accepted: true, status: 'new', deposit_status: 'pending' });
+      await base44.asServiceRole.entities.WorkiesAILead.create({ name, phone, ...(email ? { email } : {}), business_name, session, ...(session_date ? { session_date } : {}), terms_accepted: true, status: 'new' });
       return Response.json({ success: true });
     }
     await base44.asServiceRole.entities[entity].create({ name, phone, status: 'new' });
