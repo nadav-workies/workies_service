@@ -169,7 +169,7 @@ export default function WorkiesAI() {
           <div className="idea-grid">
             {IDEAS.map(([title, text]) => (
               <article className="idea" key={title}>
-                <div className="idea-prompt"><Spark /><span>{`בנה לי ${title.replace("עמוד ", "עמוד ").toLowerCase()}`}</span></div>
+                <div className="idea-prompt"><Spark /><span>{`בנה לי ${title}`}</span></div>
                 <h3>{title}</h3>
                 <p>{text}</p>
               </article>
