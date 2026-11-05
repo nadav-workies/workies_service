@@ -23,14 +23,18 @@ export default function LandingDashboard({ onSelect }) {
     return { key, rows, total: rows.reduce((s, r) => s + r.count, 0) };
   });
   const total = pages.reduce((s, p) => s + p.total, 0);
-  if (!pages.length) return <p className="rounded-xl border border-dashed p-5 text-center text-muted-foreground">אין כרגע עמודי נחיתה פעילים.</p>;
-  return <section aria-label="דשבורד לידים" className="space-y-3">
-    <div className="rounded-xl bg-primary text-primary-foreground p-4 flex items-center justify-between">
+  const closed = keys.filter(key => !openKeys.includes(key));
+  return <section aria-label="דשבורד לידים" className="space-y-3 min-w-0">
+    {!pages.length && <p className="rounded-xl border border-dashed p-5 text-center text-muted-foreground">אין כרגע עמודי נחיתה פעילים.</p>}
+    {!!pages.length && <div className="rounded-xl bg-primary text-primary-foreground p-4 flex items-center justify-between">
       <span className="font-bold">סה״כ לידים בעמודים פעילים</span><span className="text-3xl font-bold">{total}</span>
-    </div>
+    </div>}
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {pages.map(p => <PageStatCard key={p.key} title={campaigns[p.key].title} total={p.total} rows={p.rows}
         labels={p.key === "referral" ? REFERRAL_LABELS : STATUSES} onSelect={status => onSelect(p.key, status)} />)}
     </div>
+    {!!closed.length && <div className="pt-2 space-y-2"><h2 className="text-sm font-bold text-muted-foreground">עמודים סגורים</h2><div className="flex flex-wrap gap-2">
+      {closed.map(key => <button key={key} type="button" onClick={() => onSelect(key)} className="rounded-full border px-3 min-h-11 text-sm hover:text-primary">{campaigns[key].title}</button>)}
+    </div></div>}
   </section>;
 }

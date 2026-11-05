@@ -40,6 +40,7 @@ const Podcast = lazy(() => import('@/pages/Podcast'));
 const PublicReferralPage = lazy(() => import('@/pages/PublicReferralPage'));
 const DailyOffice = lazy(() => import('@/pages/DailyOffice'));
 const LandingPages = lazy(() => import('@/pages/LandingPages'));
+const LandingPageManage = lazy(() => import('@/pages/LandingPageManage'));
 import WorkiesAI from '@/pages/WorkiesAI';
 
 
@@ -98,9 +99,10 @@ const AuthenticatedApp = () => {
           <Route path="/community-content" element={<CommunityContent />} />
           <Route path="/maintenance-plan" element={<MaintenancePlan />} />
           <Route path="/friend-referral" element={<ReferralPage />} />
-          <Route path="/referrals-report" element={<Navigate to="/landing-pages?campaign=referral" replace />} />
+          <Route path="/referrals-report" element={<Navigate to="/landing-pages/referral" replace />} />
           <Route path="/landing-pages" element={<LandingPages />} />
-          <Route path="/leads" element={<Navigate to="/landing-pages?campaign=office" replace />} />
+          <Route path="/landing-pages/:campaign" element={<LandingPageManage />} />
+          <Route path="/leads" element={<Navigate to="/landing-pages/office" replace />} />
         </Route>
       </Route>
       <Route path="/onboarding/access/:token" element={<OnboardingAccessPage />} />
