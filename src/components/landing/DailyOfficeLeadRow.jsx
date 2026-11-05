@@ -2,7 +2,7 @@ import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const STATUSES = { new: "חדש", contacted: "נוצר קשר", scheduled: "תואמה התנסות", completed: "ההתנסות בוצעה", not_relevant: "לא רלוונטי" };
+export const STATUSES = { new: "חדש", contacted: "נוצר קשר", scheduled: "תואמה התנסות", completed: "ההתנסות בוצעה", not_relevant: "לא רלוונטי" };
 export default function DailyOfficeLeadRow({ lead, onSaved, entity = "DailyOfficeLead", category = "התנסות במשרד יומי" }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");

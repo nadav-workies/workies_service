@@ -14,10 +14,11 @@ import ReferralStatusDialog from "@/components/referral/ReferralStatusDialog";
 import ReferralTermsDialog from "@/components/referral/ReferralTermsDialog";
 import ReferralShareCard from "@/components/referral/ReferralShareCard";
 
-export default function ReferralsReport({ embedded = false }) {
+export default function ReferralsReport({ embedded = false, status = "" }) {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState(status || "all");
+  useEffect(() => { setFilter(status || "all"); }, [status]);
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState(null);
   const [termsOpen, setTermsOpen] = useState(false);
