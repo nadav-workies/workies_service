@@ -19,7 +19,6 @@ export default function LandingShareCard({ campaign = "office" }) {
       <Button onClick={copy} className="min-h-11"><Copy />העתקת קישור</Button>
       <Button asChild variant="outline" className="min-h-11"><a href={config.path} target="_blank" rel="noopener noreferrer"><ExternalLink />פתיחת העמוד</a></Button>
       <Button asChild variant="outline" className="min-h-11"><a href={`https://wa.me/?text=${encodeURIComponent(`${config.title} בוורקיז באר שבע: ${url}`)}`} target="_blank" rel="noopener noreferrer"><MessageCircle />שיתוף בוואטסאפ</a></Button>
-      <Button asChild variant="outline" className="min-h-11"><a href="#registrations">לרשימת הפניות</a></Button>
     </div>
     {message && <p role="status" className="text-sm text-muted-foreground">{message}</p>}
   </div>;
