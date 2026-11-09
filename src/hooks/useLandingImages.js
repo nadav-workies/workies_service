@@ -14,7 +14,8 @@ export default function useLandingImages(campaign) {
   });
   const needsLogin = editRequested && isFetched && !canEdit;
   const login = () => base44.auth.redirectToLogin(window.location.href);
-  const images = Object.fromEntries(items.map(i => [i.slot, i.image_url]));
+  const DEFAULTS = campaign === "hr_meetup" ? { speaker_liron: "https://base44.app/api/apps/6a1d5a36316988d9f113f88e/files/mp/public/6a1d5a36316988d9f113f88e/f630af83b_hozrim-lamaslul.png" } : {};
+  const images = { ...DEFAULTS, ...Object.fromEntries(items.map(i => [i.slot, i.image_url])) };
   async function upload(slot, file) {
     const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
     const existing = items.find(i => i.slot === slot);

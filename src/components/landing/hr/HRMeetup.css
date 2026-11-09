@@ -56,8 +56,9 @@
 .hr-img-ph { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 8px; color: var(--hr-purple); font-size: 14px; font-weight: 600; }
 .hr-img-edit { cursor: pointer; }
 .hr-img-badge { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 4px; background: rgba(30,22,56,.85); color: #fff; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+.hr-img[data-slot="speaker_liron"] { object-fit: contain; object-position: center; padding: 12%; background: #fff; }
 .hr-avatar-lg { width: min(100%, 220px); aspect-ratio: 1; border-radius: 50%; border: 8px solid var(--hr-purple-light); }
-.hr-avatar-sm { width: 52px; height: 52px; flex-shrink: 0; border-radius: 50%; border: 2px solid var(--hr-purple); }
+.hr-avatar-sm { width: 72px; height: 72px; flex-shrink: 0; border-radius: 50%; border: 2px solid var(--hr-purple); }
 .hr-avatar-sm .hr-img-badge { display: none; }
 
 /* Lectures */
@@ -159,7 +160,7 @@
 .hr-panel-title { font-weight: 800; font-size: 22px; }
 .hr-panel-talk { display: flex; gap: 16px; align-items: flex-start; padding-bottom: 22px; border-bottom: 1px solid #cfc3f2; }
 .hr-panel-talk:last-child { border-bottom: 0; padding-bottom: 0; }
-.hr-panel-avatar { width: 96px; height: 96px; flex-shrink: 0; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 6px 20px rgba(124,95,200,.25); }
+.hr-panel-avatar { width: 120px; height: 120px; flex-shrink: 0; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 6px 20px rgba(124,95,200,.25); }
 .hr-panel-avatar .hr-img-ph { font-size: 12px; }
 .hr-panel-talk h3 { font-weight: 900; font-size: 22px; line-height: 1.15; margin: 8px 0 6px; }
 .hr-panel-talk b { display: block; font-size: 16px; }
@@ -175,7 +176,7 @@
   .hr-hero-content .hr-title { font-size: clamp(48px, 9vh, 96px); margin-top: 24px; }
   .hr-hero-panel { padding: 28px 44px; overflow: hidden; gap: 16px; }
   .hr-panel-talk { padding-bottom: 16px; }
-  .hr-panel-avatar { width: 84px; height: 84px; }
+  .hr-panel-avatar { width: 108px; height: 108px; }
   .hr-panel-talk h3 { font-size: 20px; margin: 6px 0 4px; }
   .hr-hero-content .hr-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }

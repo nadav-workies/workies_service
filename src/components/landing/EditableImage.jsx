@@ -14,7 +14,7 @@ export default function EditableImage({ editor, slot, alt, placeholder, classNam
     setBusy(true); setError("");
     try { await editor.upload(slot, file); } catch { setError("ההעלאה נכשלה"); } finally { setBusy(false); }
   }
-  const content = src ? <img src={src} alt={alt} className="hr-img" /> : <span className="hr-img-ph">{placeholder}</span>;
+  const content = src ? <img src={src} alt={alt} data-slot={slot} className="hr-img" /> : <span className="hr-img-ph">{placeholder}</span>;
   if (!editor.canEdit) return <div className={`hr-img-box ${className}`}>{content}</div>;
   return <button type="button" onClick={() => input.current.click()} disabled={busy} aria-label={`החלפת תמונה: ${alt}`} className={`hr-img-box hr-img-edit ${className}`}>
     {content}
