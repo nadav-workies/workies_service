@@ -1,4 +1,5 @@
 import { escapeHtml } from './security.ts';
+import { sendLoggedEmail } from './messageLog.ts';
 
 // Recipients for every new lead: Haim Langer (operations) and Sally (sales)
 const LEAD_RECIPIENTS = ['maintenance@workies.co.il', 'sp2577@gmail.com'];
@@ -15,7 +16,8 @@ export async function notifyNewLead(base44, campaignTitle, fields) {
     <p style="margin-top:16px"><a href="https://service.workies.co.il/landing-pages" style="color:#f97015">לצפייה בכל הלידים במערכת</a></p>
   </div>`;
   await Promise.all(LEAD_RECIPIENTS.map((to) =>
-    base44.asServiceRole.integrations.Core.SendEmail({
+    sendLoggedEmail(base44, {
+      source: 'leads', key: 'new_lead', recipientType: 'managers',
       to,
       subject: `ליד חדש: ${campaignTitle} | ${fields['שם'] || fields['שם החבר/ה'] || ''}`,
       body,

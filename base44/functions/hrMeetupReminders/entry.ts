@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
+import { sendLoggedEmail } from '../../shared/messageLog.ts';
 
 const REMINDERS = {
   '2026-11-21': { key: 'three_days', when: 'בעוד 3 ימים, ביום שלישי 24.11.2026' },
@@ -22,7 +23,7 @@ export default async function(req) {
     let sent = 0, failed = 0;
     for (let i = 0; i < pending.length; i += 6) {
       const results = await Promise.allSettled(pending.slice(i, i + 6).map(async (lead) => {
-        const res = await base44.asServiceRole.integrations.Core.SendEmail({
+        const res = await sendLoggedEmail(base44, { source: 'hr_meetup', key: `hr_reminder_${reminder.key}`,
           to: lead.email, template_name: 'HRMeetupReminder', category: 'transactional', from_name: 'Workies',
           variables: { first_name: String(lead.name || '').split(' ')[0], when_text: reminder.when },
         });

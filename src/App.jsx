@@ -42,6 +42,7 @@ const DailyOffice = lazy(() => import('@/pages/DailyOffice'));
 const LandingPages = lazy(() => import('@/pages/LandingPages'));
 const HRMeetup = lazy(() => import('@/pages/HRMeetup'));
 const LandingPageManage = lazy(() => import('@/pages/LandingPageManage'));
+const Messages = lazy(() => import('@/pages/Messages'));
 import WorkiesAI from '@/pages/WorkiesAI';
 
 
@@ -87,6 +88,7 @@ const AuthenticatedApp = () => {
           <Route path="/sla-report" element={<SLAReport />} />
           <Route path="/sla-settings" element={<SLASettings />} />
           <Route path="/notification-settings" element={<NotificationSettings />} />
+          <Route path="/messages" element={<Messages />} />
           <Route path="/service-map" element={<ServiceMapPage />} />
           <Route path="/survey-responses" element={<SurveyResponses />} />
           <Route path="/reset-test-data" element={<ResetTestData />} />

@@ -72,6 +72,7 @@ Deno.serve(async (req) => {
     await base44.asServiceRole.entities.NotificationLog.create({
       ticket_id: '',
       ticket_number: '',
+      source: 'users',
       notification_key: 'user_invitation',
       recipient_email: importedUser.email,
       recipient_type: 'user',

@@ -29,6 +29,7 @@ function buildHtml(body) {
 // ─── Notification log ─────────────────────────────────────────────
 async function createLog(base44, payload) {
   return base44.asServiceRole.entities.NotificationLog.create({
+    source: 'tickets',
     ...payload,
     sent_at: new Date().toISOString(),
   });

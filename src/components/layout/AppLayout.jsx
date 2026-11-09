@@ -31,7 +31,7 @@ export default function AppLayout() {
   { label: "סקרי שירות", path: "/survey-responses", icon: Star, managerOnly: true },
   { label: "בקרת ניקיון", path: "/cleaning-report", icon: Sparkles, managerOnly: true },
   { label: "הגדרות SLA", path: "/sla-settings", icon: Settings, adminOnly: true },
-  { label: "הגדרות התראות", path: "/notification-settings", icon: Bell, adminOnly: true },
+  { label: "הודעות", path: "/messages", icon: Bell, managerOnly: true },
   { label: "ניהול לקוחות", path: "/users", icon: Users, managerOnly: true },
   { label: "קהילה ותוכן", path: "/community-content", icon: Megaphone, managerOnly: true },
   { label: "תוכנית תחזוקה", path: "/maintenance-plan", icon: Wrench, maintenanceAccess: true },

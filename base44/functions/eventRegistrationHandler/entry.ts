@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { escapeHtml } from '../../shared/security.ts';
+import { sendLoggedEmail } from '../../shared/messageLog.ts';
 import { dateIsActive } from '../../shared/campaignValidity.ts';
 
 function normalizeEmail(val) {
@@ -181,7 +182,8 @@ export default async function(req) {
       let emailSent = false;
       try {
         if (!isKnownAddress) throw new Error('unverified recipient');
-        await base44.asServiceRole.integrations.Core.SendEmail({
+        await sendLoggedEmail(base44, {
+          source: 'events', key: 'event_confirmation',
           to: email,
           subject: 'הרשמתך לאירוע Workies התקבלה',
           body: emailBody,

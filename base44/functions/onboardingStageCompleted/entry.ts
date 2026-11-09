@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { escapeHtml } from '../../shared/security.ts';
+import { sendLoggedEmail } from '../../shared/messageLog.ts';
 
 export default async function(req: Request): Promise<Response> {
   try {
@@ -153,7 +154,8 @@ export default async function(req: Request): Promise<Response> {
     let sent = 0;
     for (const recipient of recipients) {
       if (!recipient.email) continue;
-      await base44.asServiceRole.integrations.Core.SendEmail({
+      await sendLoggedEmail(base44, {
+        source: 'onboarding', key: 'onboarding_stage_completed', recipientType: 'managers',
         to: recipient.email,
         subject: subject,
         body: bodyHtml,

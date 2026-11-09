@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { sendLoggedEmail } from '../../shared/messageLog.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -62,7 +63,8 @@ Deno.serve(async (req) => {
     for (const m of managers) {
       if (!m.email) continue;
       try {
-        await base44.asServiceRole.integrations.Core.SendEmail({
+        await sendLoggedEmail(base44, {
+          source: 'summaries', key: 'event_registration_summary', recipientType: 'managers',
           to: m.email,
           subject: 'סיכום הרשמות יומי לאירוע Workies',
           body: emailBody,

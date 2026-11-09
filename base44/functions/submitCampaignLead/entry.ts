@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { campaignIsActive } from '../../shared/campaignValidity.ts';
 import { notifyNewLead } from '../../shared/leadNotify.ts';
+import { sendLoggedEmail } from '../../shared/messageLog.ts';
 
 export default async function(req) {
   try {
@@ -29,7 +30,7 @@ export default async function(req) {
       const details_token = crypto.randomUUID();
       const lead = await base44.asServiceRole.entities.HRMeetupLead.create({ name, phone, email, details_token, status: 'new' });
       await notifyNewLead(base44, 'HR מחוץ לשגרה', { 'שם': name, 'טלפון': phone, 'מייל': email });
-      const res = await base44.asServiceRole.integrations.Core.SendEmail({ to: email, template_name: 'HRMeetupConfirmation', variables: { first_name: name.split(' ')[0] }, category: 'transactional', from_name: 'Workies' }).catch((e) => ({ success: false, message: e.message }));
+      const res = await sendLoggedEmail(base44, { source: 'hr_meetup', key: 'hr_confirmation', to: email, template_name: 'HRMeetupConfirmation', variables: { first_name: name.split(' ')[0] }, category: 'transactional', from_name: 'Workies' }).catch((e) => ({ success: false, message: e.message }));
       if (res?.success === false) console.error('hr confirmation failed', res.message || res.reason);
       else await base44.asServiceRole.entities.HRMeetupLead.update(lead.id, { confirmation_sent: true });
       return Response.json({ success: true, lead_id: lead.id, token: details_token });

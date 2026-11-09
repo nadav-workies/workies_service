@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import { escapeHtml } from '../../shared/security.ts';
+import { sendLoggedEmail } from '../../shared/messageLog.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -56,7 +57,8 @@ Deno.serve(async (req) => {
     // Send birthday greetings to users whose birthday is today
     for (const user of birthdaysToday) {
       try {
-        await base44.integrations.Core.SendEmail({
+        await sendLoggedEmail(base44, {
+          source: 'birthdays', key: 'birthday_greeting',
           to: user.email,
           subject: "🎉 יום הולדת שמח!",
           body: `<div dir="rtl" style="font-family: Heebo, Arial, sans-serif; text-align: center; padding: 40px; background: #fef3f2; border-radius: 12px;">
@@ -83,7 +85,8 @@ Deno.serve(async (req) => {
 
       for (const email of managerEmails) {
         try {
-          await base44.integrations.Core.SendEmail({
+          await sendLoggedEmail(base44, {
+            source: 'birthdays', key: 'birthday_reminder', recipientType: 'managers',
             to: email,
             subject: "🎂 תזכורת: ימי הולדת מחר",
             body: `<div dir="rtl" style="font-family: Heebo, Arial, sans-serif; padding: 30px; background: #fff7ed; border-radius: 12px;">

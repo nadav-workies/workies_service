@@ -1,4 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.31";
+import { sendLoggedEmail } from "../../shared/messageLog.ts";
 
 const escapeHtml = (s: any) => String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
 
@@ -234,7 +235,8 @@ Deno.serve(async (req) => {
 
     for (const mgr of managers) {
       try {
-        await base44.asServiceRole.integrations.Core.SendEmail({
+        await sendLoggedEmail(base44, {
+          source: 'summaries', key: 'daily_summary', recipientType: 'managers',
           to: mgr.email,
           subject: `📊 סיכום יומי — ${yesterdayLabel}`,
           body: fullHtml,

@@ -1,0 +1,28 @@
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { SOURCE_LABELS, STATUS_META, sourceOf, sentAt, formatDate } from "@/components/messages/messageConfig";
+
+function Row({ label, children }) {
+  return <div className="grid grid-cols-[110px_1fr] gap-2 text-sm"><span className="text-muted-foreground">{label}</span><span className="break-words">{children}</span></div>;
+}
+
+export default function MessageDetailDialog({ log, onClose }) {
+  if (!log) return null;
+  const vars = log.variables && Object.entries(log.variables);
+  return <Dialog open onOpenChange={onClose}>
+    <DialogContent dir="rtl" className="max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogHeader><DialogTitle className="text-right">{log.subject || log.notification_key}</DialogTitle></DialogHeader>
+      <div className="space-y-2">
+        <Row label="נמען"><bdi dir="ltr">{log.recipient_email}</bdi></Row>
+        <Row label="נשלח">{formatDate(sentAt(log))}</Row>
+        <Row label="סטטוס">{STATUS_META[log.status]?.label || log.status}</Row>
+        <Row label="אזור">{SOURCE_LABELS[sourceOf(log)]}</Row>
+        <Row label="סוג">{log.notification_key}</Row>
+        {log.ticket_number && <Row label="קריאה">{log.ticket_number}</Row>}
+        {log.template_name && <Row label="תבנית">{log.template_name}</Row>}
+        {log.error_message && <Row label="שגיאה"><span className="text-destructive">{log.error_message}</span></Row>}
+        {vars?.length > 0 && <Row label="משתנים">{vars.map(([k, v]) => `${k}: ${v}`).join(" · ")}</Row>}
+      </div>
+      {log.body_preview && <div className="mt-3 rounded-lg bg-muted p-3 text-sm leading-relaxed whitespace-pre-wrap">{log.body_preview}</div>}
+    </DialogContent>
+  </Dialog>;
+}
