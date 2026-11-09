@@ -10,20 +10,29 @@ export default async function(req) {
     const entity = { office: 'DailyOfficeLead', podcast: 'PodcastLead', workies_ai: 'WorkiesAILead', hr_meetup: 'HRMeetupLead' }[campaign];
     if (!entity) return Response.json({ error: 'קמפיין לא תקין' }, { status: 400 });
     if (!await campaignIsActive(base44, campaign)) return Response.json({ error: 'ההרשמה הסתיימה' }, { status: 400 });
+    if (campaign === 'hr_meetup' && body.step === 'details') {
+      const token = String(body.token || '');
+      const organization = String(body.organization || '').trim().slice(0, 150);
+      const job_title = String(body.job_title || '').trim().slice(0, 150);
+      if (!body.lead_id || !token || !organization || !job_title) return Response.json({ error: 'יש למלא ארגון ותפקיד.' }, { status: 400 });
+      const lead = await base44.asServiceRole.entities.HRMeetupLead.get(String(body.lead_id)).catch((e) => (e.status === 404 ? null : Promise.reject(e)));
+      if (!lead || !lead.details_token || lead.details_token !== token) return Response.json({ error: 'ההרשמה לא נמצאה' }, { status: 404 });
+      await base44.asServiceRole.entities.HRMeetupLead.update(lead.id, { organization, job_title, details_completed: true });
+      return Response.json({ success: true });
+    }
     const name = String(rawName || '').trim().slice(0, 100);
     const phone = String(rawPhone || '').trim().slice(0, 30);
     if (!name || !/^\+?[\d\s()-]+$/.test(phone) || phone.replace(/\D/g, '').length < 9) return Response.json({ error: 'יש למלא שם וטלפון תקינים' }, { status: 400 });
     if (campaign === 'hr_meetup') {
       const email = String(body.email || '').trim().slice(0, 150);
-      const organization = String(body.organization || '').trim().slice(0, 150);
-      const job_title = String(body.job_title || '').trim().slice(0, 150);
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !organization || !job_title) return Response.json({ error: 'יש למלא את כל השדות.' }, { status: 400 });
-      const lead = await base44.asServiceRole.entities.HRMeetupLead.create({ name, phone, email, organization, job_title, status: 'new' });
-      await notifyNewLead(base44, 'HR מחוץ לשגרה', { 'שם': name, 'טלפון': phone, 'מייל': email, 'ארגון': organization, 'תפקיד': job_title });
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return Response.json({ error: 'יש למלא אימייל תקין.' }, { status: 400 });
+      const details_token = crypto.randomUUID();
+      const lead = await base44.asServiceRole.entities.HRMeetupLead.create({ name, phone, email, details_token, status: 'new' });
+      await notifyNewLead(base44, 'HR מחוץ לשגרה', { 'שם': name, 'טלפון': phone, 'מייל': email });
       const res = await base44.asServiceRole.integrations.Core.SendEmail({ to: email, template_name: 'HRMeetupConfirmation', variables: { first_name: name.split(' ')[0] }, category: 'transactional', from_name: 'Workies' }).catch((e) => ({ success: false, message: e.message }));
       if (res?.success === false) console.error('hr confirmation failed', res.message || res.reason);
       else await base44.asServiceRole.entities.HRMeetupLead.update(lead.id, { confirmation_sent: true });
-      return Response.json({ success: true });
+      return Response.json({ success: true, lead_id: lead.id, token: details_token });
     }
     if (campaign === 'workies_ai') {
       const email = String(body.email || '').trim().slice(0, 150);
