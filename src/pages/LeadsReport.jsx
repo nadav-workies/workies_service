@@ -5,6 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { isManagerOrAdmin } from "@/lib/permissions";
 import { Button } from "@/components/ui/button";
 import DailyOfficeLeadRow, { STATUSES } from "@/components/landing/DailyOfficeLeadRow";
+import LeadsArchive from "@/components/landing/LeadsArchive";
 import campaigns from "@/components/landing/campaigns";
 
 export default function LeadsReport({ campaign = "office", embedded = false, status = "", onClearStatus }) {
@@ -14,7 +15,7 @@ export default function LeadsReport({ campaign = "office", embedded = false, sta
   const allowed = isManagerOrAdmin(user);
   const { data, isPending, error, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ["landing-leads", config.entity, status], enabled: allowed, initialPageParam: null,
-    queryFn: ({ pageParam }) => base44.entities[config.entity].filter(status ? { status } : {}, { sort: "-created_date", limit: 30, ...(pageParam ? { cursor: pageParam } : {}) }),
+    queryFn: ({ pageParam }) => base44.entities[config.entity].filter(status ? { status } : { status: { $ne: "not_relevant" } }, { sort: "-created_date", limit: 30, ...(pageParam ? { cursor: pageParam } : {}) }),
     getNextPageParam: page => page.has_more ? page.next_cursor : undefined,
   });
   const refresh = () => Promise.all([client.invalidateQueries({ queryKey: ["landing-leads", config.entity] }), client.invalidateQueries({ queryKey: ["landing-stats", campaign] })]);
@@ -30,5 +31,6 @@ export default function LeadsReport({ campaign = "office", embedded = false, sta
     {status && <div className="flex flex-wrap items-center gap-2 rounded-xl bg-primary/10 p-3 text-sm"><span>מסונן לפי סטטוס: <b>{STATUSES[status] || status}</b></span>{onClearStatus && <Button variant="outline" size="sm" onClick={onClearStatus}>הצגת הכל</Button>}</div>}
     {isPending ? <p role="status" className="py-12 text-center">טוענים פניות…</p> : error ? <div role="alert" className="border rounded-xl p-5"><p>לא ניתן לטעון את הפניות כרגע.</p><Button variant="outline" onClick={refresh} className="mt-3">ניסיון נוסף</Button></div> : leads.length ? leads.map(lead => <DailyOfficeLeadRow key={lead.id} lead={lead} onSaved={refresh} entity={config.entity} category={config.title} />) : <div className="text-center border border-dashed rounded-xl p-8 space-y-2"><h2 className="font-bold">עדיין אין פניות</h2><p className="text-muted-foreground">שתפו את קישור ההתנסות, והפניות יופיעו כאן.</p>{!embedded && <Link to="/landing-pages" className="text-primary underline inline-flex min-h-11 items-center">לשיתוף העמוד</Link>}</div>}
     {hasNextPage && <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage} className="h-11 w-full">{isFetchingNextPage ? "טוענים…" : "טעינת פניות נוספות"}</Button>}
+    {!status && <LeadsArchive entity={config.entity} category={config.title} onSaved={refresh} />}
   </div>;
 }

@@ -9,9 +9,15 @@ export async function notifyNewLead(base44, campaignTitle, fields) {
     .filter(([, v]) => v)
     .map(([k, v]) => `<tr><td style="padding:6px 12px;color:#6a7181">${escapeHtml(k)}</td><td style="padding:6px 12px;font-weight:600">${escapeHtml(v)}</td></tr>`)
     .join('');
+  const [setting] = await base44.asServiceRole.entities.NotificationSetting.filter({ key: 'new_lead' }).catch(() => []);
+  if (setting && setting.enabled === false) return;
+  const name = fields['שם'] || fields['שם החבר/ה'] || '';
+  const fill = (t) => t.replace(/\{\{campaign\}\}/g, campaignTitle).replace(/\{\{name\}\}/g, name);
+  const intro = fill(setting?.body_template || 'נכנס ליד חדש מעמוד הנחיתה. מומלץ לחזור אליו בהקדם.');
+  const subject = fill(setting?.subject_template || 'ליד חדש: {{campaign}} | {{name}}');
   const body = `<div dir="rtl" style="font-family:Heebo,Arial,sans-serif;color:#14181f">
     <h2 style="color:#f97015;margin:0 0 8px">ליד חדש: ${escapeHtml(campaignTitle)}</h2>
-    <p style="margin:0 0 12px;color:#6a7181">נכנס ליד חדש מעמוד הנחיתה. מומלץ לחזור אליו בהקדם.</p>
+    <p style="margin:0 0 12px;color:#6a7181;white-space:pre-wrap">${escapeHtml(intro)}</p>
     <table style="border-collapse:collapse;background:#f7f7f7;border-radius:10px">${rows}</table>
     <p style="margin-top:16px"><a href="https://service.workies.co.il/landing-pages" style="color:#f97015">לצפייה בכל הלידים במערכת</a></p>
   </div>`;
@@ -19,7 +25,7 @@ export async function notifyNewLead(base44, campaignTitle, fields) {
     sendLoggedEmail(base44, {
       source: 'leads', key: 'new_lead', recipientType: 'managers',
       to,
-      subject: `ליד חדש: ${campaignTitle} | ${fields['שם'] || fields['שם החבר/ה'] || ''}`,
+      subject,
       body,
       from_name: 'Workies לידים',
       category: 'transactional',

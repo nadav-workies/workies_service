@@ -117,7 +117,7 @@
 .hr-logos { background: #fff; padding: 40px 0; border-top: 1px solid #ece8f6; }
 .hr-logos-title { text-align: center; font-weight: 800; font-size: 15px; color: var(--hr-muted); margin-bottom: 20px; }
 .hr-logos-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: center; justify-items: center; list-style: none; padding: 0; margin: 0; }
-.hr-logos-row img { max-height: 56px; width: auto; max-width: 100%; object-fit: contain; mix-blend-mode: multiply; }
+.hr-logos-row img { max-height: 56px; width: auto; max-width: 100%; object-fit: contain; mix-blend-mode: multiply; filter: brightness(1.08) contrast(1.15); background: transparent; }
 @media (min-width: 768px) { .hr-logos-row { gap: 48px; } .hr-logos-row img { max-height: 80px; } }
 
 /* Closing + footer */

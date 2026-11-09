@@ -12,12 +12,15 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Bell, Pencil } from "lucide-react";
 import { isManagerOrAdmin } from "@/lib/slaUtils";
 
+const CATEGORIES = { tickets: "קריאות שירות", leads: "לידים", users: "משתמשים" };
+const categoryOf = (key = "") => key === "new_lead" ? "leads" : key === "user_registered" ? "users" : "tickets";
 const RECIPIENT_LABELS = { user: "משתמש", managers: "מנהלים", admin: "אדמין" };
 
 export default function NotificationSettings() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
+  const [cat, setCat] = useState("tickets");
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -45,8 +48,9 @@ export default function NotificationSettings() {
   if (loading || isLoading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
   if (user?.role !== 'admin') return <div className="text-center py-20 text-muted-foreground">אין הרשאה לצפות בדף זה</div>;
 
-  const userSettings = settings.filter(s => s.recipient_type === 'user');
-  const managerSettings = settings.filter(s => s.recipient_type === 'managers');
+  const inCat = settings.filter(s => categoryOf(s.key) === cat);
+  const userSettings = inCat.filter(s => s.recipient_type === 'user');
+  const managerSettings = inCat.filter(s => s.recipient_type !== 'user');
 
   return (
     <div className="space-y-5 max-w-4xl mx-auto" dir="rtl">
@@ -57,8 +61,13 @@ export default function NotificationSettings() {
         <p className="text-muted-foreground text-sm mt-1">הפעלה, כיבוי ועריכת נוסחי מיילים</p>
       </div>
 
-      <SettingGroup title="התראות למשתמש" settings={userSettings} onEdit={setEditing} onToggle={handleToggle} />
-      <SettingGroup title="התראות למנהלים" settings={managerSettings} onEdit={setEditing} onToggle={handleToggle} />
+      <div className="flex flex-wrap gap-2" role="tablist" aria-label="קטגוריות הודעה">
+        {Object.entries(CATEGORIES).map(([k, label]) => <button key={k} type="button" role="tab" aria-selected={cat === k} onClick={() => setCat(k)}
+          className={`rounded-full border px-4 min-h-10 text-sm ${cat === k ? "bg-primary text-primary-foreground border-primary" : "bg-card hover:border-primary"}`}>
+          {label} · {settings.filter(s => categoryOf(s.key) === k).length}</button>)}
+      </div>
+      {userSettings.length > 0 && <SettingGroup title="התראות למשתמש" settings={userSettings} onEdit={setEditing} onToggle={handleToggle} />}
+      {managerSettings.length > 0 && <SettingGroup title="התראות למנהלים" settings={managerSettings} onEdit={setEditing} onToggle={handleToggle} />}
 
       {editing && (
         <EditModal
@@ -130,7 +139,7 @@ function EditModal({ setting, onSave, onClose, saving }) {
           </div>
           <div className="space-y-1.5">
             <Label>גוף המייל</Label>
-            <p className="text-xs text-muted-foreground">משתנים: {`{{ticket_number}} {{customer_name}} {{ticket_type}} {{status}} {{assigned_to}} {{resolution_summary}} {{sla_label}} {{room_label}} {{priority}} {{created_by_name}}`}</p>
+            <p className="text-xs text-muted-foreground">משתנים: {setting.key === "new_lead" ? "{{campaign}} {{name}} — פרטי הליד מצורפים אוטומטית" : `{{ticket_number}} {{customer_name}} {{ticket_type}} {{status}} {{assigned_to}} {{resolution_summary}} {{sla_label}} {{room_label}} {{priority}} {{created_by_name}}`}</p>
             <Textarea value={form.body_template} onChange={e => setForm(f => ({ ...f, body_template: e.target.value }))} rows={6} className="text-sm font-mono" />
           </div>
           {setting.reminder_minutes !== undefined && (

@@ -6,6 +6,7 @@ import MessageFilterPills from "@/components/messages/MessageFilterPills";
 import MessageRow from "@/components/messages/MessageRow";
 import MessagesPager from "@/components/messages/MessagesPager";
 import MessageDetailDialog from "@/components/messages/MessageDetailDialog";
+import MessagesArchive from "@/components/messages/MessagesArchive";
 import MessagesTableHead from "@/components/messages/MessagesTableHead";
 import { PER_PAGE, SOURCE_LABELS, sourceOf, sentAt, downloadCsv } from "@/components/messages/messageConfig";
 
@@ -29,6 +30,7 @@ export default function MessagesTable() {
   useEffect(() => { setPage(1); }, [status, source, term]);
 
   const base = useMemo(() => ({
+    not_relevant: { $ne: true },
     ...(source !== "all" ? { source } : {}),
     ...(term ? { $or: [{ recipient_email: { $regex: escapeRegex(term) } }, { subject: { $regex: escapeRegex(term) } }] } : {}),
   }), [source, term]);
@@ -108,6 +110,7 @@ export default function MessagesTable() {
       </div>
       {!isLoading && list.length > 0 && <MessagesPager page={current} pages={pages} shown={slice.length} start={start} total={list.length} onPage={setPage} />}
     </div>
+    <MessagesArchive onOpen={setOpen} />
     <MessageDetailDialog log={open} onClose={() => setOpen(null)} />
   </section>;
 }

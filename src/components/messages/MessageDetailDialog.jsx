@@ -1,3 +1,6 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SOURCE_LABELS, STATUS_META, sourceOf, sentAt, formatDate } from "@/components/messages/messageConfig";
 
@@ -6,6 +9,11 @@ function Row({ label, children }) {
 }
 
 export default function MessageDetailDialog({ log, onClose }) {
+  const client = useQueryClient();
+  const toggle = useMutation({
+    mutationFn: () => base44.entities.NotificationLog.update(log.id, { not_relevant: !log.not_relevant }),
+    onSuccess: () => { client.invalidateQueries({ queryKey: ["message-logs"] }); client.invalidateQueries({ queryKey: ["message-log-counts"] }); onClose(); },
+  });
   if (!log) return null;
   const vars = log.variables && Object.entries(log.variables);
   return <Dialog open onOpenChange={onClose}>
@@ -23,6 +31,9 @@ export default function MessageDetailDialog({ log, onClose }) {
         {vars?.length > 0 && <Row label="משתנים">{vars.map(([k, v]) => `${k}: ${v}`).join(" · ")}</Row>}
       </div>
       {log.body_preview && <div className="mt-3 rounded-lg bg-muted p-3 text-sm leading-relaxed whitespace-pre-wrap">{log.body_preview}</div>}
+      <Button variant={log.not_relevant ? "outline" : "destructive"} disabled={toggle.isPending} onClick={() => toggle.mutate()} className="mt-3 min-h-11">
+        {log.not_relevant ? "החזרה מהארכיון" : "סימון כלא רלוונטי"}
+      </Button>
     </DialogContent>
   </Dialog>;
 }

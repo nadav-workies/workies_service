@@ -37,7 +37,7 @@ export default function LandingPageManage() {
         {campaign === "referral" ? <ReferralsReport embedded status={status} /> : <LeadsReport key={campaign} campaign={campaign} embedded status={status} onClearStatus={() => setStatus("")} />}
       </TabsContent>
       <TabsContent value="settings" className="space-y-4 mt-4 min-w-0">
-        <LandingShareCard campaign={campaign} />
+        <LandingShareCard campaign={campaign} canEdit={user.role === "admin"} />
         {user.role === "admin" && <CampaignValidityEditor campaign={campaign} />}
       </TabsContent>
     </Tabs>

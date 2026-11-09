@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Copy, ExternalLink, MessageCircle } from "lucide-react";
+import { Copy, ExternalLink, MessageCircle, Pencil } from "lucide-react";
 import campaigns from "@/components/landing/campaigns";
 
-export default function LandingShareCard({ campaign = "office" }) {
+export default function LandingShareCard({ campaign = "office", canEdit = false }) {
   const [message, setMessage] = useState("");
   const config = campaigns[campaign];
-  const url = `${window.location.origin}${config.path}`;
+  const url = `https://service.workies.co.il${config.path}`;
   async function copy() {
     try { await navigator.clipboard.writeText(url); setMessage("הקישור הועתק"); }
     catch { setMessage("אפשר לסמן ולהעתיק את הקישור מהשדה."); }
@@ -18,6 +18,7 @@ export default function LandingShareCard({ campaign = "office" }) {
     <div className="flex flex-wrap gap-2">
       <Button onClick={copy} className="min-h-11"><Copy />העתקת קישור</Button>
       <Button asChild variant="outline" className="min-h-11"><a href={config.path} target="_blank" rel="noopener noreferrer"><ExternalLink />פתיחת העמוד</a></Button>
+      {canEdit && <Button asChild variant="outline" className="min-h-11"><a href={`${config.path}?edit=1`} target="_blank" rel="noopener noreferrer"><Pencil />עריכת העמוד</a></Button>}
       <Button asChild variant="outline" className="min-h-11"><a href={`https://wa.me/?text=${encodeURIComponent(`${config.title} בוורקיז באר שבע: ${url}`)}`} target="_blank" rel="noopener noreferrer"><MessageCircle />שיתוף בוואטסאפ</a></Button>
     </div>
     {message && <p role="status" className="text-sm text-muted-foreground">{message}</p>}
