@@ -16,7 +16,7 @@ export default function HRMeetup() {
     {editor.canEdit && <p className="hr-admin-bar">מצב עריכה: לחיצה על תמונה מחליפה אותה</p>}
     <HRHero editor={editor} />
     <main>
-      {LECTURES.map((l, i) => <HRLecture key={l.title} lecture={l} editor={editor} alt={i === 1} />)}
+      {LECTURES.map((l, i) => <HRLecture key={l.title} lecture={l} editor={editor} alt={i % 2 === 1} />)}
       <HRSchedule />
       <section id="register" className="hr-register" aria-labelledby="hr-register-title">
         <div className="hr-wrap hr-register-grid">

@@ -169,7 +169,10 @@
   .hr-hero-photo { min-height: 0; height: 100%; }
   .hr-hero-content { padding: 0 56px 40px; }
   .hr-hero-content .hr-title { font-size: clamp(48px, 9vh, 96px); margin-top: 24px; }
-  .hr-hero-panel { padding: 32px 44px; overflow: hidden; }
+  .hr-hero-panel { padding: 28px 44px; overflow: hidden; gap: 16px; }
+  .hr-panel-talk { padding-bottom: 16px; }
+  .hr-panel-avatar { width: 84px; height: 84px; }
+  .hr-panel-talk h3 { font-size: 20px; margin: 6px 0 4px; }
   .hr-hero-content .hr-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
