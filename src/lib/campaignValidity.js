@@ -8,7 +8,7 @@ export function campaignActive(validity) {
 }
 export async function getCampaignValidity(campaign) {
   const { items } = await base44.entities.CampaignValidity.filter({ campaign }, { sort: "-created_date", limit: 1 });
-  return items[0] || { campaign, end_date: { referral: "2026-10-15", hr_meetup: "2026-11-17" }[campaign] || "" };
+  return items[0] || { campaign, end_date: { referral: "2026-10-15", hr_meetup: "2026-11-23" }[campaign] || "" };
 }
 export function formatEndDate(value) {
   return value ? value.split("-").reverse().join(".") : "ללא הגבלת תוקף";

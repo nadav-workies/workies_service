@@ -2,7 +2,7 @@ import EditableImage from "@/components/landing/EditableImage";
 import { LECTURES } from "@/components/landing/hr/hrContent";
 
 const HERO_BG = "https://base44.app/api/apps/6a1d5a36316988d9f113f88e/files/mp/public/6a1d5a36316988d9f113f88e/58ceb9525_hr-hero-lounge.jpg";
-const FACTS = [["מתי", "שלישי 17.11.2026"], ["שעה", "09:00–12:00"], ["איפה", "WORKIES, באר שבע"], ["השתתפות", "ללא עלות", true]];
+const FACTS = [["מתי", "שלישי 24.11.2026"], ["שעה", "09:00–12:00"], ["איפה", "WORKIES, באר שבע"], ["השתתפות", "ללא עלות", true]];
 
 export default function HRHero({ editor }) {
   const bgEditor = { ...editor, images: { hero_bg: HERO_BG, ...editor.images } };
@@ -24,7 +24,7 @@ export default function HRHero({ editor }) {
         </dl>
         <div className="hr-cta-row">
           <a href="#register" className="hr-btn">שריון מקום ←</a>
-          <span><b>ההרשמה עד 17.11.2026</b> · מספר המקומות מוגבל</span>
+          <span><b>ההרשמה עד 23.11.2026</b> · מספר המקומות מוגבל</span>
         </div>
       </div>
     </div>

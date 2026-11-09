@@ -23,10 +23,10 @@ export default function HRMeetup() {
           <div>
             <span className="hr-badge">ללא עלות</span>
             <h2 id="hr-register-title" className="hr-register-title">שריון מקום בפחות מדקה</h2>
-            <p className="hr-register-meta"><b>יום שלישי | 17.11.2026 | <bdi dir="ltr">09:00–12:00</bdi></b></p>
+            <p className="hr-register-meta"><b>יום שלישי | 24.11.2026 | <bdi dir="ltr">09:00–12:00</bdi></b></p>
             <p className="hr-register-meta">WORKIES, באר שבע</p>
             <p className="hr-register-meta">ההשתתפות ללא עלות, בהרשמה מראש.</p>
-            <p className="hr-register-small">מספר המקומות מוגבל. ההרשמה פתוחה עד 17.11.2026.</p>
+            <p className="hr-register-small">מספר המקומות מוגבל. ההרשמה פתוחה עד 23.11.2026.</p>
           </div>
           <div className="hr-form-card">
             <h3 className="hr-form-title">פרטי הרשמה</h3>
