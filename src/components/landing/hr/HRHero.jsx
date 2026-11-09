@@ -17,7 +17,7 @@ export default function HRHero({ editor }) {
         <p className="hr-lead">אנחנו מזמינים אתכן לפתוח את הבוקר קצת אחרת, ליהנות מארוחת בוקר עשירה, לפגוש קולגות מהתחום, להחליף רעיונות ולהכיר כלים חדשים שיכולים לשנות את הדרך שבה אנחנו עובדות.</p>
         <p className="hr-lead">בוקר מקצועי למנהלות משאבי אנוש, עם שתי הרצאות על האתגרים וההזדמנויות שמביאה איתה הבינה המלאכותית לעולם העבודה והניהול.</p>
         <dl className="hr-facts">
-          {FACTS.map(([k, v, hi]) => <div key={k} className={hi ? "hr-fact hr-fact-hi" : "hr-fact"}><dt>{k}</dt><dd>{v}</dd></div>)}
+          {FACTS.map(([k, v, hi]) => <div key={k} className={hi ? "hr-fact hr-fact-hi" : "hr-fact"}><dt>{k}</dt><dd>{/^\d/.test(v) ? <bdi dir="ltr">{v}</bdi> : v}</dd></div>)}
         </dl>
         <div className="hr-cta-row">
           <a href="#register" className="hr-btn">שריון מקום ←</a>
