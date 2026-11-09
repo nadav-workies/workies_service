@@ -40,11 +40,12 @@ const Podcast = lazy(() => import('@/pages/Podcast'));
 const PublicReferralPage = lazy(() => import('@/pages/PublicReferralPage'));
 const DailyOffice = lazy(() => import('@/pages/DailyOffice'));
 const LandingPages = lazy(() => import('@/pages/LandingPages'));
+const HRMeetup = lazy(() => import('@/pages/HRMeetup'));
 const LandingPageManage = lazy(() => import('@/pages/LandingPageManage'));
 import WorkiesAI from '@/pages/WorkiesAI';
 
 
-const PUBLIC_ROUTES = ['/event-registration', '/feedback', '/onboarding/access', '/referral-share', '/daily-office', '/podcast', '/workies-ai'];
+const PUBLIC_ROUTES = ['/event-registration', '/feedback', '/onboarding/access', '/referral-share', '/daily-office', '/podcast', '/workies-ai', '/hr-meetup'];
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -111,6 +112,7 @@ const AuthenticatedApp = () => {
       <Route path="/referral-share" element={<PublicReferralPage />} />
       <Route path="/daily-office" element={<DailyOffice />} />
       <Route path="/podcast" element={<Podcast />} />
+      <Route path="/hr-meetup" element={<HRMeetup />} />
       <Route path="/workies-ai" element={<WorkiesAI />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>

@@ -1,0 +1,99 @@
+{
+  "name": "HRMeetupLead",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "\u05e9\u05dd \u05de\u05dc\u05d0"
+    },
+    "phone": {
+      "type": "string",
+      "maxLength": 30,
+      "description": "\u05d8\u05dc\u05e4\u05d5\u05df \u05e0\u05d9\u05d9\u05d3"
+    },
+    "email": {
+      "type": "string",
+      "maxLength": 150,
+      "description": "\u05d0\u05d9\u05de\u05d9\u05d9\u05dc"
+    },
+    "organization": {
+      "type": "string",
+      "maxLength": 150,
+      "description": "\u05d0\u05e8\u05d2\u05d5\u05df"
+    },
+    "job_title": {
+      "type": "string",
+      "maxLength": 150,
+      "description": "\u05ea\u05e4\u05e7\u05d9\u05d3"
+    },
+    "confirmation_sent": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05d0\u05d9\u05e9\u05d5\u05e8 \u05d4\u05e8\u05e9\u05de\u05d4 \u05e0\u05e9\u05dc\u05d7"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "contacted",
+        "scheduled",
+        "completed",
+        "not_relevant"
+      ],
+      "enumColors": [
+        "blue",
+        "yellow",
+        "purple",
+        "green",
+        "gray"
+      ],
+      "default": "new"
+    }
+  },
+  "required": [
+    "name",
+    "phone",
+    "email",
+    "organization",
+    "job_title"
+  ],
+  "rls": {
+    "create": {
+      "data.status": "new"
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
