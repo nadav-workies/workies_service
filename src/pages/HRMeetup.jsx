@@ -14,6 +14,7 @@ export default function HRMeetup() {
   useEffect(() => { document.title = "HR מחוץ לשגרה | מיטאפ למנהלות משאבי אנוש | Workies"; }, []);
   return <div dir="rtl" lang="he" className="hr-page landing-font">
     {editor.canEdit && <p className="hr-admin-bar">מצב עריכה: לחיצה על תמונה מחליפה אותה</p>}
+    {editor.needsLogin && <p className="hr-admin-bar">כדי לערוך את העמוד יש להתחבר כאדמין · <button type="button" onClick={editor.login} className="underline font-bold">התחברות</button></p>}
     <HRHero editor={editor} />
     <main>
       {LECTURES.map((l, i) => <HRLecture key={l.title} lecture={l} editor={editor} alt={i % 2 === 1} />)}
