@@ -2,7 +2,7 @@ import EditableImage from "@/components/landing/EditableImage";
 import { LECTURES } from "@/components/landing/hr/hrContent";
 
 const HERO_BG = "https://base44.app/api/apps/6a1d5a36316988d9f113f88e/files/mp/public/6a1d5a36316988d9f113f88e/58ceb9525_hr-hero-lounge.jpg";
-const FACTS = [["מתי", "חמישי 19.11.2026"], ["שעה", "09:00–12:00"], ["איפה", "WORKIES, באר שבע"], ["השתתפות", "ללא עלות", true]];
+const FACTS = [["מתי", "שלישי 17.11.2026"], ["שעה", "09:00–12:00"], ["איפה", "WORKIES, באר שבע"], ["השתתפות", "ללא עלות", true]];
 
 export default function HRHero({ editor }) {
   const bgEditor = { ...editor, images: { hero_bg: HERO_BG, ...editor.images } };
@@ -18,7 +18,7 @@ export default function HRHero({ editor }) {
         <p className="hr-eyebrow">מיטאפ למנהלות משאבי אנוש · בשיתוף PARGODA</p>
         <h1 className="hr-title">HR מחוץ לשגרה<span className="hr-dot">.</span></h1>
         <p className="hr-sub">בוקר של קפה, קולגות ורעיונות חדשים</p>
-        <p className="hr-lead">ארוחת בוקר עשירה, קולגות מהתחום ושתי הרצאות על האתגרים וההזדמנויות שמביאה הבינה המלאכותית לעולם העבודה והניהול.</p>
+        <p className="hr-lead">ארוחת בוקר עשירה, קולגות מהתחום והרצאות על האתגרים וההזדמנויות שמביאה הבינה המלאכותית לעולם העבודה והניהול.</p>
         <dl className="hr-facts">
           {FACTS.map(([k, v, hi]) => <div key={k} className={hi ? "hr-fact hr-fact-hi" : "hr-fact"}><dt>{k}</dt><dd>{/^\d/.test(v) ? <bdi dir="ltr">{v}</bdi> : v}</dd></div>)}
         </dl>

@@ -4,6 +4,7 @@ import useLandingImages from "@/hooks/useLandingImages";
 import HRHero from "@/components/landing/hr/HRHero";
 import HRLecture from "@/components/landing/hr/HRLecture";
 import HRSchedule from "@/components/landing/hr/HRSchedule";
+import HRLogos from "@/components/landing/hr/HRLogos";
 import HRMeetupForm from "@/components/landing/hr/HRMeetupForm";
 import CampaignValidityGate from "@/components/landing/CampaignValidityGate";
 import { LECTURES } from "@/components/landing/hr/hrContent";
@@ -16,13 +17,13 @@ export default function HRMeetup() {
     <HRHero editor={editor} />
     <main>
       {LECTURES.map((l, i) => <HRLecture key={l.title} lecture={l} editor={editor} alt={i === 1} />)}
-      <HRSchedule editor={editor} />
+      <HRSchedule />
       <section id="register" className="hr-register" aria-labelledby="hr-register-title">
         <div className="hr-wrap hr-register-grid">
           <div>
             <span className="hr-badge">ללא עלות</span>
             <h2 id="hr-register-title" className="hr-register-title">שריון מקום בפחות מדקה</h2>
-            <p className="hr-register-meta"><b>יום חמישי | 19.11.2026 | <bdi dir="ltr">09:00–12:00</bdi></b></p>
+            <p className="hr-register-meta"><b>יום שלישי | 17.11.2026 | <bdi dir="ltr">09:00–12:00</bdi></b></p>
             <p className="hr-register-meta">WORKIES, באר שבע</p>
             <p className="hr-register-meta">ההשתתפות ללא עלות, בהרשמה מראש.</p>
             <p className="hr-register-small">מספר המקומות מוגבל. ההרשמה פתוחה עד 17.11.2026.</p>
@@ -41,6 +42,7 @@ export default function HRMeetup() {
           <a href="#register" className="hr-btn">אני רוצה להירשם</a>
         </div>
       </section>
+      <HRLogos />
     </main>
     <footer className="hr-footer">
       <div className="hr-wrap hr-footer-row">
