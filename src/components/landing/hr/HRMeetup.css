@@ -75,8 +75,10 @@
 /* Schedule */
 .hr-schedule { padding: 56px 0; }
 .hr-list { margin-top: 18px; }
-.hr-list li { display: grid; grid-template-columns: 104px 1fr; gap: 16px; padding: 18px 0; border-bottom: 1px solid #ece8f6; }
+.hr-list li { display: grid; grid-template-columns: 1fr; gap: 4px; padding: 18px 0; border-bottom: 1px solid #ece8f6; }
+.hr-list li > div { min-width: 0; overflow-wrap: anywhere; }
 .hr-time { color: var(--hr-purple); font-weight: 900; font-size: 18px; direction: ltr; text-align: right; }
+@media (min-width: 640px) { .hr-list li { grid-template-columns: 104px minmax(0, 1fr); gap: 16px; } }
 .hr-list b { font-weight: 800; font-size: 18px; }
 .hr-list p { color: var(--hr-muted); font-size: 15px; line-height: 1.7; margin-top: 4px; }
 .hr-gallery { display: grid; gap: 12px; margin-top: 40px; }
@@ -146,10 +148,11 @@
 .hr-panel-talk b { display: block; font-size: 16px; }
 .hr-panel-talk p { color: var(--hr-muted); font-size: 13px; line-height: 1.55; margin-top: 2px; }
 @media (min-width: 1024px) {
-  .hr-hero2 { grid-template-columns: 1.55fr 1fr; min-height: 100vh; }
-  .hr-hero-photo { min-height: 100vh; }
-  .hr-hero-content { padding: 0 56px 64px; }
-  .hr-hero-panel { padding: 56px 44px; }
+  .hr-hero2 { grid-template-columns: 1.55fr 1fr; height: 100vh; min-height: 640px; max-height: 100vh; overflow: hidden; }
+  .hr-hero-photo { min-height: 0; height: 100%; }
+  .hr-hero-content { padding: 0 56px 40px; }
+  .hr-hero-content .hr-title { font-size: clamp(48px, 9vh, 96px); margin-top: 24px; }
+  .hr-hero-panel { padding: 32px 44px; overflow: hidden; }
   .hr-hero-content .hr-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
