@@ -167,7 +167,11 @@
 @media (min-width: 1024px) {
   .hr-hero2 { grid-template-columns: 1.55fr 1fr; height: 100vh; min-height: 640px; max-height: 100vh; overflow: hidden; }
   .hr-hero-photo { min-height: 0; height: 100%; }
-  .hr-hero-content { padding: 0 56px 40px; }
+  .hr-hero-content { padding: 0 56px 40px; max-width: none; }
+  .hr-hero-content > *:not(.hr-nav2) { max-width: 680px; }
+  .hr-nav2 .hr-pill { display: none; }
+  .hr-hero-panel { justify-content: center; }
+  .hr-panel-talk { max-width: 520px; }
   .hr-hero-content .hr-title { font-size: clamp(48px, 9vh, 96px); margin-top: 24px; }
   .hr-hero-panel { padding: 28px 44px; overflow: hidden; gap: 16px; }
   .hr-panel-talk { padding-bottom: 16px; }
