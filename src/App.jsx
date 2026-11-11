@@ -1,4 +1,6 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
+import campaigns from '@/components/landing/campaigns';
+const ThankYou = lazy(() => import('@/pages/ThankYou'));
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
@@ -46,12 +48,17 @@ const Messages = lazy(() => import('@/pages/Messages'));
 import WorkiesAI from '@/pages/WorkiesAI';
 
 
-const PUBLIC_ROUTES = ['/event-registration', '/feedback', '/onboarding/access', '/referral-share', '/daily-office', '/podcast', '/workies-ai', '/hr-meetup'];
+const PUBLIC_ROUTES = ['/event-registration', '/feedback', '/onboarding/access', '/referral-share', '/daily-office', '/podcast', '/workies-ai', '/hr-meetup', '/thank-you'];
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
   const location = useLocation();
   const isPublicRoute = PUBLIC_ROUTES.some(p => location.pathname.startsWith(p));
+  useEffect(() => {
+    const landing = Object.values(campaigns).some(c => c.path === location.pathname) || location.pathname === '/thank-you';
+    if (landing) window.startLandingGTM?.();
+    else if (window.landingGTMLoaded) window.location.reload();
+  }, [location.pathname]);
 
   const isStaticLanding = location.pathname.startsWith('/workies-ai');
   if (!isStaticLanding && (isLoadingPublicSettings || (isLoadingAuth && !isPublicRoute))) {
@@ -115,6 +122,7 @@ const AuthenticatedApp = () => {
       <Route path="/daily-office" element={<DailyOffice />} />
       <Route path="/podcast" element={<Podcast />} />
       <Route path="/hr-meetup" element={<HRMeetup />} />
+      <Route path="/thank-you" element={<ThankYou />} />
       <Route path="/workies-ai" element={<WorkiesAI />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>

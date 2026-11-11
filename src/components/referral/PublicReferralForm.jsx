@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { completeLandingLead } from '@/lib/landingTracking';
 import { base44 } from "@/api/base44Client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,9 +27,8 @@ export default function PublicReferralForm({ onOpenTerms }) {
     setError("");
     try {
       const res = await base44.functions.invoke("publicReferral", { ...form, terms_accepted: accepted });
-      setDone(res.data.ticket_number);
-      setForm(EMPTY);
-      setAccepted(false);
+      if (!res.data?.success) throw new Error('Lead not saved');
+      completeLandingLead('referral');
     } catch (err) {
       setError(err.response?.data?.error || err.message || "שגיאה בשליחה");
     } finally {

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { completeLandingLead } from '@/lib/landingTracking';
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,8 +21,9 @@ export default function DailyOfficeLeadForm({ campaign = "office" }) {
     if (!name || !/^\+?[\d\s()-]+$/.test(phone) || phone.replace(/\D/g, "").length < 9) { setError("יש למלא שם ומספר טלפון תקין."); return; }
     setBusy(true); setError("");
     try {
-      await base44.functions.invoke("submitCampaignLead", { campaign, name, phone });
-      setDone(true);
+      const res = await base44.functions.invoke("submitCampaignLead", { campaign, name, phone });
+      if (!res.data?.success) throw new Error('Lead not saved');
+      completeLandingLead(campaign);
     } catch { setError("הפנייה לא נשלחה. נסו שוב בעוד רגע."); }
     finally { setBusy(false); }
   }

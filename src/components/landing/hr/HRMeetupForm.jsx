@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { completeLandingLead } from '@/lib/landingTracking';
 import { base44 } from "@/api/base44Client";
 import HRCalendarButtons from "@/components/landing/hr/HRCalendarButtons";
 
@@ -32,7 +33,9 @@ export default function HRMeetupForm() {
     try {
       if (step === "quick") {
         const res = await base44.functions.invoke("submitCampaignLead", { campaign: "hr_meetup", ...d });
+        if (!res.data?.success) throw new Error('Lead not saved');
         persist({ step: "details", lead_id: res.data.lead_id, token: res.data.token, first_name: d.name.split(" ")[0] });
+        completeLandingLead('hr_meetup');
       } else {
         await base44.functions.invoke("submitCampaignLead", { campaign: "hr_meetup", step: "details", lead_id: saved.lead_id, token: saved.token, ...d });
         persist({ ...saved, step: "done", token: "" });

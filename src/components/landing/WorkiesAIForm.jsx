@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { completeLandingLead } from '@/lib/landingTracking';
 import { base44 } from "@/api/base44Client";
 
 export const EVENT = {
@@ -34,9 +35,9 @@ export default function WorkiesAIForm({ onDone }) {
     if (!form.checkValidity() || !phoneOk) { setError("יש למלא שם, טלפון ושם העסק."); return; }
     setBusy(true); setError("");
     try {
-      await base44.functions.invoke("submitCampaignLead", payload);
-      setDone(true);
-      onDone?.();
+      const res = await base44.functions.invoke("submitCampaignLead", payload);
+      if (!res.data?.success) throw new Error('Lead not saved');
+      completeLandingLead('workies_ai');
     } catch {
       setError("ההרשמה לא נשלחה. נסו שוב בעוד רגע.");
     } finally { setBusy(false); }
