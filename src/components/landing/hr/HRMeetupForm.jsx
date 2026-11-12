@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getCallboxSid } from "@/lib/callboxSid";
+import { getLeadSid } from "@/lib/ctmSid";
 import CallboxSidField from "@/components/landing/CallboxSidField";
 import { completeLandingLead } from '@/lib/landingTracking';
 import { base44 } from "@/api/base44Client";
@@ -28,7 +28,7 @@ export default function HRMeetupForm() {
   async function submit(e) {
     e.preventDefault();
     const form = e.currentTarget;
-    const d = { ...Object.fromEntries([...new FormData(form)].map(([k, v]) => [k, String(v).trim()])), session_id: getCallboxSid() };
+    const d = { ...Object.fromEntries([...new FormData(form)].map(([k, v]) => [k, String(v).trim()])), sid: getLeadSid() };
     const phoneOk = step !== "quick" || (/^\+?[\d\s()-]+$/.test(d.phone) && d.phone.replace(/\D/g, "").length >= 9);
     if (!form.checkValidity() || !phoneOk) { setError(step === "quick" ? "יש למלא שם, טלפון ואימייל תקינים." : "יש למלא ארגון ותפקיד."); return; }
     setBusy(true); setError("");

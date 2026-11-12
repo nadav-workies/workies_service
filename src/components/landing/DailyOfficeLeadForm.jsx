@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getCallboxSid } from "@/lib/callboxSid";
+import { getLeadSid } from "@/lib/ctmSid";
 import CallboxSidField from "@/components/landing/CallboxSidField";
 import { completeLandingLead } from '@/lib/landingTracking';
 import { base44 } from "@/api/base44Client";
@@ -23,7 +23,7 @@ export default function DailyOfficeLeadForm({ campaign = "office" }) {
     if (!name || !/^\+?[\d\s()-]+$/.test(phone) || phone.replace(/\D/g, "").length < 9) { setError("יש למלא שם ומספר טלפון תקין."); return; }
     setBusy(true); setError("");
     try {
-      const res = await base44.functions.invoke("submitCampaignLead", { campaign, name, phone, session_id: getCallboxSid() });
+      const res = await base44.functions.invoke("submitCampaignLead", { campaign, name, phone, sid: getLeadSid() });
       if (!res.data?.success) throw new Error('Lead not saved');
       completeLandingLead(campaign);
     } catch { setError("הפנייה לא נשלחה. נסו שוב בעוד רגע."); }

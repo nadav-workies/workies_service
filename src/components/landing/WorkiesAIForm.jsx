@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getCallboxSid } from "@/lib/callboxSid";
+import { getLeadSid } from "@/lib/ctmSid";
 import CallboxSidField from "@/components/landing/CallboxSidField";
 import { completeLandingLead } from '@/lib/landingTracking';
 import { base44 } from "@/api/base44Client";
@@ -32,7 +32,7 @@ export default function WorkiesAIForm({ onDone }) {
       session: EVENT.session,
       session_date: EVENT.date,
       terms_accepted: true,
-      session_id: getCallboxSid(),
+      sid: getLeadSid(),
     };
     const phoneOk = /^\+?[\d\s()-]+$/.test(payload.phone) && payload.phone.replace(/\D/g, "").length >= 9;
     if (!form.checkValidity() || !phoneOk) { setError("יש למלא שם, טלפון ושם העסק."); return; }

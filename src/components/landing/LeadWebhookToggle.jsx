@@ -23,7 +23,7 @@ export default function LeadWebhookToggle({ campaign, canEdit }) {
   return <div className="rounded-xl border bg-card p-4 flex items-center justify-between gap-3">
     <div className="min-w-0">
       <h2 className="font-bold">שליחת לידים לווב הוק (Make)</h2>
-      <p className="text-sm text-muted-foreground mt-1">{on ? "פעיל: כל ליד חדש נשלח לווב הוק כולל SID של CallBox" : "כבוי: הלידים נשמרים במערכת בלבד"}</p>
+      <p className="text-sm text-muted-foreground mt-1">{on ? "פעיל: כל ליד חדש נשלח לווב הוק כולל sid של CallTrackingMetrics" : "כבוי: הלידים נשמרים במערכת בלבד"}</p>
       {!canEdit && <p className="text-xs text-muted-foreground">רק אדמין יכול לשנות.</p>}
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
     </div>

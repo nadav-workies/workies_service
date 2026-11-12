@@ -94,7 +94,7 @@ export default async function (req) {
     });
 
     await notifyNewLead(base44, 'חבר מביא חבר', { 'שם החבר/ה': friend_name, 'טלפון': friend_phone, 'ממליץ/ה': referrerRoom, 'פרטים': details, 'מספר קריאה': ticket.ticket_number });
-    await sendLeadWebhook(base44, 'referral', { name: friend_name, phone: friend_phone, details, referrer_room: referrerRoom, ticket_number: ticket.ticket_number }, body.session_id);
+    await sendLeadWebhook(base44, 'referral', { name: friend_name, phone: friend_phone, details, referrer_room: referrerRoom, ticket_number: ticket.ticket_number }, body.sid);
 
     return Response.json({ success: true, ticket_number: ticket.ticket_number });
   } catch (error) {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getCallboxSid } from "@/lib/callboxSid";
+import { getLeadSid } from "@/lib/ctmSid";
 import CallboxSidField from "@/components/landing/CallboxSidField";
 import { completeLandingLead } from '@/lib/landingTracking';
 import { base44 } from "@/api/base44Client";
@@ -28,7 +28,7 @@ export default function PublicReferralForm({ onOpenTerms }) {
     setSaving(true);
     setError("");
     try {
-      const res = await base44.functions.invoke("publicReferral", { ...form, terms_accepted: accepted, session_id: getCallboxSid() });
+      const res = await base44.functions.invoke("publicReferral", { ...form, terms_accepted: accepted, sid: getLeadSid() });
       if (!res.data?.success) throw new Error('Lead not saved');
       completeLandingLead('referral');
     } catch (err) {
