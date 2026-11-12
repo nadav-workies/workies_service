@@ -18,6 +18,7 @@ export default function ReferralReportCard({ referral: r, isDuplicate, onEdit })
         </div>
         <ReferralStatusBadge status={r.status} />
       </div>
+      {r.friend_email && <div className="flex items-center gap-1 text-xs"><a href={`mailto:${r.friend_email}`} className="text-primary break-all" dir="ltr">{r.friend_email}</a><CopyField value={r.friend_email} label="מייל" /></div>}
       <p className="text-xs text-muted-foreground">
         ממליץ/ה: <b className="text-foreground">{r.referrer_name || r.referrer_email}</b>{r.referrer_room ? ` · ${r.referrer_room}` : ""} · {new Date(r.created_date).toLocaleDateString("he-IL")}
       </p>
@@ -31,7 +32,7 @@ export default function ReferralReportCard({ referral: r, isDuplicate, onEdit })
         {r.voucher_amount > 0 && <span className="px-2 py-0.5 rounded-full bg-teal-100 text-teal-700">שובר {r.voucher_amount} ₪</span>}
       </div>
       <div className="flex flex-wrap gap-2">
-      <LeadCopyButton size="sm" fields={[["שם", r.friend_name], ["טלפון", r.friend_phone], ["פרטים נוספים", r.details], ["ממליץ/ה", r.referrer_name || r.referrer_email], ["משרד ממליץ/ה", r.referrer_room], ["מקור", "חבר מביא חבר"], ["תאריך פנייה", new Date(r.created_date).toLocaleDateString("he-IL")]]} />
+      <LeadCopyButton size="sm" fields={[["שם", r.friend_name], ["טלפון", r.friend_phone], ["מייל", r.friend_email], ["פרטים נוספים", r.details], ["ממליץ/ה", r.referrer_name || r.referrer_email], ["משרד ממליץ/ה", r.referrer_room], ["מקור", "חבר מביא חבר"], ["תאריך פנייה", new Date(r.created_date).toLocaleDateString("he-IL")]]} />
       <Button asChild size="sm" variant="outline" className="gap-2"><a href="https://workies-aio-docs-production.up.railway.app/pipeline" target="_blank" rel="noopener noreferrer" title="פתיחת עמוד הדילים ב־AIO להוספה ידנית"><ExternalLink className="w-3 h-3" />הוספה ל־AIO</a></Button>
       </div>
       <div className="flex items-center justify-between pt-1">

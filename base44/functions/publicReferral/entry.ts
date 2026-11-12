@@ -4,6 +4,7 @@ import { roomsByNumber } from '../../shared/rooms.ts';
 import { campaignIsActive } from '../../shared/campaignValidity.ts';
 import { notifyNewLead } from '../../shared/leadNotify.ts';
 import { sendLeadWebhook } from '../../shared/leadWebhook.ts';
+import { validLeadEmail } from '../../shared/leadEmail.ts';
 
 function clean(val, max) {
   return String(val ?? '').trim().slice(0, max);
@@ -35,6 +36,8 @@ export default async function (req) {
     const room = isDesk ? null : roomsByNumber.get(roomNumber);
     const friend_name = clean(body.friend_name, 100);
     const friend_phone = clean(body.friend_phone, 30);
+    const friend_email = String(body.friend_email || '').trim();
+    if (!validLeadEmail(friend_email)) return Response.json({ error: 'יש למלא אימייל תקין של החבר/ה.' }, { status: 400 });
     const details = clean(body.details, 2000);
 
     if ((!isDesk && !room) || !friend_name || normPhone(friend_phone).length < 9) {
@@ -60,7 +63,7 @@ export default async function (req) {
       customer_name: referrer_name,
       phone: referrer_phone,
       email: referrer_email,
-      issue_description: `חבר מביא חבר: ${friend_name} (${friend_phone})`,
+      issue_description: `חבר מביא חבר: ${friend_name} (${friend_phone}), אימייל: ${friend_email}`,
       notes: details,
       area: 'אחר',
       priority: 'רגילה',
@@ -79,7 +82,7 @@ export default async function (req) {
     });
 
     await base44.asServiceRole.entities.Referral.create({
-      friend_name, friend_phone, details,
+      friend_name, friend_phone, friend_email, details,
       friend_phone_normalized: normPhone(friend_phone),
       referrer_name, referrer_phone, referrer_email,
       referrer_room: referrerRoom,
@@ -93,8 +96,8 @@ export default async function (req) {
       status_history: [{ date: now.toISOString(), status: 'new', user: referrer_name, note: 'ההמלצה נשלחה מהקישור הציבורי' }],
     });
 
-    await notifyNewLead(base44, 'חבר מביא חבר', { 'שם החבר/ה': friend_name, 'טלפון': friend_phone, 'ממליץ/ה': referrerRoom, 'פרטים': details, 'מספר קריאה': ticket.ticket_number });
-    await sendLeadWebhook(base44, 'referral', { name: friend_name, phone: friend_phone, details, referrer_room: referrerRoom, ticket_number: ticket.ticket_number }, body.sid);
+    await notifyNewLead(base44, 'חבר מביא חבר', { 'שם החבר/ה': friend_name, 'טלפון': friend_phone, 'מייל': friend_email, 'ממליץ/ה': referrerRoom, 'פרטים': details, 'מספר קריאה': ticket.ticket_number });
+    await sendLeadWebhook(base44, 'referral', { name: friend_name, phone: friend_phone, email: friend_email, details, referrer_room: referrerRoom, ticket_number: ticket.ticket_number }, body.sid);
 
     return Response.json({ success: true, ticket_number: ticket.ticket_number });
   } catch (error) {

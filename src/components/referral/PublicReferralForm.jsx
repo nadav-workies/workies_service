@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Send, CheckCircle2 } from "lucide-react";
 import { WORKIES_ROOMS } from "@/lib/workiesRooms";
 
-const EMPTY = { referrer_room: "", friend_name: "", friend_phone: "", details: "" };
+const EMPTY = { referrer_room: "", friend_name: "", friend_phone: "", friend_email: "", details: "" };
 const OFFICES = WORKIES_ROOMS.filter(r => r.room_area === "משרדים");
 const phoneOk = (p) => p.replace(/\D/g, "").length >= 9;
 
@@ -21,10 +21,11 @@ export default function PublicReferralForm({ onOpenTerms }) {
   const [error, setError] = useState("");
   const [done, setDone] = useState(null);
   const update = (k, v) => setForm(f => ({ ...f, [k]: v }));
-  const valid = form.referrer_room && form.friend_name.trim() && phoneOk(form.friend_phone) && accepted;
+  const valid = form.referrer_room && form.friend_name.trim() && phoneOk(form.friend_phone) && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.friend_email.trim()) && accepted;
 
   const submit = async (e) => {
     e.preventDefault();
+    if (!valid || saving) return;
     setSaving(true);
     setError("");
     try {
@@ -72,6 +73,7 @@ export default function PublicReferralForm({ onOpenTerms }) {
         <p className="text-sm font-bold text-teal-400">פרטי החבר/ה</p>
         {field("friend_name", "שם *")}
         {field("friend_phone", "טלפון *", { type: "tel", dir: "ltr", placeholder: "050-0000000" })}
+        {field("friend_email", "אימייל החבר/ה *", { type: "email", dir: "ltr", autoComplete: "email", maxLength: 150, required: true, placeholder: "name@example.com" })}
         <div className="space-y-1">
           <Label className="text-zinc-200 text-xs">פרטים נוספים</Label>
           <Textarea rows={3} value={form.details} onChange={e => update("details", e.target.value)} className="bg-white text-zinc-950" placeholder="שם החברה, כמה עמדות, מתי נוח לחזור" />

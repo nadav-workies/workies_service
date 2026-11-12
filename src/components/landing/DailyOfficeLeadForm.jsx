@@ -20,10 +20,11 @@ export default function DailyOfficeLeadForm({ campaign = "office" }) {
     const data = new FormData(event.currentTarget);
     const name = String(data.get("name") || "").trim();
     const phone = String(data.get("phone") || "").trim();
-    if (!name || !/^\+?[\d\s()-]+$/.test(phone) || phone.replace(/\D/g, "").length < 9) { setError("יש למלא שם ומספר טלפון תקין."); return; }
+    const email = String(data.get("email") || "").trim();
+    if (!name || !/^\+?[\d\s()-]+$/.test(phone) || phone.replace(/\D/g, "").length < 9 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError("יש למלא שם, טלפון ואימייל תקינים."); return; }
     setBusy(true); setError("");
     try {
-      const res = await base44.functions.invoke("submitCampaignLead", { campaign, name, phone, sid: getLeadSid() });
+      const res = await base44.functions.invoke("submitCampaignLead", { campaign, name, phone, email, sid: getLeadSid() });
       if (!res.data?.success) throw new Error('Lead not saved');
       completeLandingLead(campaign);
     } catch { setError("הפנייה לא נשלחה. נסו שוב בעוד רגע."); }
@@ -33,9 +34,10 @@ export default function DailyOfficeLeadForm({ campaign = "office" }) {
   return (
     <form onSubmit={submit} className="office-form office-fade office-delay-3">
       <CallboxSidField />
-      <div><h2>נרשמים להתנסות</h2><p className="office-lead">משאירים שם וטלפון, ונחזור לתיאום.</p></div>
+      <div><h2>נרשמים להתנסות</h2><p className="office-lead">משאירים שם, טלפון ואימייל, ונחזור לתיאום.</p></div>
       <div className="office-field"><Label htmlFor="office-lead-name">שם מלא</Label><Input id="office-lead-name" name="name" autoComplete="name" required maxLength={100} disabled={busy} className="h-12 bg-background" placeholder="איך קוראים לך?" /></div>
       <div className="office-field"><Label htmlFor="office-lead-phone">טלפון</Label><Input id="office-lead-phone" name="phone" type="tel" inputMode="tel" autoComplete="tel" required maxLength={30} disabled={busy} className="h-12 bg-background text-right" dir="ltr" placeholder="מספר לחזרה" /></div>
+      <div className="office-field"><Label htmlFor="office-lead-email">אימייל (חובה)</Label><Input id="office-lead-email" name="email" type="email" autoComplete="email" required maxLength={150} disabled={busy} className="h-12 bg-background text-right" dir="ltr" placeholder="name@example.com" /></div>
       {error && <p role="alert" className="text-sm text-foreground">{error}</p>}
       <Button type="submit" disabled={busy} className="w-full h-12 text-base font-bold">{busy && <Loader2 className="h-4 w-4 animate-spin" />}{busy ? "שולחים…" : "לתיאום ההתנסות שלי"}</Button>
       <p className="office-note">הפרטים ישמשו ליצירת קשר בקשר להתנסות.</p>

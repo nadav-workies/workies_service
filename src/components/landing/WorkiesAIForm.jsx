@@ -28,6 +28,7 @@ export default function WorkiesAIForm({ onDone }) {
       campaign: "workies_ai",
       name: String(d.get("full_name") || "").trim(),
       phone: String(d.get("phone") || "").trim(),
+      email: String(d.get("email") || "").trim(),
       business_name: String(d.get("business_name") || "").trim(),
       session: EVENT.session,
       session_date: EVENT.date,
@@ -35,7 +36,7 @@ export default function WorkiesAIForm({ onDone }) {
       sid: getLeadSid(),
     };
     const phoneOk = /^\+?[\d\s()-]+$/.test(payload.phone) && payload.phone.replace(/\D/g, "").length >= 9;
-    if (!form.checkValidity() || !phoneOk) { setError("יש למלא שם, טלפון ושם העסק."); return; }
+    if (!form.checkValidity() || !phoneOk || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email)) { setError("יש למלא שם, טלפון, אימייל תקין ושם העסק."); return; }
     setBusy(true); setError("");
     try {
       const res = await base44.functions.invoke("submitCampaignLead", payload);
@@ -68,6 +69,7 @@ export default function WorkiesAIForm({ onDone }) {
       <p className="reg-sub">{EVENT.dayLabel} · <bdi dir="ltr">{EVENT.timeLabel}</bdi> · ללא תשלום</p>
       <label htmlFor="f-name">שם מלא<input id="f-name" name="full_name" type="text" autoComplete="name" maxLength={100} required disabled={busy} /></label>
       <label htmlFor="f-phone">טלפון<input id="f-phone" name="phone" type="tel" inputMode="tel" autoComplete="tel" maxLength={30} required disabled={busy} /></label>
+      <label htmlFor="f-email">אימייל (חובה)<input id="f-email" name="email" type="email" dir="ltr" autoComplete="email" maxLength={150} required disabled={busy} /></label>
       <label htmlFor="f-biz">שם העסק<input id="f-biz" name="business_name" type="text" autoComplete="organization" maxLength={150} required disabled={busy} /></label>
       {error && <p className="reg-err" role="alert">{error}</p>}
       <button className="btn" type="submit" disabled={busy}>{busy ? "שולחים…" : "שריון מקום"}</button>
