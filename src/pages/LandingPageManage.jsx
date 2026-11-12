@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LandingShareCard from "@/components/landing/LandingShareCard";
 import CampaignValidityEditor from "@/components/landing/CampaignValidityEditor";
 import CampaignStatusToggle from "@/components/landing/CampaignStatusToggle";
+import LeadWebhookToggle from "@/components/landing/LeadWebhookToggle";
 import PageDashboard from "@/components/landing/PageDashboard";
 import LeadsReport from "@/pages/LeadsReport";
 import ReferralsReport from "@/pages/ReferralsReport";
@@ -27,6 +28,7 @@ export default function LandingPageManage() {
       <h1 className="text-xl sm:text-2xl font-bold break-words leading-snug">{campaigns[campaign].title}</h1>
     </div>
     <CampaignStatusToggle campaign={campaign} canEdit={user.role === "admin"} />
+    <LeadWebhookToggle campaign={campaign} canEdit={user.role === "admin"} />
     <Tabs defaultValue="leads" dir="rtl" className="min-w-0">
       <TabsList className="grid grid-cols-2 w-full h-11">
         <TabsTrigger value="leads" className="h-9">לידים</TabsTrigger>

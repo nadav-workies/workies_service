@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { getCallboxSid } from "@/lib/callboxSid";
+import CallboxSidField from "@/components/landing/CallboxSidField";
 import { completeLandingLead } from '@/lib/landingTracking';
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -21,7 +23,7 @@ export default function DailyOfficeLeadForm({ campaign = "office" }) {
     if (!name || !/^\+?[\d\s()-]+$/.test(phone) || phone.replace(/\D/g, "").length < 9) { setError("יש למלא שם ומספר טלפון תקין."); return; }
     setBusy(true); setError("");
     try {
-      const res = await base44.functions.invoke("submitCampaignLead", { campaign, name, phone });
+      const res = await base44.functions.invoke("submitCampaignLead", { campaign, name, phone, session_id: getCallboxSid() });
       if (!res.data?.success) throw new Error('Lead not saved');
       completeLandingLead(campaign);
     } catch { setError("הפנייה לא נשלחה. נסו שוב בעוד רגע."); }
@@ -30,6 +32,7 @@ export default function DailyOfficeLeadForm({ campaign = "office" }) {
   if (done) return <div role="status" className="office-success office-fade office-delay-3 text-center py-8 space-y-3"><CheckCircle2 className="w-12 h-12 text-primary mx-auto" /><h2 className="text-2xl font-bold">הפנייה נקלטה!</h2><p className="opacity-80">{config.confirmation}</p></div>;
   return (
     <form onSubmit={submit} className="office-form office-fade office-delay-3">
+      <CallboxSidField />
       <div><h2>נרשמים להתנסות</h2><p className="office-lead">משאירים שם וטלפון, ונחזור לתיאום.</p></div>
       <div className="office-field"><Label htmlFor="office-lead-name">שם מלא</Label><Input id="office-lead-name" name="name" autoComplete="name" required maxLength={100} disabled={busy} className="h-12 bg-background" placeholder="איך קוראים לך?" /></div>
       <div className="office-field"><Label htmlFor="office-lead-phone">טלפון</Label><Input id="office-lead-phone" name="phone" type="tel" inputMode="tel" autoComplete="tel" required maxLength={30} disabled={busy} className="h-12 bg-background text-right" dir="ltr" placeholder="מספר לחזרה" /></div>

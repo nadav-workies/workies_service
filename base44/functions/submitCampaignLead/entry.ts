@@ -2,6 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { campaignIsActive } from '../../shared/campaignValidity.ts';
 import { notifyNewLead } from '../../shared/leadNotify.ts';
 import { sendLoggedEmail } from '../../shared/messageLog.ts';
+import { sendLeadWebhook } from '../../shared/leadWebhook.ts';
 
 export default async function(req) {
   try {
@@ -19,6 +20,7 @@ export default async function(req) {
       const lead = await base44.asServiceRole.entities.HRMeetupLead.get(String(body.lead_id)).catch((e) => (e.status === 404 ? null : Promise.reject(e)));
       if (!lead || !lead.details_token || lead.details_token !== token) return Response.json({ error: 'ההרשמה לא נמצאה' }, { status: 404 });
       await base44.asServiceRole.entities.HRMeetupLead.update(lead.id, { organization, job_title, details_completed: true });
+      await sendLeadWebhook(base44, campaign, { step: 'details', lead_id: lead.id, name: lead.name, phone: lead.phone, email: lead.email, organization, job_title }, body.session_id);
       return Response.json({ success: true });
     }
     const name = String(rawName || '').trim().slice(0, 100);
@@ -30,6 +32,7 @@ export default async function(req) {
       const details_token = crypto.randomUUID();
       const lead = await base44.asServiceRole.entities.HRMeetupLead.create({ name, phone, email, details_token, status: 'new' });
       await notifyNewLead(base44, 'HR מחוץ לשגרה', { 'שם': name, 'טלפון': phone, 'מייל': email });
+      await sendLeadWebhook(base44, campaign, { step: 'registration', lead_id: lead.id, name, phone, email }, body.session_id);
       const res = await sendLoggedEmail(base44, { source: 'hr_meetup', key: 'hr_confirmation', to: email, template_name: 'HRMeetupConfirmation', variables: { first_name: name.split(' ')[0] }, category: 'transactional', from_name: 'Workies' }).catch((e) => ({ success: false, message: e.message }));
       if (res?.success === false) console.error('hr confirmation failed', res.message || res.reason);
       else await base44.asServiceRole.entities.HRMeetupLead.update(lead.id, { confirmation_sent: true });
@@ -41,11 +44,13 @@ export default async function(req) {
       const session = String(body.session || '');
       const session_date = /^\d{4}-\d{2}-\d{2}$/.test(String(body.session_date || '')) ? String(body.session_date) : '';
       if ((email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) || !business_name || !['01', '02', '03', '04', '05', '06'].includes(session) || body.terms_accepted !== true) return Response.json({ error: 'יש למלא את כל השדות ולאשר את תנאי ההשתתפות.' }, { status: 400 });
-      await base44.asServiceRole.entities.WorkiesAILead.create({ name, phone, ...(email ? { email } : {}), business_name, session, ...(session_date ? { session_date } : {}), terms_accepted: true, status: 'new' });
+      const aiLead = await base44.asServiceRole.entities.WorkiesAILead.create({ name, phone, ...(email ? { email } : {}), business_name, session, ...(session_date ? { session_date } : {}), terms_accepted: true, status: 'new' });
       await notifyNewLead(base44, 'Workies AI', { 'שם': name, 'טלפון': phone, 'מייל': email, 'שם העסק': business_name, 'תאריך מפגש': session_date });
+      await sendLeadWebhook(base44, campaign, { lead_id: aiLead.id, name, phone, email, business_name, session, session_date }, body.session_id);
       return Response.json({ success: true });
     }
-    await base44.asServiceRole.entities[entity].create({ name, phone, status: 'new' });
+    const lead = await base44.asServiceRole.entities[entity].create({ name, phone, status: 'new' });
+    await sendLeadWebhook(base44, campaign, { lead_id: lead.id, name, phone }, body.session_id);
     await notifyNewLead(base44, campaign === 'office' ? 'התנסות במשרד יומי' : 'התנסות באולפן הפודקאסט', { 'שם': name, 'טלפון': phone });
     return Response.json({ success: true });
   } catch (error) { return Response.json({ error: error.message }, { status: 500 }); }

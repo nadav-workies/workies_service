@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { getCallboxSid } from "@/lib/callboxSid";
+import CallboxSidField from "@/components/landing/CallboxSidField";
 import { completeLandingLead } from '@/lib/landingTracking';
 import { base44 } from "@/api/base44Client";
 import { Input } from "@/components/ui/input";
@@ -26,7 +28,7 @@ export default function PublicReferralForm({ onOpenTerms }) {
     setSaving(true);
     setError("");
     try {
-      const res = await base44.functions.invoke("publicReferral", { ...form, terms_accepted: accepted });
+      const res = await base44.functions.invoke("publicReferral", { ...form, terms_accepted: accepted, session_id: getCallboxSid() });
       if (!res.data?.success) throw new Error('Lead not saved');
       completeLandingLead('referral');
     } catch (err) {
@@ -56,6 +58,7 @@ export default function PublicReferralForm({ onOpenTerms }) {
 
   return (
     <form onSubmit={submit} className="space-y-4">
+      <CallboxSidField />
       <div className="space-y-2">
         <p className="text-sm font-bold text-teal-400">דייר/ת Workies — המשרד שלך</p>
         <select value={form.referrer_room} onChange={e => update("referrer_room", e.target.value)}

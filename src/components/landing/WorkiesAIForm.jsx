@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { getCallboxSid } from "@/lib/callboxSid";
+import CallboxSidField from "@/components/landing/CallboxSidField";
 import { completeLandingLead } from '@/lib/landingTracking';
 import { base44 } from "@/api/base44Client";
 
@@ -30,6 +32,7 @@ export default function WorkiesAIForm({ onDone }) {
       session: EVENT.session,
       session_date: EVENT.date,
       terms_accepted: true,
+      session_id: getCallboxSid(),
     };
     const phoneOk = /^\+?[\d\s()-]+$/.test(payload.phone) && payload.phone.replace(/\D/g, "").length >= 9;
     if (!form.checkValidity() || !phoneOk) { setError("יש למלא שם, טלפון ושם העסק."); return; }
@@ -57,6 +60,7 @@ export default function WorkiesAIForm({ onDone }) {
 
   return (
     <form className="reg" id="register-form" noValidate onSubmit={submit}>
+      <CallboxSidField />
       <div className="reg-head">
         <span className="live-dot" aria-hidden="true" />
         <h3>שריון מקום למפגש</h3>
