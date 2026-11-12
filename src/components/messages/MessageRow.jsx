@@ -1,3 +1,4 @@
+import { Mail, MailOpen } from "lucide-react";
 import { SOURCE_LABELS, STATUS_META, sourceOf, sentAt, formatDate } from "@/components/messages/messageConfig";
 
 const CHECK = <svg className="dt1-check-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" /></svg>;
@@ -17,6 +18,11 @@ export default function MessageRow({ log, index, selected, onToggle, onOpen }) {
     <td className="dt1-cell dt1-cell--cust"><span className="dt1-avatar" aria-hidden="true">{email.slice(0, 2)}</span><span className="dt1-name" dir="ltr">{email}</span></td>
     <td className="dt1-cell dt1-cell--email"><span className="dt1-email" title={log.subject}>{log.subject || log.notification_key}</span></td>
     <td className="dt1-cell dt1-cell--total"><span className="dt1-total">{SOURCE_LABELS[sourceOf(log)]}</span></td>
-    <td className="dt1-cell dt1-cell--status"><span className={`dt1-badge dt1-badge--${meta?.badge || "refunded"}`}>{meta?.label || log.status}</span></td>
+    <td className="dt1-cell dt1-cell--status"><span className="inline-flex flex-wrap items-center gap-1">
+      <span className={`dt1-badge dt1-badge--${meta?.badge || "refunded"}`}>{meta?.label || log.status}</span>
+      {log.status === "sent" && (log.opened_at
+        ? <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 text-primary px-2 py-0.5 text-xs font-semibold" title={`נפתח ${formatDate(log.opened_at)}`}><MailOpen className="w-3 h-3" />נפתח{log.open_count > 1 ? ` ×${log.open_count}` : ""}</span>
+        : <span className="inline-flex items-center gap-1 rounded-full bg-muted text-muted-foreground px-2 py-0.5 text-xs"><Mail className="w-3 h-3" />לא נפתח</span>)}
+    </span></td>
   </tr>;
 }

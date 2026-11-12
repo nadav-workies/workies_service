@@ -45,6 +45,7 @@ const LandingPages = lazy(() => import('@/pages/LandingPages'));
 const HRMeetup = lazy(() => import('@/pages/HRMeetup'));
 const LandingPageManage = lazy(() => import('@/pages/LandingPageManage'));
 const Messages = lazy(() => import('@/pages/Messages'));
+const MailingLists = lazy(() => import('@/pages/MailingLists'));
 import WorkiesAI from '@/pages/WorkiesAI';
 
 
@@ -111,6 +112,7 @@ const AuthenticatedApp = () => {
           <Route path="/friend-referral" element={<ReferralPage />} />
           <Route path="/referrals-report" element={<Navigate to="/landing-pages/referral" replace />} />
           <Route path="/landing-pages" element={<LandingPages />} />
+          <Route path="/mailing-lists" element={<MailingLists />} />
           <Route path="/landing-pages/:campaign" element={<LandingPageManage />} />
           <Route path="/leads" element={<Navigate to="/landing-pages/office" replace />} />
         </Route>
