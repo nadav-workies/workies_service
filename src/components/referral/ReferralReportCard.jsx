@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Phone, AlertTriangle, ExternalLink } from "lucide-react";
 import ReferralStatusBadge from "@/components/referral/ReferralStatusBadge";
 import LeadCopyButton from "@/components/landing/LeadCopyButton";
+import CopyField from "@/components/landing/CopyField";
 
 export default function ReferralReportCard({ referral: r, isDuplicate, onEdit }) {
   return (
@@ -10,10 +11,10 @@ export default function ReferralReportCard({ referral: r, isDuplicate, onEdit })
       <span className="inline-block rounded-full bg-primary/10 text-primary px-2 py-1 text-xs">חבר מביא חבר</span>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="font-semibold text-sm">{r.friend_name}</p>
-          <a href={`tel:${r.friend_phone}`} className="text-xs text-primary inline-flex items-center gap-1" dir="ltr">
+          <div className="flex items-center gap-1"><p className="font-semibold text-sm">{r.friend_name}</p><CopyField value={r.friend_name} label="שם" /></div>
+          <div className="flex items-center gap-1"><a href={`tel:${r.friend_phone}`} className="text-xs text-primary inline-flex items-center gap-1" dir="ltr">
             <Phone className="w-3 h-3" />{r.friend_phone}
-          </a>
+          </a><CopyField value={r.friend_phone} label="טלפון" /></div>
         </div>
         <ReferralStatusBadge status={r.status} />
       </div>

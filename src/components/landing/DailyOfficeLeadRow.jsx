@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ExternalLink, Phone, Mail, Building2, Clock } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import LeadCopyButton from "@/components/landing/LeadCopyButton";
+import CopyField from "@/components/landing/CopyField";
 
 export const STATUSES = { new: "חדש", contacted: "נוצר קשר", scheduled: "תואמה התנסות", completed: "ההתנסות בוצעה", not_relevant: "לא רלוונטי" };
 const AIO_URL = "https://workies-aio-docs-production.up.railway.app/pipeline";
@@ -27,11 +28,12 @@ export default function DailyOfficeLeadRow({ lead, onSaved, entity = "DailyOffic
         <span className="rounded-full bg-primary/10 text-primary px-2 py-1 text-xs">{category}</span>
         <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Clock className="w-3 h-3" />{date}</span>
       </div>
-      <h2 className="font-bold text-lg break-words">{lead.name}</h2>
+      <div className="flex items-center gap-1"><h2 className="font-bold text-lg break-words">{lead.name}</h2><CopyField value={lead.name} label="שם" /></div>
       <div className="grid gap-1 sm:grid-cols-2 text-sm">
-        <a href={`tel:${(lead.phone || "").replace(/[^+\d]/g, "")}`} className="inline-flex items-center gap-2 min-h-9 text-primary underline"><Phone className="w-4 h-4 shrink-0" /><bdi dir="ltr">{lead.phone}</bdi></a>
-        {lead.email && <a href={`mailto:${lead.email}`} className="inline-flex items-center gap-2 min-h-9 text-primary break-all"><Mail className="w-4 h-4 shrink-0" /><bdi dir="ltr">{lead.email}</bdi></a>}
-        {company && <p className="inline-flex items-center gap-2 min-h-9"><Building2 className="w-4 h-4 shrink-0 text-muted-foreground" />{company}{role && <span className="text-muted-foreground">· {role}</span>}</p>}
+        <div className="flex items-center gap-1"><a href={`tel:${(lead.phone || "").replace(/[^+\d]/g, "")}`} className="inline-flex items-center gap-2 min-h-9 text-primary underline"><Phone className="w-4 h-4 shrink-0" /><bdi dir="ltr">{lead.phone}</bdi></a><CopyField value={lead.phone} label="טלפון" /></div>
+        {lead.email && <div className="flex items-center gap-1 min-w-0"><a href={`mailto:${lead.email}`} className="inline-flex items-center gap-2 min-h-9 text-primary break-all"><Mail className="w-4 h-4 shrink-0" /><bdi dir="ltr">{lead.email}</bdi></a><CopyField value={lead.email} label="מייל" /></div>}
+        {company && <div className="flex items-center gap-1"><Building2 className="w-4 h-4 shrink-0 text-muted-foreground" /><span className="ms-1">{company}</span><CopyField value={company} label="חברה" /></div>}
+        {role && <div className="flex items-center gap-1 text-muted-foreground"><span>תפקיד: {role}</span><CopyField value={lead.job_title || lead.session} label="תפקיד" /></div>}
       </div>
     </div>
     <div className="flex flex-wrap items-center gap-2 border-t bg-muted/30 p-3">
