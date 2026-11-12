@@ -1,0 +1,45 @@
+<mjml>
+  <mj-head>
+    <mj-title>עוד 3 ימים: {{event_name}}</mj-title>
+    <mj-preview>{{event_date}}, {{event_time}} · זו התוכנית</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="Heebo, Arial, sans-serif" />
+      <mj-section background-color="#ffffff" padding="0 36px" />
+      <mj-text color="#14181f" font-size="15px" line-height="1.7" padding="0" align="right" css-class="rtl" />
+      <mj-button background-color="#f97015" color="#000000" border-radius="10px" font-weight="700" inner-padding="14px 28px" align="right" />
+    </mj-attributes>
+    <mj-style>.rtl div { direction: rtl; }</mj-style>
+    <mj-style inline="inline">.program div { white-space: pre-line; }</mj-style>
+  </mj-head>
+  <mj-body background-color="#f7f7f7">
+    <mj-section background-color="#f97015" padding="24px 36px">
+      <mj-column>
+        <mj-image src="https://media.base44.com/images/public/6a1d5a36316988d9f113f88e/1c0d76342_1.png" width="48px" align="right" padding="0 0 8px" alt="Workies" />
+        <mj-text color="#000000" font-size="18px" font-weight="700">Workies שירות ותמיכה</mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section padding="36px 36px 8px">
+      <mj-column>
+        <mj-text font-size="28px" font-weight="800" line-height="1.2">{{first_name}}, עוד 3 ימים נפגשים!</mj-text>
+        <mj-text color="#6a7181" padding="10px 0 0">{{event_name}} מתקיים ב{{event_date}}, {{event_time}}, ב-{{event_location}}.</mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section padding="20px 36px">
+      <mj-column background-color="#fff1e6" border-radius="10px" padding="18px">
+        <mj-text font-size="18px" font-weight="800" padding="0 0 8px">מה בתוכנית?</mj-text>
+        <mj-text css-class="program rtl">{{event_program}}</mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section padding="0 36px 36px">
+      <mj-column>
+        <mj-button href="{{page_url}}">לפרטי האירוע</mj-button>
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#14181f" padding="18px 36px">
+      <mj-column>
+        <mj-text color="#c7cbd4" font-size="12px" align="center">WORKIES | WORK • MEET • GROW · באר שבע</mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-raw><img src="{{open_pixel_url}}" width="1" height="1" alt="" style="display:block;border:0;width:1px;height:1px" /></mj-raw>
+  </mj-body>
+</mjml>

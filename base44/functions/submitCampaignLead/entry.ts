@@ -1,7 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { campaignIsActive } from '../../shared/campaignValidity.ts';
 import { notifyNewLead } from '../../shared/leadNotify.ts';
-import { sendLoggedEmail } from '../../shared/messageLog.ts';
+import { sendLeadConfirmation } from '../../shared/campaignEmails.ts';
+
+async function confirm(base44, campaign, lead) {
+  const res = await sendLeadConfirmation(base44, campaign, lead).catch((e) => ({ success: false, message: e.message }));
+  if (res?.success === false) console.error('lead confirmation failed', campaign, res.message || res.reason);
+  return !!res && res.success !== false;
+}
 import { sendLeadWebhook } from '../../shared/leadWebhook.ts';
 import { validLeadEmail } from '../../shared/leadEmail.ts';
 
@@ -34,9 +40,7 @@ export default async function(req) {
       const lead = await base44.asServiceRole.entities.HRMeetupLead.create({ name, phone, email, details_token, status: 'new' });
       await notifyNewLead(base44, 'HR מחוץ לשגרה', { 'שם': name, 'טלפון': phone, 'מייל': email });
       await sendLeadWebhook(base44, campaign, { step: 'registration', lead_id: lead.id, name, phone, email }, body.sid);
-      const res = await sendLoggedEmail(base44, { source: 'hr_meetup', key: 'hr_confirmation', to: email, template_name: 'HRMeetupConfirmation', variables: { first_name: name.split(' ')[0] }, category: 'transactional', from_name: 'Workies' }).catch((e) => ({ success: false, message: e.message }));
-      if (res?.success === false) console.error('hr confirmation failed', res.message || res.reason);
-      else await base44.asServiceRole.entities.HRMeetupLead.update(lead.id, { confirmation_sent: true });
+      if (await confirm(base44, campaign, { name, email })) await base44.asServiceRole.entities.HRMeetupLead.update(lead.id, { confirmation_sent: true });
       return Response.json({ success: true, lead_id: lead.id, token: details_token });
     }
     if (campaign === 'workies_ai') {
@@ -47,11 +51,13 @@ export default async function(req) {
       const aiLead = await base44.asServiceRole.entities.WorkiesAILead.create({ name, phone, email, business_name, session, ...(session_date ? { session_date } : {}), terms_accepted: true, status: 'new' });
       await notifyNewLead(base44, 'Workies AI', { 'שם': name, 'טלפון': phone, 'מייל': email, 'שם העסק': business_name, 'תאריך מפגש': session_date });
       await sendLeadWebhook(base44, campaign, { lead_id: aiLead.id, name, phone, email, business_name, session, session_date }, body.sid);
+      await confirm(base44, campaign, { name, email });
       return Response.json({ success: true });
     }
     const lead = await base44.asServiceRole.entities[entity].create({ name, phone, email, status: 'new' });
     await sendLeadWebhook(base44, campaign, { lead_id: lead.id, name, phone, email }, body.sid);
     await notifyNewLead(base44, campaign === 'office' ? 'התנסות במשרד יומי' : 'התנסות באולפן הפודקאסט', { 'שם': name, 'טלפון': phone, 'מייל': email });
+    await confirm(base44, campaign, { name, email });
     return Response.json({ success: true });
   } catch (error) { return Response.json({ error: error.message }, { status: 500 }); }
 }
