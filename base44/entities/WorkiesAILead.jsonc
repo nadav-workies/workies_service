@@ -1,5 +1,6 @@
 {
   "name": "WorkiesAILead",
+  "type": "object",
   "properties": {
     "business_name": {
       "maxLength": 150,
@@ -64,15 +65,9 @@
     "session",
     "terms_accepted"
   ],
-  "type": "object",
   "rls": {
     "create": {
       "data.status": "new"
-    },
-    "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
     },
     "read": {
       "$or": [
@@ -84,6 +79,21 @@
         {
           "user_condition": {
             "role": "manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "sales_manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "operations_manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "collections_manager"
           }
         }
       ]
@@ -99,8 +109,28 @@
           "user_condition": {
             "role": "manager"
           }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "sales_manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "operations_manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "collections_manager"
+          }
         }
       ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
     }
   }
 }

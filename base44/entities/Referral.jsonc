@@ -149,6 +149,21 @@
           "user_condition": {
             "role": "manager"
           }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "sales_manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "operations_manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "collections_manager"
+          }
         }
       ]
     },
@@ -162,6 +177,21 @@
         {
           "user_condition": {
             "role": "manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "sales_manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "operations_manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "collections_manager"
           }
         }
       ]
