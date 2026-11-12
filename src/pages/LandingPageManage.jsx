@@ -2,7 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { canManageLeads } from "@/lib/permissions";
+import { canManageLeads, isManagerOrAdmin } from "@/lib/permissions";
+import CampaignEmailSettings from "@/components/landing/CampaignEmailSettings";
+import CampaignEmailStats from "@/components/landing/CampaignEmailStats";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LandingShareCard from "@/components/landing/LandingShareCard";
 import CampaignValidityEditor from "@/components/landing/CampaignValidityEditor";
@@ -36,10 +38,12 @@ export default function LandingPageManage() {
       </TabsList>
       <TabsContent value="leads" className="space-y-4 mt-4 min-w-0">
         <PageDashboard campaign={campaign} status={status} onSelect={setStatus} />
+        {isManagerOrAdmin(user) && campaign !== "referral" && <CampaignEmailStats campaign={campaign} />}
         {campaign === "referral" ? <ReferralsReport embedded status={status} /> : <LeadsReport key={campaign} campaign={campaign} embedded status={status} onClearStatus={() => setStatus("")} />}
       </TabsContent>
       <TabsContent value="settings" className="space-y-4 mt-4 min-w-0">
         <LandingShareCard campaign={campaign} canEdit={user.role === "admin"} />
+        {user.role === "admin" && campaign !== "referral" && <CampaignEmailSettings campaign={campaign} />}
         {user.role === "admin" && <CampaignValidityEditor campaign={campaign} />}
       </TabsContent>
     </Tabs>
