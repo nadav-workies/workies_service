@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { isManagerOrAdmin } from "@/lib/permissions";
+import { canManageLeads } from "@/lib/permissions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LandingShareCard from "@/components/landing/LandingShareCard";
 import CampaignValidityEditor from "@/components/landing/CampaignValidityEditor";
@@ -20,7 +20,7 @@ export default function LandingPageManage() {
   const { data: user, isPending } = useQuery({ queryKey: ["landing-manager"], queryFn: () => base44.auth.me() });
   if (!Object.hasOwn(campaigns, campaign)) return <Navigate to="/landing-pages" replace />;
   if (isPending) return <p role="status" className="py-12 text-center">טוענים…</p>;
-  if (!isManagerOrAdmin(user)) return <Navigate to="/" replace />;
+  if (!canManageLeads(user)) return <Navigate to="/" replace />;
   return <div dir="rtl" className="w-full min-w-0 max-w-3xl mx-auto space-y-4">
     <div>
       <Link to="/landing-pages" className="inline-flex items-center gap-1 min-h-10 text-sm text-primary"><ArrowRight className="w-4 h-4" />כל עמודי הנחיתה</Link>

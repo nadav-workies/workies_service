@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { LayoutDashboard, Ticket, AlertTriangle, Plus, Settings, Users, LogOut, Menu, X, Bell, MapPin, Star, Archive, Sparkles, Shield, CalendarDays, GraduationCap, Megaphone, Wrench, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { isAdmin, isManagerOrAdmin, canManagePermissions, canManageCustomers, canManageMaintenancePlan } from "@/lib/permissions";
+import { isAdmin, isManagerOrAdmin, canManageLeads, canManagePermissions, canManageCustomers, canManageMaintenancePlan } from "@/lib/permissions";
 
 export default function AppLayout() {
   const location = useLocation();
@@ -24,7 +24,7 @@ export default function AppLayout() {
   { label: "דשבורד", path: "/dashboard", icon: LayoutDashboard },
   { label: "כל הקריאות", path: "/tickets", icon: Ticket, managerOnly: true },
   { label: "חבר מביא חבר", path: "/friend-referral", icon: Gift },
-  { label: "עמודי נחיתה", path: "/landing-pages", icon: Megaphone, managerOnly: true },
+  { label: "עמודי נחיתה", path: "/landing-pages", icon: Megaphone, leadsAccess: true },
 
   { label: "מפת שירות", path: "/service-map", icon: MapPin, managerOnly: true },
   { label: "חורגות SLA", path: "/sla-report", icon: AlertTriangle, managerOnly: true },
@@ -43,6 +43,7 @@ export default function AppLayout() {
     if (item.adminOnly && !adminRole) return false;
     if (item.managerOnly && !mgrOrAdmin) return false;
     if (item.maintenanceAccess && !canManageMaintenancePlan(user)) return false;
+    if (item.leadsAccess && !canManageLeads(user)) return false;
     return true;
   });
 

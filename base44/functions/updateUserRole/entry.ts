@@ -45,14 +45,16 @@ Deno.serve(async (req) => {
     }
 
     // עדכון תפקיד פנימי (internal_role) — נפרד מהרשאות מערכת
-    const VALID_INTERNAL_ROLES = ['service_manager', 'collections_manager', 'operations_manager', 'maintenance_manager'];
+    const VALID_INTERNAL_ROLES = ['service_manager', 'collections_manager', 'operations_manager', 'maintenance_manager', 'sales_manager'];
     const INTERNAL_ROLE_LABELS: Record<string, string> = {
+      sales_manager: 'מנהל מכירות',
       service_manager: 'מנהלת שירות',
       collections_manager: 'מנהל גבייה',
       operations_manager: 'מנהל תפעול',
       maintenance_manager: 'מנהל תחזוקה'
     };
     const INTERNAL_ROLE_DEPARTMENTS: Record<string, string> = {
+      sales_manager: 'sales',
       service_manager: 'service',
       collections_manager: 'collections',
       operations_manager: 'operations',

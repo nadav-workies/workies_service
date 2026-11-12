@@ -5,7 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2, Search, Download, FileText } from "lucide-react";
-import { isManagerOrAdmin } from "@/lib/permissions";
+import { canManageLeads } from "@/lib/permissions";
 import { TERMINAL_REFERRAL_STATUSES, normalizePhone } from "@/lib/referralConfig";
 import { exportReferralsCsv } from "@/lib/referralService";
 import ReferralKpis from "@/components/referral/ReferralKpis";
@@ -24,7 +24,7 @@ export default function ReferralsReport({ embedded = false, status = "" }) {
   const [termsOpen, setTermsOpen] = useState(false);
 
   useEffect(() => {
-    base44.auth.me().then(u => { if (!isManagerOrAdmin(u)) navigate("/"); else setUser(u); }).catch(() => navigate("/"));
+    base44.auth.me().then(u => { if (!canManageLeads(u)) navigate("/"); else setUser(u); }).catch(() => navigate("/"));
   }, [navigate]);
 
   const { data: referrals = [], isLoading, refetch } = useQuery({

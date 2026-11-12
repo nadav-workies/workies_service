@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Phone, AlertTriangle, ExternalLink } from "lucide-react";
 import ReferralStatusBadge from "@/components/referral/ReferralStatusBadge";
+import LeadCopyButton from "@/components/landing/LeadCopyButton";
 
 export default function ReferralReportCard({ referral: r, isDuplicate, onEdit }) {
   return (
@@ -28,7 +29,10 @@ export default function ReferralReportCard({ referral: r, isDuplicate, onEdit })
         <span className={`px-2 py-0.5 rounded-full ${r.crm_registered ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}>{r.crm_registered ? "רשום ב-CRM" : "לא רשום ב-CRM"}</span>
         {r.voucher_amount > 0 && <span className="px-2 py-0.5 rounded-full bg-teal-100 text-teal-700">שובר {r.voucher_amount} ₪</span>}
       </div>
+      <div className="flex flex-wrap gap-2">
+      <LeadCopyButton size="sm" fields={[["שם", r.friend_name], ["טלפון", r.friend_phone], ["פרטים נוספים", r.details], ["ממליץ/ה", r.referrer_name || r.referrer_email], ["משרד ממליץ/ה", r.referrer_room], ["מקור", "חבר מביא חבר"], ["תאריך פנייה", new Date(r.created_date).toLocaleDateString("he-IL")]]} />
       <Button asChild size="sm" variant="outline" className="gap-2"><a href="https://workies-aio-docs-production.up.railway.app/pipeline" target="_blank" rel="noopener noreferrer" title="פתיחת עמוד הדילים ב־AIO להוספה ידנית"><ExternalLink className="w-3 h-3" />הוספה ל־AIO</a></Button>
+      </div>
       <div className="flex items-center justify-between pt-1">
         {r.ticket_id ? (
           <Link to={`/tickets/${r.ticket_id}`} className="text-xs text-muted-foreground inline-flex items-center gap-1 hover:text-primary">

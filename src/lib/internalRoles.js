@@ -18,14 +18,23 @@ export const INTERNAL_ROLES = [
     key: "maintenance_manager",
     label: "מנהל תחזוקה",
     department: "maintenance"
+  },
+  {
+    key: "sales_manager",
+    label: "מנהל מכירות",
+    department: "sales"
   }
 ];
+
+// תפקידים פנימיים עם גישה לניהול לידים
+export const LEAD_INTERNAL_ROLES = ["sales_manager", "operations_manager", "collections_manager"];
 
 export const DEPARTMENT_LABELS = {
   service: "שירות",
   collections: "גבייה",
   operations: "תפעול",
-  maintenance: "תחזוקה"
+  maintenance: "תחזוקה",
+  sales: "מכירות"
 };
 
 export function getInternalRoleLabel(key) {

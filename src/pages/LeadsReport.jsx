@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Navigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { isManagerOrAdmin } from "@/lib/permissions";
+import { canManageLeads } from "@/lib/permissions";
 import { Button } from "@/components/ui/button";
 import DailyOfficeLeadRow, { STATUSES } from "@/components/landing/DailyOfficeLeadRow";
 import LeadsArchive from "@/components/landing/LeadsArchive";
@@ -12,7 +12,7 @@ export default function LeadsReport({ campaign = "office", embedded = false, sta
   const config = campaigns[campaign];
   const client = useQueryClient();
   const { data: user, isPending: loadingUser } = useQuery({ queryKey: ["landing-manager"], queryFn: () => base44.auth.me() });
-  const allowed = isManagerOrAdmin(user);
+  const allowed = canManageLeads(user);
   const { data, isPending, error, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ["landing-leads", config.entity, status], enabled: allowed, initialPageParam: null,
     queryFn: ({ pageParam }) => base44.entities[config.entity].filter(status ? { status } : { status: { $ne: "not_relevant" } }, { sort: "-created_date", limit: 30, ...(pageParam ? { cursor: pageParam } : {}) }),

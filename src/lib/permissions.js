@@ -14,6 +14,13 @@ export function isManagerOrAdmin(user) {
   return ["admin", "manager"].includes(user?.role);
 }
 
+// ── ניהול לידים — Admin + Manager + מנהל מכירות / תפעול / גבייה ──
+const LEAD_INTERNAL_ROLES = ["sales_manager", "operations_manager", "collections_manager"];
+
+export function canManageLeads(user) {
+  return isManagerOrAdmin(user) || LEAD_INTERNAL_ROLES.includes(user?.internal_role);
+}
+
 // ── פעולות רגישות — Admin בלבד ──────────────────────────────────
 
 export function canDeleteRecords(user) {

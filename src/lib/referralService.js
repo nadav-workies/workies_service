@@ -84,7 +84,8 @@ export async function updateReferralStatus(referral, { status, note, crm_registe
   if (status === "voucher_given" && !referral.voucher_given_at) updates.voucher_given_at = now;
   await base44.entities.Referral.update(referral.id, updates);
 
-  if (referral.ticket_id && status !== referral.status) {
+  // סנכרון קריאת השירות — רק למי שמורשה לנהל קריאות (מנהל / אדמין)
+  if (referral.ticket_id && status !== referral.status && ["admin", "manager"].includes(user?.role)) {
     const ticket = await base44.entities.ServiceTicket.get(referral.ticket_id);
     const label = REFERRAL_STATUSES[status].label;
     await base44.entities.ServiceTicket.update(referral.ticket_id, {
