@@ -20,8 +20,8 @@ export default function DailyOfficeLeadRow({ lead, onSaved, entity = "DailyOffic
   }
   const date = new Date(lead.created_date).toLocaleString("he-IL", { timeZone: "Asia/Jerusalem", dateStyle: "short", timeStyle: "short" });
   const company = lead.organization || lead.business_name;
-  const role = lead.job_title || (lead.session && `מפגש ${lead.session}`);
-  const copyFields = [["שם", lead.name], ["טלפון", lead.phone], ["מייל", lead.email], ["חברה", company], ["תפקיד", lead.job_title], ["מפגש", lead.session], ["מקור", category], ["תאריך פנייה", date]];
+  const role = lead.job_title || (lead.session && `מפגש ${lead.session}`) || (lead.team_size && `${lead.team_size} אנשים במשרד`);
+  const copyFields = [["שם", lead.name], ["טלפון", lead.phone], ["מייל", lead.email], ["כמה אנשים", lead.team_size], ["חברה", company], ["תפקיד", lead.job_title], ["מפגש", lead.session], ["מקור", category], ["תאריך פנייה", date]];
   return <article className={`border rounded-xl overflow-hidden ${lead.status === "not_relevant" ? "bg-destructive/10 border-destructive/40" : "bg-card"}`}>
     <div className="p-4 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -33,7 +33,7 @@ export default function DailyOfficeLeadRow({ lead, onSaved, entity = "DailyOffic
         <div className="flex items-center gap-1"><a href={`tel:${(lead.phone || "").replace(/[^+\d]/g, "")}`} className="inline-flex items-center gap-2 min-h-9 text-primary underline"><Phone className="w-4 h-4 shrink-0" /><bdi dir="ltr">{lead.phone}</bdi></a><CopyField value={lead.phone} label="טלפון" /></div>
         {lead.email && <div className="flex items-center gap-1 min-w-0"><a href={`mailto:${lead.email}`} className="inline-flex items-center gap-2 min-h-9 text-primary break-all"><Mail className="w-4 h-4 shrink-0" /><bdi dir="ltr">{lead.email}</bdi></a><CopyField value={lead.email} label="מייל" /></div>}
         {company && <div className="flex items-center gap-1"><Building2 className="w-4 h-4 shrink-0 text-muted-foreground" /><span className="ms-1">{company}</span><CopyField value={company} label="חברה" /></div>}
-        {role && <div className="flex items-center gap-1 text-muted-foreground"><span>תפקיד: {role}</span><CopyField value={lead.job_title || lead.session} label="תפקיד" /></div>}
+        {role && <div className="flex items-center gap-1 text-muted-foreground"><span>{lead.team_size && !lead.job_title && !lead.session ? role : `תפקיד: ${role}`}</span><CopyField value={lead.job_title || lead.session || lead.team_size} label="תפקיד" /></div>}
       </div>
     </div>
     <div className="flex flex-wrap items-center gap-2 border-t bg-muted/30 p-3">

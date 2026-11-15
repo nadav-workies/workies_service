@@ -54,9 +54,10 @@ export default async function(req) {
       await confirm(base44, campaign, { name, email });
       return Response.json({ success: true });
     }
-    const lead = await base44.asServiceRole.entities[entity].create({ name, phone, email, status: 'new' });
-    await sendLeadWebhook(base44, campaign, { lead_id: lead.id, name, phone, email }, body.sid);
-    await notifyNewLead(base44, campaign === 'office' ? 'התנסות במשרד יומי' : 'התנסות באולפן הפודקאסט', { 'שם': name, 'טלפון': phone, 'מייל': email });
+    const team_size = campaign === 'office' && ['1', '2-3', '4+'].includes(String(body.team_size)) ? String(body.team_size) : '';
+    const lead = await base44.asServiceRole.entities[entity].create({ name, phone, email, ...(team_size ? { team_size } : {}), status: 'new' });
+    await sendLeadWebhook(base44, campaign, { lead_id: lead.id, name, phone, email, ...(team_size ? { team_size } : {}) }, body.sid);
+    await notifyNewLead(base44, campaign === 'office' ? 'סיור במשרד פרטי' : 'התנסות באולפן הפודקאסט', { 'שם': name, 'טלפון': phone, 'מייל': email, ...(team_size ? { 'כמה אנשים': team_size } : {}) });
     await confirm(base44, campaign, { name, email });
     return Response.json({ success: true });
   } catch (error) { return Response.json({ error: error.message }, { status: 500 }); }
