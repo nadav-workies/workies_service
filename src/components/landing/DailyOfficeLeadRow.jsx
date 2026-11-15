@@ -5,11 +5,12 @@ import { ExternalLink, Phone, Mail, Building2, Clock } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import LeadCopyButton from "@/components/landing/LeadCopyButton";
 import CopyField from "@/components/landing/CopyField";
+import LeadDeleteButton from "@/components/landing/LeadDeleteButton";
 
 export const STATUSES = { new: "חדש", contacted: "נוצר קשר", scheduled: "תואמה התנסות", completed: "ההתנסות בוצעה", not_relevant: "לא רלוונטי" };
 const AIO_URL = "https://workies-aio-docs-production.up.railway.app/pipeline";
 
-export default function DailyOfficeLeadRow({ lead, onSaved, entity = "DailyOfficeLead", category = "התנסות במשרד יומי" }) {
+export default function DailyOfficeLeadRow({ lead, onSaved, entity = "DailyOfficeLead", category = "התנסות במשרד יומי", canDelete = false }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   async function update(status) {
@@ -40,6 +41,7 @@ export default function DailyOfficeLeadRow({ lead, onSaved, entity = "DailyOffic
       <Select value={lead.status || "new"} onValueChange={update} disabled={busy}><SelectTrigger aria-label={`סטטוס הפנייה של ${lead.name}`} className="w-full sm:w-44 h-10 bg-card"><SelectValue /></SelectTrigger><SelectContent>{Object.entries(STATUSES).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select>
       <LeadCopyButton fields={copyFields} className="flex-1 sm:flex-none h-10" />
       <Button asChild variant="outline" className="flex-1 sm:flex-none h-10 gap-2"><a href={AIO_URL} target="_blank" rel="noopener noreferrer" title="פתיחת עמוד הדילים ב־AIO להוספה ידנית"><ExternalLink className="w-4 h-4" />הוספה ל־AIO</a></Button>
+      {canDelete && <LeadDeleteButton lead={lead} entity={entity} onDeleted={onSaved} onError={setError} />}
       {error && <p role="alert" className="w-full text-sm text-destructive">{error}</p>}
     </div>
   </article>;

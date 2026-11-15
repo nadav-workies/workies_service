@@ -4,7 +4,7 @@ import { ChevronDown } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import DailyOfficeLeadRow from "@/components/landing/DailyOfficeLeadRow";
 
-export default function LeadsArchive({ entity, category, onSaved }) {
+export default function LeadsArchive({ entity, category, onSaved, canDelete }) {
   const [open, setOpen] = useState(false);
   const { data, isPending } = useQuery({
     queryKey: ["landing-leads", entity, "archive"],
@@ -17,7 +17,7 @@ export default function LeadsArchive({ entity, category, onSaved }) {
       <ChevronDown className={`w-4 h-4 transition-transform ${open ? "rotate-180" : ""}`} />
     </button>
     {open && <div className="space-y-3 p-3 pt-0">
-      {items.length ? items.map(l => <DailyOfficeLeadRow key={l.id} lead={l} onSaved={onSaved} entity={entity} category={category} />) : <p className="text-sm text-muted-foreground text-center py-3">אין פניות בארכיון</p>}
+      {items.length ? items.map(l => <DailyOfficeLeadRow key={l.id} lead={l} onSaved={onSaved} entity={entity} category={category} canDelete={canDelete} />) : <p className="text-sm text-muted-foreground text-center py-3">אין פניות בארכיון</p>}
     </div>}
   </section>;
 }

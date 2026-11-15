@@ -56,7 +56,7 @@ const AuthenticatedApp = () => {
   const location = useLocation();
   const isPublicRoute = PUBLIC_ROUTES.some(p => location.pathname.startsWith(p));
   useEffect(() => {
-    const landing = Object.values(campaigns).some(c => c.path === location.pathname) || location.pathname === '/thank-you';
+    const landing = Object.values(campaigns).some(c => c.path === location.pathname) || location.pathname.startsWith('/thank-you');
     if (landing) window.startLandingGTM?.();
     else if (window.landingGTMLoaded) window.location.reload();
   }, [location.pathname]);
@@ -125,6 +125,7 @@ const AuthenticatedApp = () => {
       <Route path="/podcast" element={<Podcast />} />
       <Route path="/hr-meetup" element={<HRMeetup />} />
       <Route path="/thank-you" element={<ThankYou />} />
+      {Object.values(campaigns).map(c => <Route key={c.thankYou} path={c.thankYou} element={<ThankYou />} />)}
       <Route path="/workies-ai" element={<WorkiesAI />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
