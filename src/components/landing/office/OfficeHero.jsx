@@ -1,7 +1,7 @@
-import { Phone } from "lucide-react";
+import { Check, MessageCircle, Phone } from "lucide-react";
 import CampaignValidityGate from "@/components/landing/CampaignValidityGate";
 import TourLeadForm from "@/components/landing/office/TourLeadForm";
-import { LOGO, PHONE_DISPLAY, PHONE_TEL, scrollToForm, trackClick } from "@/lib/officeContact";
+import { LOGO, PHONE_DISPLAY, PHONE_TEL, WHATSAPP_URL, scrollToForm, trackClick } from "@/lib/officeContact";
 
 const HERO = "https://media.base44.com/images/public/6a1d5a36316988d9f113f88e/ec89027b2_2.png";
 
@@ -21,7 +21,13 @@ export default function OfficeHero() {
           <img src={LOGO} alt="Workies" className="ot-logo ot-logo--hero" width="96" height="40" />
           <h1>משרד פרטי <span>בבאר שבע</span></h1>
           <p>משרד סגור ושקט במתחם משרדים שלנו בביג באר שבע. אצלנו משלמים חודש בחודשו, בלי חוזה ארוך ובלי התחייבות.</p>
-          <button type="button" className="ot-btn ot-btn--full ot-mobile-only" onClick={scrollToForm}>לתיאום סיור במתחם</button>
+          <ul className="ot-hero-perks">
+            {["בלי חוזה ארוך", "חניה בחינם", "הכל כלול במחיר"].map(t => <li key={t}><Check className="w-4 h-4" aria-hidden="true" />{t}</li>)}
+          </ul>
+          <div className="ot-mobile-only ot-hero-ctas">
+            <button type="button" className="ot-btn ot-btn--full" onClick={scrollToForm}>לתיאום סיור במתחם</button>
+            <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="ot-hero-wa" onClick={() => trackClick("click_whatsapp", "hero")}><MessageCircle className="w-4 h-4" />או כתבו לנו בוואטסאפ</a>
+          </div>
         </div>
         <div className="ot-hero-card" id="tour-form">
           <CampaignValidityGate campaign="office"><TourLeadForm id="hero" title="השאירו פרטים ונתאם לכם סיור במתחם" /></CampaignValidityGate>

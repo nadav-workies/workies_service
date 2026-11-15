@@ -38,8 +38,14 @@
 
 /* Hero */
 .ot-hero { position: relative; overflow: hidden; background: var(--ot-ink); }
-.ot-hero-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.ot-hero-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.05) 0%, rgba(0,0,0,.25) 40%, rgba(0,0,0,.82) 100%); }
+.ot-hero-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 55% 65%; }
+.ot-hero-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.3) 0%, rgba(0,0,0,.2) 18%, rgba(0,0,0,.72) 40%, rgba(0,0,0,.88) 65%, rgba(0,0,0,.94) 100%); }
+.ot-hero-text h1, .ot-hero-text p, .ot-hero-perks { text-shadow: 0 2px 14px rgba(0,0,0,.55); }
+.ot-hero-perks { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 18px; font-weight: 700; font-size: 16px; }
+.ot-hero-perks li { display: inline-flex; align-items: center; gap: 6px; }
+.ot-hero-perks svg { color: var(--ot-teal); }
+.ot-hero-ctas { display: flex; flex-direction: column; gap: 12px; margin-top: 6px; }
+.ot-hero-wa { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; color: #fff; font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }
 .ot-hero-grid { position: relative; }
 .ot-hero-text { min-height: 88vh; min-height: 88svh; display: flex; flex-direction: column; justify-content: flex-end; gap: 18px; padding: 90px 0 28px; color: #fff; }
 .ot-hero-text h1 { margin: 0; font-size: clamp(36px, 9vw, 60px); font-weight: 800; line-height: 1.12; }
@@ -47,8 +53,11 @@
 .ot-hero-text p { margin: 0; font-size: 18px; line-height: 1.6; opacity: .92; max-width: 34em; }
 .ot-hero-card { background: #fff; margin: 0 -20px; padding: 32px 20px; scroll-margin-top: 0; }
 @media (min-width: 900px) {
-  .ot-hero-shade { background: linear-gradient(270deg, rgba(0,0,0,.72) 0%, rgba(0,0,0,.35) 55%, rgba(0,0,0,.15) 100%); }
-  .ot-hero-grid { display: grid; grid-template-columns: 1fr 380px; gap: 64px; align-items: center; padding-top: 56px; padding-bottom: 56px; }
+  .ot-hero-bg { object-position: center 60%; }
+  .ot-hero-shade { background: linear-gradient(270deg, rgba(0,0,0,.85) 0%, rgba(0,0,0,.6) 40%, rgba(0,0,0,.2) 75%, rgba(0,0,0,.1) 100%); }
+  .ot-hero-grid { display: grid; grid-template-columns: 1fr 380px; gap: 64px; align-items: center; min-height: calc(100vh - 64px); min-height: calc(100svh - 64px); padding-top: 48px; padding-bottom: 48px; }
+  .ot-hero-text h1 { font-size: 64px; }
+  .ot-hero-text p { font-size: 20px; }
   .ot-hero-text { min-height: 0; padding: 0; justify-content: center; }
   .ot-hero-card { margin: 0; border-radius: 18px; padding: 26px 22px; box-shadow: 0 20px 50px rgba(0,0,0,.25); }
 }
