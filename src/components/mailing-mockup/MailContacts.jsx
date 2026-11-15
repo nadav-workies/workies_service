@@ -3,16 +3,17 @@ import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Search, Upload, Tag, ListPlus, Mail, MousePointerClick, Eye } from "lucide-react";
-import { CONTACTS, CONSENT, SOURCES, dateHe } from "./mockData";
+import { Search, Upload, Tag, ListPlus, Mail, MousePointerClick, Eye, PhoneCall, CalendarCheck, Plus } from "lucide-react";
+import { CONTACTS, CONSENT, SOURCES, STAGES, ENGAGEMENT_TYPES, stageOf, dateHe } from "./mockData";
 import { PageHeader, Pill, Table } from "./shared";
 
 const HISTORY = [
-  { at: "2026-11-12", what: "הקליק בקמפיין", detail: "הזמנה ל-Workies AI Open Stage · כפתור הרשמה", icon: MousePointerClick },
-  { at: "2026-11-09", what: "פתח קמפיין", detail: "הזמנה ל-Workies AI Open Stage", icon: Eye },
-  { at: "2026-11-04", what: "פתח קמפיין", detail: "ניוזלטר נובמבר", icon: Eye },
-  { at: "2026-10-21", what: "נכנס לאוטומציה", detail: "נרשם ל-Workies AI — חימום ל-Lab", icon: Mail },
-  { at: "2026-10-21", what: "נרשם בעמוד נחיתה", detail: "Workies AI · אישר דיוור", icon: Mail },
+  { at: "2026-11-12", what: "הקליק על קישור", detail: "הזמנה ל-Workies AI Open Stage · כפתור הרשמה", icon: MousePointerClick, src: "אוטומטי · מייל", pts: 3 },
+  { at: "2026-11-10", what: "ענה לשיחה", detail: "מתעניין במשרד לשניים מינואר", icon: PhoneCall, src: "ידני · נדב", pts: 4 },
+  { at: "2026-11-09", what: "הגיע לאירוע", detail: "Workies AI Open Stage", icon: CalendarCheck, src: "ידני · סימון נוכחות", pts: 10 },
+  { at: "2026-11-09", what: "פתח מייל", detail: "הזמנה ל-Workies AI Open Stage", icon: Eye, src: "אוטומטי · מייל", pts: 1 },
+  { at: "2026-11-04", what: "פתח מייל", detail: "ניוזלטר נובמבר", icon: Eye, src: "אוטומטי · מייל", pts: 1 },
+  { at: "2026-10-21", what: "נרשם בעמוד נחיתה", detail: "Workies AI · אישר דיוור", icon: Mail, src: "אוטומטי · עמוד נחיתה", pts: 6 },
 ];
 
 export default function MailContacts() {
@@ -21,6 +22,7 @@ export default function MailContacts() {
   const [source, setSource] = useState("all");
   const [selected, setSelected] = useState([]);
   const [open, setOpen] = useState(null);
+  const [logging, setLogging] = useState(false);
 
   const rows = useMemo(() => CONTACTS.filter(c =>
     (consent === "all" || c.consent === consent) &&
@@ -59,7 +61,7 @@ export default function MailContacts() {
 
     <Table head={[
       <input key="all" type="checkbox" aria-label="בחירת הכל" checked={allOn} onChange={() => setSelected(allOn ? [] : rows.map(r => r.id))} />,
-      "שם", "מייל", "מקורות", "תגיות", "הסכמה", "פעילות אחרונה", "מעורבות"]}>
+      "שם", "מייל", "מקורות", "תגיות", "הסכמה", "פעילות אחרונה", "שלב מעורבות"]}>
       {rows.map(c => <tr key={c.id} className="hover:bg-muted/40 cursor-pointer" onClick={() => setOpen(c)}>
         <td className="px-3 py-2.5" onClick={e => e.stopPropagation()}><input type="checkbox" aria-label={`בחירת ${c.name}`} checked={selected.includes(c.id)} onChange={() => toggle(c.id)} /></td>
         <td className="px-3 py-2.5 font-medium whitespace-nowrap">{c.name}<div className="text-xs text-muted-foreground font-normal">{c.company}</div></td>
@@ -68,7 +70,7 @@ export default function MailContacts() {
         <td className="px-3 py-2.5"><div className="flex flex-wrap gap-1">{c.tags.map(t => <Pill key={t}>{t}</Pill>)}</div></td>
         <td className="px-3 py-2.5"><Pill tone={CONSENT[c.consent].tone}>{CONSENT[c.consent].label}</Pill></td>
         <td className="px-3 py-2.5 whitespace-nowrap text-muted-foreground">{dateHe(c.last)}</td>
-        <td className="px-3 py-2.5 tabular-nums">{c.score}</td>
+        <td className="px-3 py-2.5 whitespace-nowrap"><Pill tone={STAGES[stageOf(c.score)].tone}>{STAGES[stageOf(c.score)].label} · {c.score}</Pill></td>
       </tr>)}
       {rows.length === 0 && <tr><td colSpan={8} className="px-3 py-10 text-center text-muted-foreground">אין אנשי קשר שמתאימים לסינון.</td></tr>}
     </Table>
@@ -90,11 +92,19 @@ export default function MailContacts() {
               <div className="flex flex-wrap gap-1">{open.sources.map(s => <Pill key={s} tone="blue">{SOURCES[s]}</Pill>)}</div>
             </div>
             <div>
-              <p className="font-medium mb-2">היסטוריית פעילות</p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="font-medium">מעורבות <Pill tone={STAGES[stageOf(open.score)].tone}>{STAGES[stageOf(open.score)].label} · {open.score}</Pill></p>
+                <Button size="sm" variant="outline" onClick={() => setLogging(l => !l)}><Plus className="w-3.5 h-3.5 ml-1" />רישום מעורבות</Button>
+              </div>
+              {logging && <div className="mb-3 space-y-2 rounded-lg border bg-muted/40 p-3">
+                <select className="h-9 w-full rounded-md border bg-background px-2">{Object.entries(ENGAGEMENT_TYPES).filter(([, t]) => !t.auto).map(([k, t]) => <option key={k}>{t.label} (+{t.points})</option>)}</select>
+                <Input placeholder="הערה (אופציונלי)" />
+                <div className="flex justify-end"><Button size="sm" onClick={() => setLogging(false)}>שמירה</Button></div>
+              </div>}
               <ol className="space-y-3 border-r pr-3">
                 {HISTORY.map((h, i) => <li key={i} className="flex gap-2">
                   <h.icon className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                  <div><p>{h.what} <span className="text-muted-foreground text-xs">· {dateHe(h.at)}</span></p><p className="text-xs text-muted-foreground">{h.detail}</p></div>
+                  <div className="flex-1"><p>{h.what} <span className="text-muted-foreground text-xs">· {dateHe(h.at)}</span></p><p className="text-xs text-muted-foreground">{h.detail}</p><p className="text-[11px] text-muted-foreground mt-0.5">{h.src}</p></div><span className="text-xs tabular-nums text-primary">+{h.pts}</span>
                 </li>)}
               </ol>
             </div>

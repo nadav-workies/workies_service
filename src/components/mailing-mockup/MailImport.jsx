@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, FileSpreadsheet, HardDrive, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Upload, FileSpreadsheet, HardDrive, CheckCircle2, AlertTriangle, Activity } from "lucide-react";
 import { IMPORT_HISTORY, dateHe, fmt } from "./mockData";
 import { PageHeader, Panel, Table, Pill } from "./shared";
 
@@ -17,14 +17,17 @@ export default function MailImport() {
   const [step, setStep] = useState(0);
   const [basis, setBasis] = useState("");
   return <div className="space-y-4">
-    <PageHeader title="ייבוא אנשי קשר" subtitle="Excel או CSV מהמחשב, או קובץ מ-Google Drive. כל ייבוא מתועד: מי, מתי, ומה נכנס." />
+    <PageHeader title="ייבוא" subtitle="אנשי קשר או פעולות מעורבות, מ-Excel/CSV או מ-Google Drive. כל ייבוא מתועד: מי, מתי, ומה נכנס." />
 
-    {step === 0 && <div className="grid sm:grid-cols-2 gap-3">
+    {step === 0 && <div className="grid sm:grid-cols-3 gap-3">
       <button onClick={() => setStep(1)} className="rounded-xl border-2 border-dashed bg-card p-8 flex flex-col items-center gap-2 hover:border-primary">
         <Upload className="w-8 h-8 text-primary" /><p className="font-semibold">העלאת קובץ</p><p className="text-xs text-muted-foreground">xlsx, csv · עד 10,000 שורות</p>
       </button>
       <button onClick={() => setStep(1)} className="rounded-xl border-2 border-dashed bg-card p-8 flex flex-col items-center gap-2 hover:border-primary">
         <HardDrive className="w-8 h-8 text-primary" /><p className="font-semibold">בחירה מ-Google Drive</p><p className="text-xs text-muted-foreground">מתיקיית "אנשי קשר לדיוור"</p>
+      </button>
+      <button onClick={() => setStep(1)} className="rounded-xl border-2 border-dashed bg-card p-8 flex flex-col items-center gap-2 hover:border-primary">
+        <Activity className="w-8 h-8 text-primary" /><p className="font-semibold">ייבוא מעורבות</p><p className="text-xs text-muted-foreground text-center">רשימת נוכחות, יומן שיחות או משתתפי קמפיין — נרשם כאירועי מעורבות</p>
       </button>
     </div>}
 

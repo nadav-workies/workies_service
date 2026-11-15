@@ -1,12 +1,12 @@
 import { NavLink, Navigate, useParams } from "react-router-dom";
-import { LayoutDashboard, Users, ListChecks, LayoutTemplate, Send, Workflow, Upload, Settings, FlaskConical } from "lucide-react";
+import { LayoutDashboard, Users, ListChecks, LayoutTemplate, Send, Zap, Upload, Settings, FlaskConical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import MailDashboard from "@/components/mailing-mockup/MailDashboard";
 import MailContacts from "@/components/mailing-mockup/MailContacts";
 import MailLists from "@/components/mailing-mockup/MailLists";
 import MailTemplates from "@/components/mailing-mockup/MailTemplates";
 import MailCampaigns from "@/components/mailing-mockup/MailCampaigns";
-import MailAutomations from "@/components/mailing-mockup/MailAutomations";
+import MailEngagement from "@/components/mailing-mockup/MailEngagement";
 import MailImport from "@/components/mailing-mockup/MailImport";
 import MailSettings from "@/components/mailing-mockup/MailSettings";
 
@@ -16,7 +16,7 @@ const SECTIONS = [
   { key: "lists", label: "רשימות וסגמנטים", icon: ListChecks, el: MailLists },
   { key: "templates", label: "טמפלטים", icon: LayoutTemplate, el: MailTemplates },
   { key: "campaigns", label: "קמפיינים", icon: Send, el: MailCampaigns },
-  { key: "automations", label: "אוטומציות", icon: Workflow, el: MailAutomations },
+  { key: "engagement", label: "מנוע מעורבות", icon: Zap, el: MailEngagement },
   { key: "import", label: "ייבוא", icon: Upload, el: MailImport },
   { key: "settings", label: "הגדרות", icon: Settings, el: MailSettings },
 ];
@@ -30,7 +30,7 @@ export default function MailingHub() {
     <div className="flex flex-wrap items-center justify-between gap-2">
       <div>
         <h1 className="text-2xl font-bold">דיוור</h1>
-        <p className="text-muted-foreground text-sm mt-1">מאגר אחד לכל מי שנרשם אלינו, וממנו קמפיינים ואוטומציות.</p>
+        <p className="text-muted-foreground text-sm mt-1">מאגר אחד לכל מי שנרשם אלינו. כל פעולה שלהם נמדדת, והמערכת יוזמת את המהלך הבא.</p>
       </div>
       <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800">
         <FlaskConical className="w-3.5 h-3.5" />מוקאפ · נתוני דמה · שום מייל לא נשלח

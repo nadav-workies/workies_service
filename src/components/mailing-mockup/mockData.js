@@ -64,22 +64,6 @@ export const CAMPAIGN_STATUS = {
   sent: { label: "נשלח", tone: "green" },
 };
 
-export const AUTOMATIONS = [
-  {
-    id: "a1", name: "ליד חדש — התנסות במשרד יומי", active: true, trigger: "ליד חדש מעמוד נחיתה: התנסות במשרד יומי", enrolled: 58, completed: 41,
-    steps: [
-      { type: "email", title: "מייל ברוכים הבאים", template: "ברוכים הבאים" },
-      { type: "delay", title: "המתנה 2 ימים" },
-      { type: "condition", title: "האם קבע יום התנסות?", yes: "יציאה מהמסלול", no: "המשך" },
-      { type: "email", title: "תזכורת התנסות", template: "תזכורת התנסות" },
-      { type: "delay", title: "המתנה 5 ימים" },
-      { type: "email", title: "הצעה למשרד", template: "הצעה למשרד" },
-    ],
-  },
-  { id: "a2", name: "נרשם ל-Workies AI — חימום ל-Lab", active: true, trigger: "ליד חדש מעמוד נחיתה: Workies AI", enrolled: 132, completed: 97, steps: [] },
-  { id: "a3", name: "לקוח חדש מ-AIO — קליטה לקהילה", active: false, trigger: "אירוע AIO: חוזה נחתם", enrolled: 0, completed: 0, steps: [] },
-];
-
 export const TREND = [
   { month: "06/26", contacts: 910, unsub: 4 },
   { month: "07/26", contacts: 968, unsub: 7 },
@@ -97,3 +81,48 @@ export const IMPORT_HISTORY = [
 export const pct = (a, b) => (b ? Math.round((a / b) * 1000) / 10 : 0);
 export const fmt = n => Number(n || 0).toLocaleString("he-IL");
 export const dateHe = d => (d ? new Date(d.length === 10 ? `${d}T12:00:00` : d.replace(" ", "T")).toLocaleDateString("he-IL") : "—");
+
+// ---- מנוע מעורבות ----
+// כל פעולה של איש קשר נרשמת כאירוע מעורבות: אוטומטית (מייל, טופס, AIO) או ידנית (שיחה, הגעה, פגישה).
+export const ENGAGEMENT_TYPES = {
+  opened: { label: "פתח מייל", points: 1, auto: true },
+  clicked: { label: "הקליק על קישור", points: 3, auto: true },
+  replied: { label: "השיב למייל", points: 5, auto: true },
+  registered: { label: "נרשם (טופס / אירוע)", points: 6, auto: true },
+  attended: { label: "הגיע לאירוע", points: 10 },
+  call_answered: { label: "ענה לשיחה", points: 4 },
+  meeting: { label: "פגישה / סיור במתחם", points: 12 },
+  whatsapp: { label: "השיב בוואטסאפ", points: 4 },
+  referral: { label: "הפנה מישהו", points: 8 },
+};
+
+export const STAGES = {
+  cold: { label: "קר", tone: "gray" },
+  warming: { label: "מתחמם", tone: "yellow" },
+  engaged: { label: "מעורב", tone: "blue" },
+  hot: { label: "חם", tone: "orange" },
+};
+export const stageOf = score => (score >= 45 ? "hot" : score >= 25 ? "engaged" : score >= 10 ? "warming" : "cold");
+
+export const STAGE_COUNTS = { cold: 612, warming: 404, engaged: 211, hot: 57 };
+
+export const RULES = [
+  { id: "r1", name: "הקליק על משרד ולא נרשם", when: "הקליק על קישור 'משרד' · לא נרשם להתנסות תוך 3 ימים", move: "מייל 'הצעה למשרד' + משימת שיחה למכירות", mode: "suggest", hits: 14, active: true },
+  { id: "r2", name: "פותח ולא מקליק", when: "3 פתיחות אחרונות בלי אף הקלקה", move: "מייל קצר עם שאלה אחת: מה הכי רלוונטי לך?", mode: "suggest", hits: 37, active: true },
+  { id: "r3", name: "נרשם ולא הגיע", when: "נרשם לאירוע · לא סומנה נוכחות", move: "מייל 'פספסת' עם תקציר + הזמנה לאירוע הבא", mode: "auto", hits: 22, active: true },
+  { id: "r4", name: "הגיע לאירוע", when: "סומנה נוכחות באירוע", move: "מייל תודה + הצעה להמשך (Lab / סיור במתחם)", mode: "auto", hits: 41, active: true },
+  { id: "r5", name: "חצה את סף 'חם'", when: "ניקוד מעורבות עבר 45", move: "התראה למכירות + משימת שיחה", mode: "auto", hits: 9, active: true },
+  { id: "r6", name: "שקט 60 יום", when: "אין אף פעולת מעורבות 60 יום", move: "מייל ערך בלי הצעה, לבדיקת עניין", mode: "suggest", hits: 186, active: false },
+];
+
+export const SUGGESTIONS = [
+  { id: "s1", rule: "r1", signal: "14 אנשים הקליקו על 'משרד יומי' בניוזלטר נובמבר ולא נרשמו להתנסות", move: "לשלוח 'הצעה למשרד' ולפתוח 14 משימות שיחה למכירות", count: 14, urgency: "high" },
+  { id: "s2", rule: "r5", signal: "אבי מזרחי עבר לסטטוס 'חם' (90): 7 פתיחות, 5 הקלקות, ענה לשיחה ב-10.11", move: "משימת שיחה היום", count: 1, urgency: "high" },
+  { id: "s3", rule: "r2", signal: "37 אנשי קשר פתחו את 3 המיילים האחרונים ולא הקליקו על אף קישור", move: "מייל קצר עם שאלה אחת", count: 37, urgency: "mid" },
+  { id: "s4", rule: "r6", signal: "186 אנשי קשר בלי שום מעורבות 60 יום", move: "מייל ערך לבדיקת עניין (החוק כבוי — הצעה חד-פעמית)", count: 186, urgency: "low" },
+];
+
+export const EVENTS_FOR_ATTENDANCE = [
+  { id: "e1", name: "Workies AI Open Stage", date: "2026-11-09", registered: ["c1", "c4", "c6", "c8", "c11"] },
+  { id: "e2", name: "HR מחוץ לשגרה", date: "2026-10-29", registered: ["c3", "c9", "c1"] },
+];
