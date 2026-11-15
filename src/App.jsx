@@ -46,10 +46,12 @@ const HRMeetup = lazy(() => import('@/pages/HRMeetup'));
 const LandingPageManage = lazy(() => import('@/pages/LandingPageManage'));
 const Messages = lazy(() => import('@/pages/Messages'));
 const MailingLists = lazy(() => import('@/pages/MailingLists'));
+const MailingHub = lazy(() => import('@/pages/MailingHub'));
+const Unsubscribe = lazy(() => import('@/pages/Unsubscribe'));
 import WorkiesAI from '@/pages/WorkiesAI';
 
 
-const PUBLIC_ROUTES = ['/event-registration', '/feedback', '/onboarding/access', '/referral-share', '/daily-office', '/podcast', '/workies-ai', '/hr-meetup', '/thank-you'];
+const PUBLIC_ROUTES = ['/event-registration', '/feedback', '/onboarding/access', '/referral-share', '/daily-office', '/podcast', '/workies-ai', '/hr-meetup', '/thank-you', '/unsubscribe'];
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -113,6 +115,8 @@ const AuthenticatedApp = () => {
           <Route path="/referrals-report" element={<Navigate to="/landing-pages/referral" replace />} />
           <Route path="/landing-pages" element={<LandingPages />} />
           <Route path="/mailing-lists" element={<MailingLists />} />
+          <Route path="/mailing" element={<Navigate to="/mailing/dashboard" replace />} />
+          <Route path="/mailing/:section" element={<MailingHub />} />
           <Route path="/landing-pages/:campaign" element={<LandingPageManage />} />
           <Route path="/leads" element={<Navigate to="/landing-pages/office" replace />} />
         </Route>
@@ -125,6 +129,7 @@ const AuthenticatedApp = () => {
       <Route path="/podcast" element={<Podcast />} />
       <Route path="/hr-meetup" element={<HRMeetup />} />
       <Route path="/thank-you" element={<ThankYou />} />
+      <Route path="/unsubscribe" element={<Unsubscribe />} />
       {Object.values(campaigns).map(c => <Route key={c.thankYou} path={c.thankYou} element={<ThankYou />} />)}
       <Route path="/workies-ai" element={<WorkiesAI />} />
       <Route path="*" element={<PageNotFound />} />
