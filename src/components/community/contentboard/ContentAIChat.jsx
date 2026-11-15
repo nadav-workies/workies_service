@@ -2,7 +2,7 @@ import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Loader2, Send, MessageCircle } from "lucide-react";
-import { buildUnitContext, NO_INVENT_RULE } from "./ContentAIActions";
+import { buildUnitContext } from "./ContentAIActions";
 
 export default function ContentAIChat({ itemId, form, thread, onThreadChange }) {
   const [msg, setMsg] = useState("");
@@ -15,10 +15,8 @@ export default function ContentAIChat({ itemId, form, thread, onThreadChange }) 
     onThreadChange(withUser);
     setMsg("");
     setBusy(true);
-    const history = withUser.map((m) => `${m.role === "user" ? "משתמשת" : "עוזר"}: ${m.text}`).join("\n");
-    const prompt = `${buildUnitContext(form)}\n\nהתכתבות על יחידת התוכן הזו בלבד:\n${history}\n\nענה/עני להודעה האחרונה של המשתמשת בהקשר של יחידת תוכן זו בלבד.\n\n${NO_INVENT_RULE}`;
-    const res = await base44.integrations.Core.InvokeLLM({ prompt });
-    const full = [...withUser, { role: "assistant", text: typeof res === "string" ? res.trim() : String(res), at: new Date().toISOString() }];
+    const res = await base44.functions.invoke("contentAI", { action: "chat", unit_context: buildUnitContext(form), thread: withUser });
+    const full = [...withUser, { role: "assistant", text: res.data.result, at: new Date().toISOString() }];
     onThreadChange(full);
     await base44.entities.WeeklyContentIdea.update(itemId, { ai_thread_notes: full });
     setBusy(false);

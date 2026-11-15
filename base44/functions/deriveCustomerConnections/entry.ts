@@ -87,7 +87,7 @@ ${customer_id ? `גזור חיבורים עבור הלקוח עם id "${customer
 
 החזר JSON בלבד.`;
 
-    const llmResponse = await base44.integrations.Core.InvokeLLM({
+    const llmResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
       response_json_schema: SCHEMA,
     });

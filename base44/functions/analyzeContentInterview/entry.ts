@@ -115,7 +115,7 @@ export default async function(req) {
 
     const prompt = buildPrompt(interview, insightsContext || "אין תובנות עדכניות", conversationsContext || "אין שיחות עדכניות");
 
-    const llmResponse = await base44.integrations.Core.InvokeLLM({
+    const llmResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
       response_json_schema: ANALYSIS_SCHEMA,
     });

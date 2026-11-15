@@ -1,10 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.40";
 import { gradeQuiz } from "../../shared/onboardingQuizKeys.ts";
-
-async function hashToken(token) {
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token));
-  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
+import { hashToken } from "../../shared/onboardingToken.ts";
 
 function generateToken() {
   const bytes = crypto.getRandomValues(new Uint8Array(32));

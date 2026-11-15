@@ -57,7 +57,7 @@ export default async function(req) {
       llmInput.prompt = `${basePrompt}\n\n--- תמלול הראיון ---\n${transcript_text}`;
     }
 
-    const llmResponse = await base44.integrations.Core.InvokeLLM(llmInput);
+    const llmResponse = await base44.asServiceRole.integrations.Core.InvokeLLM(llmInput);
     const result = llmResponse.data || llmResponse;
 
     return Response.json(result);

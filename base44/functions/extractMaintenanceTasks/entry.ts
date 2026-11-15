@@ -19,7 +19,7 @@ export default async function(req) {
 עבור priority השתמש ב: low, medium, high (ברירת מחדל medium).
 החזר אך ורק משימות תחזוקה אמיתיות שניתן לבצע. אל תמציא פרטים שאינם מופיעים במסמך.`;
 
-    const result = await base44.integrations.Core.InvokeLLM({
+    const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
       file_urls: [file_url],
       response_json_schema: {

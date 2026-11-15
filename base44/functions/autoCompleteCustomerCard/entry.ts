@@ -61,7 +61,7 @@ export default async function(req) {
 
 החזר JSON בלבד.`;
 
-    const llmResponse = await base44.integrations.Core.InvokeLLM({
+    const llmResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
       response_json_schema: SCHEMA,
     });

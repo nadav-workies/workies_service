@@ -17,20 +17,8 @@ export default function OnboardingAIAssistant({ track, stages, isManager }) {
     setMessages((m) => [...m, { role: "user", text: question }]);
     setLoading(true);
     try {
-      const stagesSummary = stages
-        .map((s) => `- יום ${s.day_number}: ${s.title} (סטטוס: ${s.status}${s.quiz_score != null ? `, ציון: ${s.quiz_score}` : ""})`)
-        .join("\n");
-      const prompt = `אתה עוזר וירטואלי לתהליך חפיפה בחברת Workies.
-פרטי החפיפה: שם: ${track.employee_name}, תפקיד: ${track.role_title}, התקדמות: ${track.progress_percent}%, סטטוס: ${track.status}, שלבים שהושלמו: ${track.completed_stages}/${track.total_stages}, תאריך תחילה: ${track.start_date}, תאריך סיום מתוכנן: ${track.planned_end_date}.
-
-שלבי החפיפה:
-${stagesSummary}
-
-השאלה נשאלה על ידי ${isManager ? "מנהל" : "המשתמש/ת"}: ${question}
-
-ענה בעברית, בקצרה ובצורה ברורה ומועילה. אם השאלה לא קשורה לחפיפה, בקש להבהיר.`;
-      const res = await base44.integrations.Core.InvokeLLM({ prompt });
-      setMessages((m) => [...m, { role: "assistant", text: typeof res === "string" ? res : JSON.stringify(res) }]);
+      const res = await base44.functions.invoke("onboardingAssistant", { onboarding_id: track.id, question });
+      setMessages((m) => [...m, { role: "assistant", text: res.data.answer }]);
     } catch {
       setMessages((m) => [...m, { role: "assistant", text: "מצטער, לא הצלחתי לענות כעת. נסו שוב מאוחר יותר." }]);
     }

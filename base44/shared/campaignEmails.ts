@@ -43,15 +43,30 @@ export function eventVariables(s, name) {
   };
 }
 
+// Anti-relay limits for the public lead form: one confirmation per address per campaign per 30 days,
+// and at most HOURLY_CAP confirmations per campaign per hour.
+const HOURLY_CAP = 30;
+async function confirmationAllowed(base44, key, email) {
+  const log = base44.asServiceRole.entities.NotificationLog;
+  const since = (ms) => new Date(Date.now() - ms).toISOString();
+  const [mine, recent] = await Promise.all([
+    log.filter({ notification_key: key, recipient_email: email, created_date: { $gte: since(30 * 864e5) } }, { limit: 1 }),
+    log.filter({ notification_key: key, created_date: { $gte: since(36e5) } }, { limit: HOURLY_CAP }),
+  ]);
+  return !(mine.items || mine).length && (recent.items || recent).length < HOURLY_CAP;
+}
+
 // Registration confirmation (event) or details-received confirmation (sponsored campaign).
 export async function sendLeadConfirmation(base44, campaign, { name, email }) {
   const s = await campaignSettings(base44, campaign);
   if (!s || !s.confirmation || !['event', 'sponsored'].includes(s.page_type)) return null;
   const isEvent = s.page_type === 'event';
   const template_name = !isEvent ? 'LeadReceived' : campaign === 'hr_meetup' ? 'HRMeetupConfirmation' : 'EventConfirmation';
+  const key = `${isEvent ? 'event_confirmation' : 'lead_received'}_${campaign}`;
+  if (!await confirmationAllowed(base44, key, email)) return { success: false, reason: 'rate_limited', message: 'confirmation skipped: send limit reached' };
   return sendLoggedEmail(base44, {
     source: campaign === 'hr_meetup' ? 'hr_meetup' : 'leads',
-    key: `${isEvent ? 'event_confirmation' : 'lead_received'}_${campaign}`,
+    key,
     to: email, template_name, category: 'transactional', from_name: 'Workies',
     variables: eventVariables(s, name),
   });

@@ -85,11 +85,7 @@ export default function OnboardingLinkManager({ track, onPreview }) {
     }
     setSendingEmail(true);
     try {
-      await base44.integrations.Core.SendEmail({
-        to: track.employee_email,
-        subject: "מסלול החפיפה שלך ב־Workies",
-        body: `שלום ${track.employee_name},<br><br>נפתח עבורך מסלול חפיפה אישי לתפקיד ${track.role_title}.<br><br>דרך הקישור ניתן לצפות בתוכנית היומית, ללמוד, לבצע משימות, להשלים מבדקים ולשלוח שאלות.<br><br><a href="${accessUrl}">לכניסה למסלול</a><br><br>ההתקדמות נשמרת ומסונכרנת ישירות עם מערכת Workies.<br><br>בהצלחה,<br>Workies`,
-      });
+      await base44.functions.invoke("sendOnboardingLinkEmail", { onboarding_id: track.id, token });
       setEmailResult("המייל נשלח בהצלחה");
     } catch {
       setEmailResult("שליחת מייל נכשלה — ייתכן שהעובדת אינה רשומה. ניתן להעתיק את הקישור ולשלוח ידנית.");
