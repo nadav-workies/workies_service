@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { LayoutDashboard, Ticket, AlertTriangle, Plus, Settings, Users, LogOut, Menu, X, Bell, MapPin, Star, Archive, Sparkles, Shield, CalendarDays, GraduationCap, Megaphone, Wrench, Gift } from "lucide-react";
+import { LayoutDashboard, Ticket, AlertTriangle, Plus, Settings, Users, LogOut, Menu, X, Bell, MapPin, Star, Archive, Sparkles, Shield, CalendarDays, GraduationCap, Megaphone, Wrench, Gift, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { isAdmin, isManagerOrAdmin, canManageLeads, canManagePermissions, canManageCustomers, canManageMaintenancePlan } from "@/lib/permissions";
@@ -25,6 +25,7 @@ export default function AppLayout() {
   { label: "כל הקריאות", path: "/tickets", icon: Ticket, managerOnly: true },
   { label: "חבר מביא חבר", path: "/friend-referral", icon: Gift },
   { label: "עמודי נחיתה", path: "/landing-pages", icon: Megaphone, leadsAccess: true },
+  { label: "דיוור", path: "/mailing", icon: Mail, leadsAccess: true },
 
   { label: "מפת שירות", path: "/service-map", icon: MapPin, managerOnly: true },
   { label: "חורגות SLA", path: "/sla-report", icon: AlertTriangle, managerOnly: true },
