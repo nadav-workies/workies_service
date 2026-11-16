@@ -1,0 +1,73 @@
+{
+  "name": "MailImport",
+  "type": "object",
+  "properties": {
+    "file_name": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "imported_by": {
+      "type": "string"
+    },
+    "consent": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "subscribed"
+      ],
+      "enumColors": [
+        "yellow",
+        "green"
+      ]
+    },
+    "list_id": {
+      "type": "string"
+    },
+    "added": {
+      "type": "number",
+      "default": 0
+    },
+    "updated": {
+      "type": "number",
+      "default": 0
+    },
+    "rejected": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "file_name"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
