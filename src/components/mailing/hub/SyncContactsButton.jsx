@@ -11,14 +11,14 @@ export default function SyncContactsButton({ onDone }) {
     setBusy(true);
     try {
       const { data } = await base44.functions.invoke("mailContacts", { action: "sync" });
-      const added = Object.values(data.result).reduce((a, r) => a + r.added, 0);
-      toast({ title: "הסנכרון הושלם", description: `${added} אנשי קשר חדשים נוספו מהלידים ומהדיירים.` });
+      const sum = k => Object.values(data.result).reduce((a, r) => a + r[k], 0);
+      toast({ title: "הסנכרון הושלם", description: `נוספו ${sum("added")} · עודכנו ${sum("updated")} · נדחו ${sum("rejected")} (ללא אימייל תקין). המקורות: לידים ודיירים.` });
       onDone();
-    } catch {
-      toast({ title: "הסנכרון נכשל", description: "נסו שוב בעוד רגע.", variant: "destructive" });
+    } catch (e) {
+      toast({ title: "הסנכרון נכשל", description: e.response?.data?.error || "נסו שוב בעוד רגע.", variant: "destructive" });
     } finally { setBusy(false); }
   }
   return <Button variant="outline" onClick={sync} disabled={busy}>
-    <RefreshCw className={`w-4 h-4 ml-1 ${busy ? "animate-spin" : ""}`} />{busy ? "מסנכרן..." : "סנכרון מלידים"}
+    <RefreshCw className={`w-4 h-4 ml-1 ${busy ? "animate-spin" : ""}`} />{busy ? "מסנכרן..." : "סנכרון מלידים ומדיירים"}
   </Button>;
 }

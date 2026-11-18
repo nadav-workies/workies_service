@@ -1,24 +1,20 @@
 import { NavLink, Navigate, useParams } from "react-router-dom";
-import { LayoutDashboard, Users, ListChecks, LayoutTemplate, Send, Zap, Upload, Settings, FlaskConical } from "lucide-react";
+import { LayoutDashboard, Users, ListChecks, LayoutTemplate, Upload, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
-import MailDashboard from "@/components/mailing-mockup/MailDashboard";
+import MailDashboard from "@/components/mailing/hub/MailDashboardSection";
 import MailContacts from "@/components/mailing/hub/MailContactsSection";
 import MailLists from "@/components/mailing/hub/MailListsSection";
-import MailTemplates from "@/components/mailing-mockup/MailTemplates";
-import MailCampaigns from "@/components/mailing-mockup/MailCampaigns";
-import MailEngagement from "@/components/mailing-mockup/MailEngagement";
+import MailTemplates from "@/components/mailing/hub/MailTemplatesSection";
 import MailImport from "@/components/mailing/hub/MailImportSection";
-import MailSettings from "@/components/mailing-mockup/MailSettings";
+import MailSettings from "@/components/mailing/hub/MailSettingsSection";
 
 const SECTIONS = [
-  { key: "dashboard", label: "דשבורד", icon: LayoutDashboard, el: MailDashboard, demo: true },
+  { key: "dashboard", label: "דשבורד", icon: LayoutDashboard, el: MailDashboard },
   { key: "contacts", label: "אנשי קשר", icon: Users, el: MailContacts },
   { key: "lists", label: "רשימות וסגמנטים", icon: ListChecks, el: MailLists },
-  { key: "templates", label: "טמפלטים", icon: LayoutTemplate, el: MailTemplates, demo: true },
-  { key: "campaigns", label: "קמפיינים", icon: Send, el: MailCampaigns, demo: true },
-  { key: "engagement", label: "מנוע מעורבות", icon: Zap, el: MailEngagement, demo: true },
+  { key: "templates", label: "טמפלטים", icon: LayoutTemplate, el: MailTemplates },
   { key: "import", label: "ייבוא", icon: Upload, el: MailImport },
-  { key: "settings", label: "הגדרות", icon: Settings, el: MailSettings, demo: true },
+  { key: "settings", label: "הגדרות", icon: Settings, el: MailSettings },
 ];
 
 export default function MailingHub() {
@@ -27,14 +23,9 @@ export default function MailingHub() {
   if (!current) return <Navigate to="/mailing/dashboard" replace />;
   const Section = current.el;
   return <div dir="rtl" className="w-full min-w-0 max-w-6xl mx-auto space-y-4">
-    <div className="flex flex-wrap items-center justify-between gap-2">
-      <div>
-        <h1 className="text-2xl font-bold">דיוור</h1>
-        <p className="text-muted-foreground text-sm mt-1">מאגר אחד לכל מי שנרשם אלינו. כל פעולה שלהם נמדדת, והמערכת יוזמת את המהלך הבא.</p>
-      </div>
-      {current.demo && <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-800">
-        <FlaskConical className="w-3.5 h-3.5" />מוקאפ · נתוני דמה · שום מייל לא נשלח
-      </span>}
+    <div>
+      <h1 className="text-2xl font-bold">דיוור</h1>
+      <p className="text-muted-foreground text-sm mt-1">מאגר אחד לכל מי שנרשם אלינו. כל המספרים כאן נשלפים מבסיס הנתונים.</p>
     </div>
     <nav className="flex gap-1 overflow-x-auto rounded-xl border bg-card p-1" aria-label="ניווט דיוור">
       {SECTIONS.map(s => <NavLink key={s.key} to={`/mailing/${s.key}`}

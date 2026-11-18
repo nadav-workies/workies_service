@@ -1,0 +1,63 @@
+<mjml>
+  <mj-head>
+    <mj-title>{{headline}}</mj-title>
+    <mj-preview>{{subheadline}}</mj-preview>
+    <mj-font name="Rubik" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800&amp;display=swap" />
+    <mj-attributes>
+      <mj-all font-family="Rubik, Arial, sans-serif" />
+      <mj-section background-color="#ffffff" padding="0 36px" />
+      <mj-column padding="0" />
+      <mj-text color="#1e1638" font-size="16px" line-height="1.7" padding="0" align="right" css-class="rtl" />
+      <mj-button background-color="#7c5fc8" color="#ffffff" border-radius="999px" font-size="16px" font-weight="700" inner-padding="15px 34px" padding="0" align="right" />
+      <mj-image padding="0" />
+      <mj-class name="label" font-size="12px" font-weight="700" letter-spacing="1px" />
+    </mj-attributes>
+    <mj-style>.rtl div { direction: rtl; }</mj-style>
+  </mj-head>
+  <mj-body background-color="#f4f0fd" width="600px">
+    <mj-section background-color="#1f1838" padding="24px 36px 0">
+      <mj-column>
+        <mj-image src="https://media.base44.com/images/public/6a1d5a36316988d9f113f88e/1c0d76342_1.png" alt="Workies" width="44px" align="right" padding="0 0 8px" />
+        <mj-text color="#cfc6ef" font-size="13px" font-weight="700" letter-spacing="2px">WORKIES · אירועים</mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#1f1838" padding="30px 36px 40px">
+      <mj-column>
+        <mj-text color="#ffffff" font-size="34px" font-weight="800" line-height="1.15">{{headline}}<span style="color:#f2c62e;">.</span></mj-text>
+        <mj-text color="#ddd7f3" font-size="17px" padding="12px 0 0">{{subheadline}}</mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-hero mode="fixed-height" height="220px" background-width="600px" background-height="220px" background-color="#2b2052" background-position="center center" padding="0"
+      background-url="https://base44.app/api/apps/6a1d5a36316988d9f113f88e/files/mp/public/6a1d5a36316988d9f113f88e/58ceb9525_hr-hero-lounge.jpg">
+      <mj-spacer height="1px" />
+    </mj-hero>
+    <mj-section padding="28px 28px 4px" direction="rtl">
+      <mj-column padding="0 8px 14px" inner-background-color="#f2c62e" inner-border-radius="14px">
+        <mj-text mj-class="label" padding="18px 20px 4px">מתי</mj-text>
+        <mj-text font-size="17px" font-weight="700" line-height="1.4" padding="0 20px 18px">{{event_date}}<br />{{event_time}}</mj-text>
+      </mj-column>
+      <mj-column padding="0 8px 14px" inner-background-color="#e8e1fb" inner-border-radius="14px">
+        <mj-text mj-class="label" color="#7c5fc8" padding="18px 20px 4px">איפה</mj-text>
+        <mj-text font-size="17px" font-weight="700" line-height="1.4" padding="0 20px 18px">{{event_location}}</mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section padding="14px 36px 40px">
+      <mj-column>
+        <mj-text font-weight="700" padding="0 0 6px">שלום {{first_name}},</mj-text>
+        <mj-text color="#5d567a" padding="0 0 24px">{{body}}</mj-text>
+        <mj-button href="{{cta_url}}">{{cta_label}}</mj-button>
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#1f1838" padding="30px 36px">
+      <mj-column>
+        <mj-text color="#ffffff" font-size="18px" font-weight="800">Workies באר שבע</mj-text>
+        <mj-text color="#cfc6ef" font-size="14px" padding="6px 0 0">אליהו נאווי 24, באר שבע</mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#f4f0fd" padding="20px 36px 28px">
+      <mj-column>
+        <mj-text align="center" font-size="12px" color="#5d567a">דיוור פרסומי מאת Workies. <a href="{{unsubscribe_url}}" style="color:#5d567a;text-decoration:underline;">להסרה מרשימת התפוצה</a></mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
