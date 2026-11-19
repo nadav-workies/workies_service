@@ -46,10 +46,11 @@ const Messages = lazy(() => import('@/pages/Messages'));
 const MailingLists = lazy(() => import('@/pages/MailingLists'));
 const MailingHub = lazy(() => import('@/pages/MailingHub'));
 const Unsubscribe = lazy(() => import('@/pages/Unsubscribe'));
+const OAuthConsent = lazy(() => import('@/pages/OAuthConsent'));
 import WorkiesAI from '@/pages/WorkiesAI';
 
 
-const PUBLIC_ROUTES = ['/feedback', '/onboarding/access', '/referral-share', '/daily-office', '/podcast', '/workies-ai', '/hr-meetup', '/thank-you', '/unsubscribe'];
+const PUBLIC_ROUTES = ['/feedback', '/onboarding/access', '/referral-share', '/daily-office', '/podcast', '/workies-ai', '/hr-meetup', '/thank-you', '/unsubscribe', '/oauth/consent'];
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -126,6 +127,7 @@ const AuthenticatedApp = () => {
       <Route path="/hr-meetup" element={<HRMeetup />} />
       <Route path="/thank-you" element={<ThankYou />} />
       <Route path="/unsubscribe" element={<Unsubscribe />} />
+      <Route path="/oauth/consent" element={<OAuthConsent />} />
       {Object.values(campaigns).map(c => <Route key={c.thankYou} path={c.thankYou} element={<ThankYou />} />)}
       <Route path="/workies-ai" element={<WorkiesAI />} />
       <Route path="*" element={<PageNotFound />} />
