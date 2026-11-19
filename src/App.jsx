@@ -29,8 +29,6 @@ const ResetTestData = lazy(() => import('@/pages/ResetTestData'));
 const CleaningReport = lazy(() => import('@/pages/CleaningReport'));
 const UsersManagement = lazy(() => import('@/pages/UsersManagement'));
 const PermissionsManagement = lazy(() => import('@/pages/PermissionsManagement'));
-const EventsManagement = lazy(() => import('@/pages/EventsManagement'));
-const EventRegistration = lazy(() => import('@/pages/EventRegistration'));
 const OnboardingManagement = lazy(() => import('@/pages/OnboardingManagement'));
 const OnboardingDetail = lazy(() => import('@/pages/OnboardingDetail'));
 const MyOnboarding = lazy(() => import('@/pages/MyOnboarding'));
@@ -51,7 +49,7 @@ const Unsubscribe = lazy(() => import('@/pages/Unsubscribe'));
 import WorkiesAI from '@/pages/WorkiesAI';
 
 
-const PUBLIC_ROUTES = ['/event-registration', '/feedback', '/onboarding/access', '/referral-share', '/daily-office', '/podcast', '/workies-ai', '/hr-meetup', '/thank-you', '/unsubscribe'];
+const PUBLIC_ROUTES = ['/feedback', '/onboarding/access', '/referral-share', '/daily-office', '/podcast', '/workies-ai', '/hr-meetup', '/thank-you', '/unsubscribe'];
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -105,7 +103,6 @@ const AuthenticatedApp = () => {
           <Route path="/cleaning-report" element={<CleaningReport />} />
           <Route path="/users" element={<UsersManagement />} />
           <Route path="/permissions" element={<PermissionsManagement />} />
-          <Route path="/events" element={<EventsManagement />} />
           <Route path="/onboarding" element={<OnboardingManagement />} />
           <Route path="/onboarding/:id" element={<OnboardingDetail />} />
           <Route path="/my-onboarding" element={<MyOnboarding />} />
@@ -123,7 +120,6 @@ const AuthenticatedApp = () => {
       </Route>
       <Route path="/onboarding/access/:token" element={<OnboardingAccessPage />} />
       <Route path="/feedback/:token" element={<FeedbackSurvey />} />
-      <Route path="/event-registration" element={<EventRegistration />} />
       <Route path="/referral-share" element={<PublicReferralPage />} />
       <Route path="/daily-office" element={<DailyOffice />} />
       <Route path="/podcast" element={<Podcast />} />

@@ -1,7 +1,8 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { LayoutDashboard, Ticket, AlertTriangle, Plus, Settings, Users, LogOut, Menu, X, Bell, MapPin, Star, Archive, Sparkles, Shield, CalendarDays, GraduationCap, Megaphone, Wrench, Gift, Mail } from "lucide-react";
+import { LayoutDashboard, Ticket, AlertTriangle, Plus, Settings, Users, LogOut, Menu, X, Bell, MapPin, Star, Archive, Sparkles, Shield, GraduationCap, Megaphone, Wrench, Gift, Mail, ChevronUp, ChevronDown, ArrowUpDown, RotateCcw } from "lucide-react";
+import useNavOrder from "@/components/layout/useNavOrder";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { isAdmin, isManagerOrAdmin, canManageLeads, canManagePermissions, canManageCustomers, canManageMaintenancePlan } from "@/lib/permissions";
@@ -36,7 +37,6 @@ export default function AppLayout() {
   { label: "ניהול לקוחות", path: "/users", icon: Users, managerOnly: true },
   { label: "קהילה ותוכן", path: "/community-content", icon: Megaphone, managerOnly: true },
   { label: "תוכנית תחזוקה", path: "/maintenance-plan", icon: Wrench, maintenanceAccess: true },
-  { label: "אירועים והרשמות", path: "/events", icon: CalendarDays, managerOnly: true },
   { label: "קליטת עובד", path: "/onboarding", icon: GraduationCap, managerOnly: true },
   { label: "ניהול הרשאות", path: "/permissions", icon: Shield, adminOnly: true },
   { label: "איפוס נתוני ניסיון", path: "/reset-test-data", icon: Archive, adminOnly: true }].
@@ -47,6 +47,9 @@ export default function AppLayout() {
     if (item.leadsAccess && !canManageLeads(user)) return false;
     return true;
   });
+
+  const { sorted, move, reset } = useNavOrder(user, navItems);
+  const [editing, setEditing] = useState(false);
 
   const handleLogout = () => base44.auth.logout("/login");
   const closeMobile = () => setMobileOpen(false);
@@ -91,9 +94,25 @@ export default function AppLayout() {
         </div>
 
         {/* Nav */}
+        <div className="flex items-center justify-between px-4 pb-1 text-[11px] text-sidebar-foreground/50">
+          <span>{editing ? "סידור התפריט" : "תפריט"}</span>
+          <div className="flex items-center gap-1">
+            {editing && <button onClick={reset} title="סדר ברירת מחדל" className="p-1 rounded hover:bg-sidebar-accent"><RotateCcw className="w-3.5 h-3.5" /></button>}
+            <button onClick={() => setEditing(!editing)} title="סידור התפריט" className={cn("flex items-center gap-1 px-1.5 py-1 rounded hover:bg-sidebar-accent", editing && "text-primary")}>
+              <ArrowUpDown className="w-3.5 h-3.5" />{editing ? "סיום" : "סידור"}
+            </button>
+          </div>
+        </div>
         <nav className="flex-1 px-2 space-y-0.5 overflow-y-auto">
-          {navItems.map((item) => {
+          {sorted.map((item, idx) => {
             const active = item.path === "/" ? location.pathname === "/" : location.pathname.startsWith(item.path);
+            if (editing) return (
+              <div key={item.path} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-sidebar-accent/40">
+                <item.icon className="w-4 h-4 shrink-0" />
+                <span className="flex-1 truncate">{item.label}</span>
+                <button onClick={() => move(item.path, -1)} disabled={idx === 0} aria-label="למעלה" className="p-1 rounded hover:bg-sidebar-accent disabled:opacity-30"><ChevronUp className="w-4 h-4" /></button>
+                <button onClick={() => move(item.path, 1)} disabled={idx === sorted.length - 1} aria-label="למטה" className="p-1 rounded hover:bg-sidebar-accent disabled:opacity-30"><ChevronDown className="w-4 h-4" /></button>
+              </div>);
             return (
               <Link
                 key={item.path}
