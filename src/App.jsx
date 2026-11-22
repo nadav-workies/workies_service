@@ -48,10 +48,12 @@ const MailingHub = lazy(() => import('@/pages/MailingHub'));
 const Unsubscribe = lazy(() => import('@/pages/Unsubscribe'));
 const OAuthConsent = lazy(() => import('@/pages/OAuthConsent'));
 const EventRsvp = lazy(() => import('@/pages/EventRsvp'));
+const CateringOrderPage = lazy(() => import('@/pages/CateringOrderPage'));
+const CateringManagement = lazy(() => import('@/pages/CateringManagement'));
 import WorkiesAI from '@/pages/WorkiesAI';
 
 
-const PUBLIC_ROUTES = ['/feedback', '/onboarding/access', '/referral-share', '/daily-office', '/podcast', '/workies-ai', '/hr-meetup', '/thank-you', '/unsubscribe', '/oauth/consent', '/rsvp'];
+const PUBLIC_ROUTES = ['/feedback', '/onboarding/access', '/referral-share', '/daily-office', '/podcast', '/workies-ai', '/hr-meetup', '/thank-you', '/unsubscribe', '/oauth/consent', '/rsvp', '/catering-order'];
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -118,6 +120,7 @@ const AuthenticatedApp = () => {
           <Route path="/mailing/:section" element={<MailingHub />} />
           <Route path="/landing-pages/:campaign" element={<LandingPageManage />} />
           <Route path="/leads" element={<Navigate to="/landing-pages/office" replace />} />
+          <Route path="/catering" element={<CateringManagement />} />
         </Route>
       </Route>
       <Route path="/onboarding/access/:token" element={<OnboardingAccessPage />} />
@@ -130,6 +133,7 @@ const AuthenticatedApp = () => {
       <Route path="/unsubscribe" element={<Unsubscribe />} />
       <Route path="/oauth/consent" element={<OAuthConsent />} />
       <Route path="/rsvp" element={<EventRsvp />} />
+      <Route path="/catering-order/:token" element={<CateringOrderPage />} />
       {Object.values(campaigns).map(c => <Route key={c.thankYou} path={c.thankYou} element={<ThankYou />} />)}
       <Route path="/workies-ai" element={<WorkiesAI />} />
       <Route path="*" element={<PageNotFound />} />
