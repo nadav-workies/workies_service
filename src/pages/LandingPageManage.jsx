@@ -14,9 +14,14 @@ import PageDashboard from "@/components/landing/PageDashboard";
 import LeadsReport from "@/pages/LeadsReport";
 import ReferralsReport from "@/pages/ReferralsReport";
 import campaigns from "@/components/landing/campaigns";
+import RsvpReport from "@/components/landing/rsvp/RsvpReport";
+import useCampaignValidity from "@/hooks/useCampaignValidity";
+import { pageTypeOf } from "@/lib/pageTypes";
 
 export default function LandingPageManage() {
   const { campaign } = useParams();
+  const { data: validity } = useCampaignValidity(campaign);
+  const isEvent = campaign !== "referral" && pageTypeOf(campaign, validity) === "event";
   const [params, setParams] = useSearchParams();
   const status = params.get("status") || "";
   const setStatus = s => setParams(s ? { status: s } : {}, { replace: true });
@@ -32,15 +37,19 @@ export default function LandingPageManage() {
     <CampaignStatusToggle campaign={campaign} canEdit={user.role === "admin"} />
     <LeadWebhookToggle campaign={campaign} canEdit={user.role === "admin"} />
     <Tabs defaultValue="leads" dir="rtl" className="min-w-0">
-      <TabsList className="grid grid-cols-2 w-full h-11">
+      <TabsList className={`grid ${isEvent ? "grid-cols-3" : "grid-cols-2"} w-full h-11`}>
         <TabsTrigger value="leads" className="h-9">לידים</TabsTrigger>
+        {isEvent && <TabsTrigger value="rsvp" className="h-9">אישורי הגעה</TabsTrigger>}
         <TabsTrigger value="settings" className="h-9">שיתוף והגדרות</TabsTrigger>
       </TabsList>
       <TabsContent value="leads" className="space-y-4 mt-4 min-w-0">
         <PageDashboard campaign={campaign} status={status} onSelect={setStatus} />
         {isManagerOrAdmin(user) && campaign !== "referral" && <CampaignEmailStats campaign={campaign} />}
-        {campaign === "referral" ? <ReferralsReport embedded status={status} /> : <LeadsReport key={campaign} campaign={campaign} embedded status={status} onClearStatus={() => setStatus("")} />}
+        {campaign === "referral" ? <ReferralsReport embedded status={status} /> : <LeadsReport key={campaign} campaign={campaign} embedded status={status} onClearStatus={() => setStatus("")} isEvent={isEvent} />}
       </TabsContent>
+      {isEvent && <TabsContent value="rsvp" className="mt-4 min-w-0">
+        <RsvpReport entity={campaigns[campaign].entity} title={campaigns[campaign].title} />
+      </TabsContent>}
       <TabsContent value="settings" className="space-y-4 mt-4 min-w-0">
         <LandingShareCard campaign={campaign} canEdit={user.role === "admin"} />
         {user.role === "admin" && campaign !== "referral" && <CampaignEmailSettings campaign={campaign} />}

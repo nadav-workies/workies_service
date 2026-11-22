@@ -6,11 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import LeadCopyButton from "@/components/landing/LeadCopyButton";
 import CopyField from "@/components/landing/CopyField";
 import LeadDeleteButton from "@/components/landing/LeadDeleteButton";
+import RsvpControls from "@/components/landing/rsvp/RsvpControls";
 
 export const STATUSES = { new: "חדש", contacted: "נוצר קשר", scheduled: "תואמה התנסות", completed: "ההתנסות בוצעה", not_relevant: "לא רלוונטי" };
 const AIO_URL = "https://workies-aio-docs-production.up.railway.app/pipeline";
 
-export default function DailyOfficeLeadRow({ lead, onSaved, entity = "DailyOfficeLead", category = "התנסות במשרד יומי", canDelete = false }) {
+export default function DailyOfficeLeadRow({ lead, onSaved, entity = "DailyOfficeLead", category = "התנסות במשרד יומי", canDelete = false, rsvpCampaign = "" }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   async function update(status) {
@@ -37,6 +38,7 @@ export default function DailyOfficeLeadRow({ lead, onSaved, entity = "DailyOffic
         {role && <div className="flex items-center gap-1 text-muted-foreground"><span>{lead.team_size && !lead.job_title && !lead.session ? role : `תפקיד: ${role}`}</span><CopyField value={lead.job_title || lead.session || lead.team_size} label="תפקיד" /></div>}
       </div>
     </div>
+    {rsvpCampaign && <RsvpControls lead={lead} entity={entity} campaign={rsvpCampaign} onSaved={onSaved} />}
     <div className="flex flex-wrap items-center gap-2 border-t bg-muted/30 p-3">
       <Select value={lead.status || "new"} onValueChange={update} disabled={busy}><SelectTrigger aria-label={`סטטוס הפנייה של ${lead.name}`} className="w-full sm:w-44 h-10 bg-card"><SelectValue /></SelectTrigger><SelectContent>{Object.entries(STATUSES).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent></Select>
       <LeadCopyButton fields={copyFields} className="flex-1 sm:flex-none h-10" />
