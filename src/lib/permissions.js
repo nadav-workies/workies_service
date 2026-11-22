@@ -21,6 +21,17 @@ export function canManageLeads(user) {
   return isManagerOrAdmin(user) || LEAD_INTERNAL_ROLES.includes(user?.internal_role);
 }
 
+// ── הזמנות הסעדה לאירועים — Admin + Manager + מנהל מכירות / תפעול / גבייה ──
+// עריכת ספקים ותפריטים — Admin + Manager + מנהל מכירות
+
+export function canManageCatering(user) {
+  return canManageLeads(user);
+}
+
+export function canEditCateringCatalog(user) {
+  return isManagerOrAdmin(user) || user?.internal_role === "sales_manager";
+}
+
 // ── פעולות רגישות — Admin בלבד ──────────────────────────────────
 
 export function canDeleteRecords(user) {
