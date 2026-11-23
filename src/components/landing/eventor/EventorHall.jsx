@@ -8,7 +8,7 @@ const BENEFITS = [
   [Video, "מולטימדיה והקלטת וידאו", "הקלטה מלאה מכמה זוויות. כל הרצאה הופכת לתוכן איכותי שאפשר להפיץ."],
   [Lightbulb, "שולחן אור דיגיטלי", "האווירה המדויקת לכל רגע: קבלת פנים, הרצאה או הרמת כוסית."],
   [Volume2, "מערכת סאונד משוכללת", "כל מילה נשמעת בבירור בכל פינה באולם."],
-  [Coffee, "מטבחון מאובזר ומפנק", "מכונת קפה, מקרר, בר מים ושולחן ארוך לאירוח ברמה גבוהה."],
+  [Coffee, "בר קפה ומטבחון", "מכונות אספרסו, מקרר ושולחן ארוך לכיבוד ולאירוח ברמה גבוהה."],
 ];
 
 export default function EventorHall({ capacity }) {
@@ -17,7 +17,7 @@ export default function EventorHall({ capacity }) {
       <Reveal className="ev-hall-intro ev-stack">
         <span className="ev-label">גולת הכותרת</span>
         <h2 id="ev-hall-title" className="ev-h2-lg">האיוונטור<span className="ev-p">.</span></h2>
-        <p className="ev-hall-text">חלל אירוח עד {capacity} משתתפים, שתוכנן מהיסוד לאירועים עסקיים. אזור ישיבה פתוח, פינות לאונג', בר עם שולחן ארוך, וחצר צמודה לקבלת פנים ומינגלינג.</p>
+        <p className="ev-hall-text">חלל אירוח עד {capacity} משתתפים, שתוכנן מהיסוד לאירועים עסקיים. אזור ישיבה פתוח, פינות לאונג', בר עם שולחן ארוך, חצר צמודה לקבלת פנים ומינגלינג, ושירותים בתוך המתחם.</p>
       </Reveal>
       <img className="ev-hall-img" src={EV_IMAGES.art} alt="האיוונטור: שולחנות עגולים, ספות ויצירת אמנות צהובה" loading="lazy" />
       <ul className="ev-benefits">

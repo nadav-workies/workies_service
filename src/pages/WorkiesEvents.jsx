@@ -12,6 +12,7 @@ import EventorHall from "@/components/landing/eventor/EventorHall";
 import EventorGallery from "@/components/landing/eventor/EventorGallery";
 import EventorSpaces from "@/components/landing/eventor/EventorSpaces";
 import EventorStory from "@/components/landing/eventor/EventorStory";
+import EventorHospitality from "@/components/landing/eventor/EventorHospitality";
 import EventorClosing from "@/components/landing/eventor/EventorClosing";
 
 import EventorLogos from "@/components/landing/eventor/EventorLogos";
@@ -52,6 +53,7 @@ export default function WorkiesEvents() {
       <EventorHall capacity={s.capacity_eventor} />
       <EventorGallery />
       <EventorSpaces settings={s} />
+      <EventorHospitality />
       <EventorStory whatsappUrl={s.whatsapp_url} />
       <EventorClosing settings={s} />
     </main>

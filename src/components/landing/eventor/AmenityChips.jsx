@@ -1,16 +1,18 @@
-import { Trees, Projector, Volume2, Video, Wifi, Snowflake, Presentation, FileText, Coffee, SquareParking, Accessibility, Monitor } from "lucide-react";
+import { Trees, Projector, Volume2, Video, Wifi, Snowflake, Presentation, Coffee, SquareParking, Accessibility, Monitor, Sofa, Bath, Armchair, CookingPot } from "lucide-react";
 
 const ICONS = {
-  "חצר לקבלת פנים": Trees, "מקרן": Projector, "מערכת שמע": Volume2, "שיחת וידאו": Video, "Wi‑Fi": Wifi, "מיזוג": Snowflake,
-  "לוח מחיק": Presentation, "לוח נייר": FileText, "קפה, תה ומים": Coffee, "שתייה חמה": Coffee, "חניה": SquareParking,
-  "נגישות": Accessibility, "מסך גדול": Monitor,
+  "לאונג' ופינות ישיבה": Sofa, "שירותים בתוך המתחם": Bath, "חצר לקבלת פנים": Trees, "מקרן ושיחות וידאו": Projector,
+  "מקרן ומסך": Projector, "לוח מחיק ולוח נייר": Presentation, "טרקלין צמוד": Armchair, "מסך גדול": Monitor,
+  "שיחות וידאו": Video, "מערכת שמע": Volume2, "נגישות מלאה": Accessibility, "בר קפה": Coffee,
+  "מטבחון לכיבוד": CookingPot, "חניה חינם": SquareParking, "Wi‑Fi": Wifi, "מיזוג": Snowflake,
 };
 
-export default function AmenityChips({ items, dark = false }) {
-  return <ul aria-label="אבזור" className={dark ? "ev-chips ev-chips-dark" : "ev-chips"}>
+// Even 2-column grid (3 on wide screens for the shared list) so the list reads as a tidy set, not a pile of pills.
+export default function AmenityChips({ items, dark = false, label = "אבזור" }) {
+  return <ul aria-label={label} className={dark ? "ev-chips ev-chips-dark" : "ev-chips"}>
     {items.map(item => {
       const Icon = ICONS[item];
-      return <li key={item} className="ev-chip">{Icon && <Icon aria-hidden="true" strokeWidth={2} />}{item}</li>;
+      return <li key={item} className="ev-chip">{Icon && <span className="ev-chip-icon" aria-hidden="true"><Icon strokeWidth={2} /></span>}<span>{item}</span></li>;
     })}
   </ul>;
 }

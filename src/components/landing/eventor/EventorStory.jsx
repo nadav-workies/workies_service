@@ -4,20 +4,9 @@ import Reveal from "@/components/landing/eventor/Reveal";
 import { trackEventor } from "@/lib/eventorTracking";
 import EventorSoftCta from "@/components/landing/eventor/EventorSoftCta";
 
-// Catering, sign banner, team and FAQ sections.
+// Sign banner, team and FAQ sections.
 export default function EventorStory({ whatsappUrl }) {
   return <>
-    <section className="ev-catering" aria-labelledby="ev-catering-title">
-      <div className="ev-wrap"><div className="ev-catering-inner ev-stack">
-        <span className="ev-label-soft">הסעדה ברמה אחרת</span>
-        <h2 id="ev-catering-title" className="ev-h2">אנחנו מטפלים בתפריט. אתם נשארים פנויים לאורחים.</h2>
-        <p className="ev-text">ארוחות בוקר, צהריים וערב בכשרות מלאה, מהספקים הטובים ביותר בשוק.</p>
-        <div className="ev-meals">
-          {["בוקר", "צהריים", "ערב"].map((m, i) => <Reveal key={m} delay={i * 0.08} className="ev-meal"><span>ארוחת</span><strong>{m}</strong></Reveal>)}
-        </div>
-        <EventorSoftCta>ספרו לנו על האירוע, ונבנה תפריט</EventorSoftCta>
-      </div></div>
-    </section>
     <section className="ev-sign" aria-label="השלט של Eventor">
       <img src={EV_IMAGES.sign} alt="השלט EVENTOR BY WORKIES על זכוכית הכניסה" loading="lazy" />
       <div className="ev-sign-fade" aria-hidden="true" />
