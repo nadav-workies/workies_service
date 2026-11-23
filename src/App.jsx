@@ -52,10 +52,12 @@ const EventRsvp = lazy(() => import('@/pages/EventRsvp'));
 const WorkiesEvents = lazy(() => import('@/pages/WorkiesEvents'));
 const CateringOrderPage = lazy(() => import('@/pages/CateringOrderPage'));
 const CateringManagement = lazy(() => import('@/pages/CateringManagement'));
+const EventorGame = lazy(() => import('@/pages/EventorGame'));
+const EventorGameHost = lazy(() => import('@/pages/EventorGameHost'));
 import WorkiesAI from '@/pages/WorkiesAI';
 
 
-const PUBLIC_ROUTES = ['/feedback', '/onboarding/access', '/referral-share', '/daily-office', '/podcast', '/workies-ai', '/hr-meetup', '/thank-you', '/unsubscribe', '/oauth/consent', '/rsvp', '/catering-order', '/workies-events'];
+const PUBLIC_ROUTES = ['/feedback', '/onboarding/access', '/referral-share', '/daily-office', '/podcast', '/workies-ai', '/hr-meetup', '/thank-you', '/unsubscribe', '/oauth/consent', '/rsvp', '/catering-order', '/workies-events', '/eventor-game'];
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -93,6 +95,7 @@ const AuthenticatedApp = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+        <Route path="/eventor-game/host" element={<EventorGameHost />} />
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} />
@@ -138,6 +141,7 @@ const AuthenticatedApp = () => {
       <Route path="/rsvp" element={<EventRsvp />} />
       <Route path="/catering-order/:token" element={<CateringOrderPage />} />
       <Route path="/workies-events" element={<WorkiesEvents />} />
+      <Route path="/eventor-game" element={<EventorGame />} />
       {Object.values(campaigns).filter(c => c.thankYou).map(c => <Route key={c.thankYou} path={c.thankYou} element={<ThankYou />} />)}
       <Route path="/workies-ai" element={<WorkiesAI />} />
       <Route path="*" element={<PageNotFound />} />

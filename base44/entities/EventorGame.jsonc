@@ -1,0 +1,64 @@
+{
+  "name": "EventorGame",
+  "type": "object",
+  "properties": {
+    "key": {
+      "type": "string",
+      "default": "time",
+      "description": "\u05de\u05d6\u05d4\u05d4 \u05d4\u05de\u05e9\u05d7\u05e7"
+    },
+    "enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u05d4\u05de\u05e9\u05d7\u05e7 \u05e4\u05e2\u05d9\u05dc \u05d5\u05db\u05e4\u05ea\u05d5\u05e8 \u05d4\u05db\u05e0\u05d9\u05e1\u05d4 \u05de\u05d5\u05e6\u05d2 \u05d1\u05e2\u05de\u05d5\u05d3 \u05d4\u05d0\u05d9\u05e8\u05d5\u05e2\u05d9\u05dd"
+    },
+    "phase": {
+      "type": "string",
+      "enum": [
+        "waiting",
+        "open",
+        "revealed",
+        "ended"
+      ],
+      "enumColors": [
+        "gray",
+        "green",
+        "yellow",
+        "purple"
+      ],
+      "default": "waiting",
+      "description": "\u05e9\u05dc\u05d1 \u05d4\u05de\u05e9\u05d7\u05e7"
+    },
+    "question_index": {
+      "type": "number",
+      "default": 0,
+      "description": "\u05d4\u05e9\u05d0\u05dc\u05d4 \u05d4\u05e0\u05d5\u05db\u05d7\u05d9\u05ea (0 \u05e2\u05d3 5)"
+    },
+    "round": {
+      "type": "number",
+      "default": 1,
+      "description": "\u05e1\u05d1\u05d1 \u05de\u05e9\u05d7\u05e7, \u05e2\u05d5\u05dc\u05d4 \u05d1\u05db\u05dc \u05d0\u05d9\u05e4\u05d5\u05e1"
+    }
+  },
+  "required": [
+    "key"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
