@@ -102,6 +102,25 @@
 .ev-food p { font-size: 16px; line-height: 1.6; color: var(--text-soft); }
 .ev-food small { font-size: 15px; font-weight: 600; color: var(--lavender-line); }
 
+/* Meeting rooms gallery */
+.ev-mg { position: relative; }
+.ev-mg-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
+.ev-mg-track::-webkit-scrollbar { display: none; }
+.ev-mg-slide { flex: 0 0 100%; scroll-snap-align: center; position: relative; }
+.ev-mg-slide img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; object-position: center; display: block; }
+.ev-mg-cap, .ev-mg-count { position: absolute; background: rgba(28,21,54,0.72); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); color: #FFFFFF; font-size: 14px; font-weight: 700; padding: 6px 12px; border-radius: 999px; }
+.ev-mg-cap { bottom: 12px; right: 12px; }
+.ev-mg-count { top: 12px; left: 12px; font-variant-numeric: tabular-nums; direction: ltr; }
+.ev-mg-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 0; cursor: pointer; background: rgba(255,255,255,0.92); color: var(--bg-dark); display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px rgba(0,0,0,0.25); transition: opacity .2s ease; }
+.ev-mg-nav:disabled { opacity: 0; pointer-events: none; }
+.ev-mg-prev { right: 10px; }
+.ev-mg-next { left: 10px; }
+.ev-mg-dots { position: absolute; bottom: 18px; left: 14px; display: flex; gap: 6px; }
+.ev-mg-dots button { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 999px; background: rgba(255,255,255,0.55); cursor: pointer; transition: width .25s ease, background .25s ease; }
+.ev-mg-dots button[aria-current="true"] { width: 22px; background: var(--yellow); }
+.ev-card-ctas { margin-top: 6px; display: flex; flex-direction: column; gap: 10px; }
+.ev-card-ctas .ev-btn { width: 100%; }
+
 /* Keep every card inside the screen width */
 .ev-page { overflow-x: clip; }
 .ev-spaces-grid > *, .ev-cells > *, .ev-card-body > * { min-width: 0; }
@@ -271,7 +290,7 @@
   .ev-benefit { padding: 18px; }
   .ev-shared .ev-chips { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .ev-coffee-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .ev-card img { aspect-ratio: 16 / 10; }
+  .ev-card img, .ev-mg-slide img { aspect-ratio: 16 / 10; }
   .ev-form-card { padding: 28px; }
   .ev-float { position: fixed; z-index: 40; left: 24px; bottom: 24px; display: inline-flex; align-items: center; gap: 8px; min-height: 56px; padding: 0 22px; border-radius: 999px; background: var(--yellow); color: var(--bg-dark); font-weight: 800; font-size: 16px; text-decoration: none; box-shadow: 0 10px 30px rgba(0,0,0,0.35); transition: transform .2s ease; }
   .ev-float:hover { transform: translateY(-2px); }

@@ -7,6 +7,7 @@ import useEventorSettings from "@/hooks/useEventorSettings";
 
 const FIELDS = [
   ["phone", "טלפון לפרטים והזמנות", "text"], ["whatsapp_url", "קישור וואטסאפ", "url"],
+  ["booking_url", "קישור לשריון חדר ישיבות ביומן (לא חובה)", "url"],
   ["capacity_eventor", "קיבולת האיוונטור", "number"], ["capacity_classroom", "קיבולת כיתת לימוד", "number"],
   ["capacity_mamad", "קיבולת כיתת ממ״ד", "number"], ["capacity_meeting", "קיבולת חדר ישיבות", "number"],
 ];
@@ -22,7 +23,8 @@ export default function EventorSettingsEditor() {
     e.preventDefault(); setBusy(true); setMessage("");
     try {
       if (!/^https:\/\//.test(form.whatsapp_url)) throw new Error("קישור הוואטסאפ צריך להתחיל ב־https://");
-      const value = Object.fromEntries(FIELDS.map(([k, , t]) => [k, t === "number" ? Number(form[k]) : String(form[k]).trim()]));
+      if (form.booking_url && !/^https:\/\//.test(form.booking_url)) throw new Error("קישור השריון צריך להתחיל ב־https://");
+      const value = Object.fromEntries(FIELDS.map(([k, , t]) => [k, t === "number" ? Number(form[k]) : String(form[k] ?? "").trim()]));
       if (data.id) await base44.entities.EventorSettings.update(data.id, value);
       else await base44.entities.EventorSettings.create(value);
       await client.invalidateQueries({ queryKey: ["eventor-settings"] });
@@ -35,7 +37,7 @@ export default function EventorSettingsEditor() {
     <div><h2 className="font-bold">פרטי קשר וקיבולות בעמוד</h2><p className="text-sm text-muted-foreground">כל שינוי כאן מתעדכן מיד בעמוד הציבורי.</p></div>
     <div className="grid sm:grid-cols-2 gap-3">
       {FIELDS.map(([k, label, type]) => <label key={k} className="block space-y-1 text-sm"><span>{label}</span>
-        <Input type={type} dir={type === "number" ? undefined : "ltr"} min={type === "number" ? 1 : undefined} required value={form[k] ?? ""} disabled={busy} onChange={e => { setForm(f => ({ ...f, [k]: e.target.value })); setMessage(""); }} />
+        <Input type={type} dir={type === "number" ? undefined : "ltr"} min={type === "number" ? 1 : undefined} required={k !== "booking_url"} value={form[k] ?? ""} disabled={busy} onChange={e => { setForm(f => ({ ...f, [k]: e.target.value })); setMessage(""); }} />
       </label>)}
     </div>
     <Button type="submit" disabled={busy}>{busy ? "שומרים…" : "שמירה"}</Button>

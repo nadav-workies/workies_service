@@ -38,6 +38,16 @@ export const SHARED_AMENITIES = ["נגישות מלאה", "בר קפה", "מטב
 export const COFFEE_BAR = ["אספרסו וקפוצ'ינו", "קפה מכמה סוגים", "חלב רגיל, שיבולת שועל ועוד", "מבחר תה"];
 export const SUITS = ["הרצאות", "סדנאות", "ערבי מיטאפ", "השקות", "הרמות כוסית", "השתלמויות", "אירועים עסקיים"];
 
+const MEETING = (file, room) => ({ src: IMG + file, room, alt: `חדר הישיבות ${room} ב־Workies` });
+export const MEETING_GALLERY = [
+  MEETING("3f668fd8ab48173fb152a4aecb65dffb_meeting-70.jpg", "חדר 70"),
+  MEETING("338cc9a53fea5ac9978e76df95e9aa26_meeting-26.jpg", "חדר 26 · גרין רום"),
+  MEETING("f01aa9e024b47bb89e258866624d1315_meeting-28.jpg", "חדר 28"),
+  MEETING("8a50b54eba10eeb194d9ef930038d42e_meeting-74.jpg", "חדר 74"),
+  MEETING("21dfd1719bf00ce0d70562442d84db3a_meeting-28b.jpg", "חדר 28"),
+  MEETING("f73e9a56f0ce1b31008bf8eb2e72d97c_meeting-74b.jpg", "חדר 74"),
+];
+
 export const GALLERY = [
   { src: EV_IMAGES.lounge, alt: "פינת לאונג' באיוונטור", caption: "פינות לאונג'" },
   { src: EV_IMAGES.bar, alt: "שולחן בר ארוך מעץ באיוונטור", caption: "בר ושולחן אירוח" },

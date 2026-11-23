@@ -1,6 +1,9 @@
 import { EV_IMAGES, CLASS_AMENITIES, MEETING_AMENITIES, SHARED_AMENITIES } from "@/lib/eventorContent";
 import AmenityChips from "@/components/landing/eventor/AmenityChips";
 import Reveal from "@/components/landing/eventor/Reveal";
+import MeetingGallery from "@/components/landing/eventor/MeetingGallery";
+import { CalendarCheck } from "lucide-react";
+import { scrollToLeadForm } from "@/lib/eventorLeadScroll";
 import EventorSoftCta from "@/components/landing/eventor/EventorSoftCta";
 
 export default function EventorSpaces({ settings }) {
@@ -24,12 +27,16 @@ export default function EventorSpaces({ settings }) {
           </div>
         </Reveal>
         <Reveal as="article" className="ev-card">
-          <img src={EV_IMAGES.meeting} alt="חדר ישיבות עם שולחן ארוך ומסך גדול" loading="lazy" className="ev-img-meeting" />
+          <MeetingGallery />
           <div className="ev-card-body">
             <strong>חדרי ישיבות בגדלים שונים</strong>
             <p>מפגישה אישית ועד ישיבת הנהלה מלאה. בצמוד לחדרים יש טרקלין עם פינות ישיבה, מכונות אספרסו ומקררים.</p>
             <span className="ev-cap">עד {settings.capacity_meeting} משתתפים</span>
             <AmenityChips items={MEETING_AMENITIES} dark />
+            <div className="ev-card-ctas">
+              <a href="#lead-form" onClick={scrollToLeadForm} className="ev-btn ev-btn-primary">לבדיקת זמינות והצעת מחיר</a>
+              {settings.booking_url && <a href={settings.booking_url} target="_blank" rel="noopener" className="ev-btn ev-btn-secondary"><CalendarCheck className="w-5 h-5" aria-hidden="true" />שריינו חדר ביומן</a>}
+            </div>
           </div>
         </Reveal>
       </div>
