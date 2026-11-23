@@ -1,12 +1,14 @@
 import { EV_IMAGES } from "@/lib/eventorContent";
 import { scrollToLeadForm } from "@/lib/eventorLeadScroll";
+import CountUp from "@/components/landing/eventor/CountUp";
+import Reveal from "@/components/landing/eventor/Reveal";
 
 export default function EventorHero({ settings }) {
   const stats = [
-    [`עד ${settings.capacity_eventor}`, "משתתפים באיוונטור"],
-    [`עד ${settings.capacity_classroom}`, "משתתפים בכיתת לימוד"],
-    [`עד ${settings.capacity_meeting}`, "משתתפים בחדר ישיבות"],
-    ["כשר", "הסעדה בכשרות מלאה"],
+    [settings.capacity_eventor, "משתתפים באיוונטור"],
+    [settings.capacity_classroom, "משתתפים בכיתת לימוד"],
+    [settings.capacity_meeting, "משתתפים בחדר ישיבות"],
+    [null, "הסעדה בכשרות מלאה"],
   ];
   return <>
     <header className="ev-hero">
@@ -24,7 +26,10 @@ export default function EventorHero({ settings }) {
       </div>
     </header>
     <ul aria-label="המתחם במספרים" className="ev-wrap ev-stats">
-      {stats.map(([n, label]) => <li key={label} className="ev-stat"><b>{n}</b><span>{label}</span></li>)}
+      {stats.map(([n, label], i) => <Reveal as="li" key={label} delay={i * 0.08} className="ev-stat">
+        <b>{n == null ? "כשר" : <><small>עד</small><CountUp value={n} /></>}</b>
+        <span>{label}</span>
+      </Reveal>)}
     </ul>
   </>;
 }

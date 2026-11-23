@@ -1,5 +1,6 @@
 import { EV_IMAGES, CLASS_AMENITIES, MEETING_AMENITIES } from "@/lib/eventorContent";
 import AmenityChips from "@/components/landing/eventor/AmenityChips";
+import Reveal from "@/components/landing/eventor/Reveal";
 import EventorSoftCta from "@/components/landing/eventor/EventorSoftCta";
 
 export default function EventorSpaces({ settings }) {
@@ -10,7 +11,7 @@ export default function EventorSpaces({ settings }) {
         <p className="ev-text">בכל אחד מהחללים יש מטבחון מאובזר ומפנק.</p>
       </div>
       <div className="ev-spaces-grid">
-        <article className="ev-card">
+        <Reveal as="article" className="ev-card">
           <img className="ev-img-class" src={EV_IMAGES.classroom} alt="כיתת לימוד עם שולחנות עגולים, מקרן ומסך" loading="lazy" />
           <div className="ev-card-body">
             <strong>2 כיתות לימוד מאובזרות</strong>
@@ -21,8 +22,8 @@ export default function EventorSpaces({ settings }) {
             </div>
             <AmenityChips items={CLASS_AMENITIES} dark />
           </div>
-        </article>
-        <article className="ev-card">
+        </Reveal>
+        <Reveal as="article" className="ev-card">
           <img src={EV_IMAGES.meeting} alt="חדר ישיבות עם שולחן ארוך ומסך גדול" loading="lazy" className="ev-img-meeting" />
           <div className="ev-card-body">
             <strong>חדרי ישיבות בגדלים שונים</strong>
@@ -30,7 +31,7 @@ export default function EventorSpaces({ settings }) {
             <span className="ev-cap">עד {settings.capacity_meeting} משתתפים</span>
             <AmenityChips items={MEETING_AMENITIES} dark />
           </div>
-        </article>
+        </Reveal>
       </div>
       <EventorSoftCta>קבלו הצעת מחיר לכיתה או לחדר ישיבות</EventorSoftCta>
     </div>

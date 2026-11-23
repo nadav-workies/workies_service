@@ -1,7 +1,7 @@
 import { MessageCircle, Phone, MapPin } from "lucide-react";
 import { WAZE_URL, telHref } from "@/lib/eventorContent";
 import { trackEventor } from "@/lib/eventorTracking";
-import { scrollToLeadForm } from "@/lib/eventorLeadScroll";
+import EventorStickyBar from "@/components/landing/eventor/EventorStickyBar";
 import EventorLeadForm from "@/components/landing/eventor/EventorLeadForm";
 
 export default function EventorClosing({ settings }) {
@@ -21,11 +21,7 @@ export default function EventorClosing({ settings }) {
         </div>
       </div></div>
     </section>
-    <nav aria-label="פעולות מהירות" className="ev-sticky">
-      <a href={tel} onClick={() => trackEventor("phone_click", "sticky_bar")} className="ev-sticky-call"><Phone className="w-[18px] h-[18px]" aria-hidden="true" />התקשרו</a>
-      <a href={wa} target="_blank" rel="noopener" onClick={() => trackEventor("whatsapp_click", "sticky_bar")} className="ev-sticky-wa"><MessageCircle className="w-[18px] h-[18px]" aria-hidden="true" />וואטסאפ</a>
-      <a href="#lead-form" onClick={scrollToLeadForm} className="ev-sticky-lead">השאירו פרטים</a>
-    </nav>
+    <EventorStickyBar tel={tel} wa={wa} />
     <a href={wa} target="_blank" rel="noopener" onClick={() => trackEventor("whatsapp_click", "sticky_bar")} className="ev-float" aria-label="וואטסאפ לתיאום סיור"><MessageCircle className="w-5 h-5" aria-hidden="true" />וואטסאפ</a>
   </>;
 }

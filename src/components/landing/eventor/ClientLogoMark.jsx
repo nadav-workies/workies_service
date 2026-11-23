@@ -8,11 +8,12 @@ function sizeFor(ratio) {
   return { width: Math.round(w * s), height: Math.round(h * s) };
 }
 
-export default function ClientLogoMark({ src, alt }) {
+// dup = decorative copy used to loop the moving row.
+export default function ClientLogoMark({ src, alt, dup = false }) {
   const [ratio, setRatio] = useState(null);
-  return <li className="ev-logo-cell">
+  return <li className={dup ? "ev-logo-cell ev-logo-dup" : "ev-logo-cell"} aria-hidden={dup || undefined}>
     <img
-      src={src} alt={alt} loading="lazy" decoding="async"
+      src={src} alt={alt} decoding="async"
       onLoad={e => setRatio(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight || 1)}
       style={ratio ? sizeFor(ratio) : { width: 57, height: 46, opacity: 0 }}
     />

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { MotionConfig } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import "@/components/landing/eventor/EventorPage.css";
 import useCampaignValidity from "@/hooks/useCampaignValidity";
@@ -43,7 +44,7 @@ export default function WorkiesEvents() {
   </main>;
 
   const s = settings.data;
-  return <div dir="rtl" lang="he" className="ev-page">
+  return <MotionConfig reducedMotion="user"><div dir="rtl" lang="he" className="ev-page">
     {!active && <p className="ev-admin-bar">טיוטה: העמוד מוסתר מהציבור. רק אדמין רואה אותו, וצפיות וקליקים לא נספרים.</p>}
     <EventorHero settings={s} />
     <main>
@@ -54,5 +55,5 @@ export default function WorkiesEvents() {
       <EventorStory whatsappUrl={s.whatsapp_url} />
       <EventorClosing settings={s} />
     </main>
-  </div>;
+  </div></MotionConfig>;
 }

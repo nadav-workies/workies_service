@@ -2,6 +2,7 @@ import { Video, Lightbulb, Volume2, Coffee } from "lucide-react";
 import EventorSoftCta from "@/components/landing/eventor/EventorSoftCta";
 import { EV_IMAGES, HALL_AMENITIES, SUITS } from "@/lib/eventorContent";
 import AmenityChips from "@/components/landing/eventor/AmenityChips";
+import Reveal from "@/components/landing/eventor/Reveal";
 
 const BENEFITS = [
   [Video, "מולטימדיה והקלטת וידאו", "הקלטה מלאה מכמה זוויות. כל הרצאה הופכת לתוכן איכותי שאפשר להפיץ."],
@@ -13,17 +14,17 @@ const BENEFITS = [
 export default function EventorHall({ capacity }) {
   return <section className="ev-light ev-hall" aria-labelledby="ev-hall-title">
     <div className="ev-wrap ev-hall-grid">
-      <div className="ev-hall-intro ev-stack">
+      <Reveal className="ev-hall-intro ev-stack">
         <span className="ev-label">גולת הכותרת</span>
         <h2 id="ev-hall-title" className="ev-h2-lg">האיוונטור<span className="ev-p">.</span></h2>
         <p className="ev-hall-text">חלל אירוח עד {capacity} משתתפים, שתוכנן מהיסוד לאירועים עסקיים. אזור ישיבה פתוח, פינות לאונג', בר עם שולחן ארוך, וחצר צמודה לקבלת פנים ומינגלינג.</p>
-      </div>
+      </Reveal>
       <img className="ev-hall-img" src={EV_IMAGES.art} alt="האיוונטור: שולחנות עגולים, ספות ויצירת אמנות צהובה" loading="lazy" />
       <ul className="ev-benefits">
-        {BENEFITS.map(([Icon, title, text]) => <li key={title} className="ev-benefit">
+        {BENEFITS.map(([Icon, title, text], i) => <Reveal as="li" key={title} delay={i * 0.06} className="ev-benefit">
           <span className="ev-benefit-icon" aria-hidden="true"><Icon size={24} strokeWidth={2.2} /></span>
-          <span><strong>{title}</strong><span>{text}</span></span>
-        </li>)}
+          <div className="ev-benefit-text"><strong>{title}</strong><span>{text}</span></div>
+        </Reveal>)}
       </ul>
       <div className="ev-hall-more ev-stack">
         <div className="ev-stack-sm"><span className="ev-sub-title">באולם:</span><AmenityChips items={HALL_AMENITIES} /></div>
