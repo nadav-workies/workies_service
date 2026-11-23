@@ -1,0 +1,153 @@
+{
+  "name": "CateringMenuItem",
+  "properties": {
+    "aio_id": {
+      "type": "string"
+    },
+    "category": {
+      "default": "OTHER",
+      "enum": [
+        "STARTER",
+        "MAIN",
+        "DESSERT",
+        "DRINK",
+        "OTHER"
+      ],
+      "type": "string"
+    },
+    "category_label": {
+      "maxLength": 100,
+      "type": "string"
+    },
+    "dietary_tags": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "is_active": {
+      "default": true,
+      "type": "boolean"
+    },
+    "max_quantity": {
+      "type": "number"
+    },
+    "menu_aio_id": {
+      "type": "string"
+    },
+    "menu_id": {
+      "description": "\u05de\u05d6\u05d4\u05d4 CateringMenu",
+      "type": "string"
+    },
+    "min_quantity": {
+      "type": "number"
+    },
+    "name": {
+      "description": "\u05e9\u05dd \u05d4\u05e4\u05e8\u05d9\u05d8",
+      "maxLength": 300,
+      "type": "string"
+    },
+    "price": {
+      "description": "\u05de\u05d7\u05d9\u05e8 \u05dc\u05dc\u05e7\u05d5\u05d7 \u05dc\u05d9\u05d7\u05d9\u05d3\u05d4 (\u05d1\u05ea\u05e4\u05e8\u05d9\u05d8 itemized). \u05d1\u05ea\u05e4\u05e8\u05d9\u05d8 \u05dc\u05e1\u05d5\u05e2\u05d3 \u05d4\u05e4\u05e8\u05d9\u05d8 \u05d4\u05d5\u05d0 \u05d7\u05dc\u05e7 \u05de\u05d4\u05d7\u05d1\u05d9\u05dc\u05d4",
+      "type": "number"
+    },
+    "sort_order": {
+      "default": 0,
+      "type": "number"
+    },
+    "source": {
+      "default": "aio",
+      "enum": [
+        "aio",
+        "manual"
+      ],
+      "type": "string"
+    },
+    "supplier_id": {
+      "type": "string"
+    },
+    "unit_type": {
+      "default": "item",
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "menu_id"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "sales_manager"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "sales_manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "operations_manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "collections_manager"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "sales_manager"
+          }
+        }
+      ]
+    }
+  },
+  "type": "object"
+}

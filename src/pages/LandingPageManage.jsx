@@ -17,6 +17,7 @@ import campaigns from "@/components/landing/campaigns";
 import RsvpReport from "@/components/landing/rsvp/RsvpReport";
 import useCampaignValidity from "@/hooks/useCampaignValidity";
 import { pageTypeOf } from "@/lib/pageTypes";
+import ShowcaseManageTabs from "@/components/landing/eventor/ShowcaseManageTabs";
 
 export default function LandingPageManage() {
   const { campaign } = useParams();
@@ -35,6 +36,7 @@ export default function LandingPageManage() {
       <h1 className="text-xl sm:text-2xl font-bold break-words leading-snug">{campaigns[campaign].title}</h1>
     </div>
     <CampaignStatusToggle campaign={campaign} canEdit={user.role === "admin"} />
+    {campaigns[campaign].showcase ? <ShowcaseManageTabs campaign={campaign} isAdmin={user.role === "admin"} /> : <>
     <LeadWebhookToggle campaign={campaign} canEdit={user.role === "admin"} />
     <Tabs defaultValue="leads" dir="rtl" className="min-w-0">
       <TabsList className={`grid ${isEvent ? "grid-cols-3" : "grid-cols-2"} w-full h-11`}>
@@ -56,5 +58,6 @@ export default function LandingPageManage() {
         {user.role === "admin" && <CampaignValidityEditor campaign={campaign} />}
       </TabsContent>
     </Tabs>
+    </>}
   </div>;
 }

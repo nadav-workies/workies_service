@@ -8,6 +8,7 @@ export function campaignActive(validity) {
 }
 export async function getCampaignValidity(campaign) {
   const { items } = await base44.entities.CampaignValidity.filter({ campaign }, { sort: "-created_date", limit: 1 });
+  if (!items[0] && campaign === "eventor") return { campaign, end_date: "", is_enabled: false };
   return items[0] || { campaign, end_date: { referral: "2026-10-15", hr_meetup: "2026-11-23" }[campaign] || "" };
 }
 export function formatEndDate(value) {

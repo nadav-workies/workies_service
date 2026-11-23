@@ -37,7 +37,7 @@ export default function CampaignEmailSettings({ campaign }) {
   return <form onSubmit={save} className="rounded-xl border bg-card p-4 space-y-4">
     <div><h2 className="font-bold">סוג העמוד ומיילים לנרשמים</h2><p className="text-sm text-muted-foreground">{PAGE_TYPES[form.page_type].hint}</p></div>
     <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="סוג העמוד">
-      {Object.entries(PAGE_TYPES).map(([key, t]) => <button key={key} type="button" role="radio" aria-checked={form.page_type === key} onClick={() => set("page_type", key)}
+      {Object.entries(PAGE_TYPES).filter(([, t]) => !t.fixed).map(([key, t]) => <button key={key} type="button" role="radio" aria-checked={form.page_type === key} onClick={() => set("page_type", key)}
         className={`min-h-11 rounded-lg border text-sm font-medium ${form.page_type === key ? "border-primary bg-primary/10 text-primary" : "bg-background"}`}>{t.label}</button>)}
     </div>
     {form.page_type !== "other" && <label className="flex items-center justify-between gap-3 text-sm"><span>{isEvent ? "מייל אישור הרשמה" : "מייל אישור קבלת פרטים"}</span><Switch checked={form.confirmation_email_enabled} onCheckedChange={v => set("confirmation_email_enabled", v)} /></label>}

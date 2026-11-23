@@ -48,12 +48,13 @@ const MailingHub = lazy(() => import('@/pages/MailingHub'));
 const Unsubscribe = lazy(() => import('@/pages/Unsubscribe'));
 const OAuthConsent = lazy(() => import('@/pages/OAuthConsent'));
 const EventRsvp = lazy(() => import('@/pages/EventRsvp'));
+const WorkiesEvents = lazy(() => import('@/pages/WorkiesEvents'));
 const CateringOrderPage = lazy(() => import('@/pages/CateringOrderPage'));
 const CateringManagement = lazy(() => import('@/pages/CateringManagement'));
 import WorkiesAI from '@/pages/WorkiesAI';
 
 
-const PUBLIC_ROUTES = ['/feedback', '/onboarding/access', '/referral-share', '/daily-office', '/podcast', '/workies-ai', '/hr-meetup', '/thank-you', '/unsubscribe', '/oauth/consent', '/rsvp', '/catering-order'];
+const PUBLIC_ROUTES = ['/feedback', '/onboarding/access', '/referral-share', '/daily-office', '/podcast', '/workies-ai', '/hr-meetup', '/thank-you', '/unsubscribe', '/oauth/consent', '/rsvp', '/catering-order', '/workies-events'];
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -134,7 +135,8 @@ const AuthenticatedApp = () => {
       <Route path="/oauth/consent" element={<OAuthConsent />} />
       <Route path="/rsvp" element={<EventRsvp />} />
       <Route path="/catering-order/:token" element={<CateringOrderPage />} />
-      {Object.values(campaigns).map(c => <Route key={c.thankYou} path={c.thankYou} element={<ThankYou />} />)}
+      <Route path="/workies-events" element={<WorkiesEvents />} />
+      {Object.values(campaigns).filter(c => c.thankYou).map(c => <Route key={c.thankYou} path={c.thankYou} element={<ThankYou />} />)}
       <Route path="/workies-ai" element={<WorkiesAI />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>

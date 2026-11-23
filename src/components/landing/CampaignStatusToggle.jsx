@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import useCampaignValidity from "@/hooks/useCampaignValidity";
 import { formatEndDate } from "@/lib/campaignValidity";
 import { Switch } from "@/components/ui/switch";
+import campaigns from "@/components/landing/campaigns";
 
 export default function CampaignStatusToggle({ campaign, canEdit }) {
   const { data, active, enabled, isPending } = useCampaignValidity(campaign);
@@ -20,7 +21,7 @@ export default function CampaignStatusToggle({ campaign, canEdit }) {
     finally { setBusy(false); }
   }
   if (isPending) return <p role="status" className="text-sm">טוענים סטטוס…</p>;
-  const note = !enabled ? "העמוד כבוי ידנית, ההרשמה סגורה" : active ? `פתוח להרשמה · ${formatEndDate(data.end_date)}` : `התוקף הסתיים ב־${formatEndDate(data.end_date)}`;
+  const note = campaigns[campaign]?.showcase ? (!enabled ? "טיוטה: העמוד מוסתר מהציבור עד לאישור פרסום" : active ? "העמוד פורסם וגלוי לכולם" : `התוקף הסתיים ב־${formatEndDate(data.end_date)}`) : !enabled ? "העמוד כבוי ידנית, ההרשמה סגורה" : active ? `פתוח להרשמה · ${formatEndDate(data.end_date)}` : `התוקף הסתיים ב־${formatEndDate(data.end_date)}`;
   return <div className="rounded-xl border bg-card p-4 flex items-center justify-between gap-3">
     <div className="min-w-0">
       <div className="flex items-center gap-2"><span className={`w-2.5 h-2.5 rounded-full ${active ? "bg-green-500" : "bg-red-500"}`} /><h2 className="font-bold">{active ? "העמוד פעיל" : "העמוד סגור"}</h2></div>

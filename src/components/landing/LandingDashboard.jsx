@@ -5,9 +5,12 @@ import { REFERRAL_STATUSES } from "@/lib/referralConfig";
 import { STATUSES } from "@/components/landing/DailyOfficeLeadRow";
 import campaigns from "@/components/landing/campaigns";
 import PageStatCard from "@/components/landing/PageStatCard";
+import ShowcaseStatCard from "@/components/landing/eventor/ShowcaseStatCard";
 
 const REFERRAL_LABELS = Object.fromEntries(Object.entries(REFERRAL_STATUSES).map(([k, v]) => [k, v.label]));
-const keys = Object.keys(campaigns);
+// Showcase pages have no form leads, so they stay out of the leads total.
+const keys = Object.keys(campaigns).filter(k => !campaigns[k].showcase);
+const showcaseKeys = Object.keys(campaigns).filter(k => campaigns[k].showcase);
 
 export default function LandingDashboard({ onSelect }) {
   const validity = useQueries({ queries: keys.map(key => ({ queryKey: ["campaign-validity", key], queryFn: () => getCampaignValidity(key) })) });
@@ -32,6 +35,7 @@ export default function LandingDashboard({ onSelect }) {
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {pages.map(p => <PageStatCard key={p.key} title={campaigns[p.key].title} total={p.total} rows={p.rows}
         labels={p.key === "referral" ? REFERRAL_LABELS : STATUSES} onSelect={status => onSelect(p.key, status)} />)}
+      {showcaseKeys.map(key => <ShowcaseStatCard key={key} campaign={key} onSelect={onSelect} />)}
     </div>
     {!!closed.length && <div className="pt-2 space-y-2"><h2 className="text-sm font-bold text-muted-foreground">עמודים סגורים</h2><div className="flex flex-wrap gap-2">
       {closed.map(key => <button key={key} type="button" onClick={() => onSelect(key)} className="rounded-full border px-3 min-h-11 text-sm hover:text-primary">{campaigns[key].title}</button>)}

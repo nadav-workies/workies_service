@@ -1,0 +1,288 @@
+{
+  "name": "CateringOrder",
+  "properties": {
+    "aio_agreement_ref": {
+      "description": "\u05de\u05e1\u05e4\u05e8 \u05d4\u05e1\u05db\u05dd \u05d4\u05d0\u05d9\u05e8\u05d5\u05e2 \u05d1-AIO",
+      "maxLength": 100,
+      "type": "string"
+    },
+    "approved_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "approved_by": {
+      "type": "string"
+    },
+    "company": {
+      "description": "\u05e9\u05dd \u05d4\u05dc\u05e7\u05d5\u05d7 / \u05d4\u05d7\u05d1\u05e8\u05d4",
+      "maxLength": 200,
+      "type": "string"
+    },
+    "contact_email": {
+      "maxLength": 150,
+      "type": "string"
+    },
+    "contact_name": {
+      "maxLength": 150,
+      "type": "string"
+    },
+    "contact_phone": {
+      "maxLength": 30,
+      "type": "string"
+    },
+    "created_by_name": {
+      "type": "string"
+    },
+    "customer_notes": {
+      "description": "\u05d4\u05e2\u05e8\u05d5\u05ea \u05d4\u05dc\u05e7\u05d5\u05d7",
+      "maxLength": 2000,
+      "type": "string"
+    },
+    "dietary_notes": {
+      "description": "\u05e6\u05de\u05d7\u05d5\u05e0\u05d9\u05dd, \u05d8\u05d1\u05e2\u05d5\u05e0\u05d9\u05dd, \u05d0\u05dc\u05e8\u05d2\u05d9\u05d5\u05ea",
+      "maxLength": 1000,
+      "type": "string"
+    },
+    "event_date": {
+      "format": "date",
+      "type": "string"
+    },
+    "event_name": {
+      "maxLength": 200,
+      "type": "string"
+    },
+    "event_time": {
+      "description": "\u05e9\u05e2\u05ea \u05d4\u05d2\u05e9\u05d4",
+      "maxLength": 20,
+      "type": "string"
+    },
+    "guests_count": {
+      "description": "\u05de\u05e1\u05e4\u05e8 \u05de\u05e9\u05ea\u05ea\u05e4\u05d9\u05dd",
+      "type": "number"
+    },
+    "history": {
+      "items": {
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "user": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "internal_notes": {
+      "description": "\u05d4\u05e2\u05e8\u05d5\u05ea \u05e4\u05e0\u05d9\u05de\u05d9\u05d5\u05ea \u05e9\u05dc \u05d4\u05e6\u05d5\u05d5\u05ea",
+      "maxLength": 2000,
+      "type": "string"
+    },
+    "lines": {
+      "description": "\u05e9\u05d5\u05e8\u05d5\u05ea \u05d4\u05d4\u05d6\u05de\u05e0\u05d4",
+      "items": {
+        "properties": {
+          "item_id": {
+            "type": "string"
+          },
+          "item_name": {
+            "type": "string"
+          },
+          "line_id": {
+            "type": "string"
+          },
+          "line_total": {
+            "type": "number"
+          },
+          "menu_id": {
+            "type": "string"
+          },
+          "menu_name": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "pricing_model": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "supplier_id": {
+            "type": "string"
+          },
+          "supplier_name": {
+            "type": "string"
+          },
+          "unit_price": {
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "link_sent_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "location": {
+      "description": "\u05d7\u05d3\u05e8 / \u05d7\u05dc\u05dc",
+      "maxLength": 150,
+      "type": "string"
+    },
+    "message_to_customer": {
+      "description": "\u05d4\u05d5\u05d3\u05e2\u05d4 \u05d0\u05d9\u05e9\u05d9\u05ea \u05e9\u05de\u05d5\u05e6\u05d2\u05ea \u05dc\u05dc\u05e7\u05d5\u05d7 \u05d1\u05e8\u05d0\u05e9 \u05d4\u05d8\u05d5\u05e4\u05e1",
+      "maxLength": 2000,
+      "type": "string"
+    },
+    "order_number": {
+      "description": "\u05de\u05e1\u05e4\u05e8 \u05d4\u05d6\u05de\u05e0\u05d4, CT-1001",
+      "type": "string"
+    },
+    "status": {
+      "default": "link_created",
+      "description": "link_created = \u05d4\u05e7\u05d9\u05e9\u05d5\u05e8 \u05e0\u05d5\u05e6\u05e8 \u05d5\u05de\u05de\u05ea\u05d9\u05df \u05dc\u05dc\u05e7\u05d5\u05d7, submitted = \u05d4\u05dc\u05e7\u05d5\u05d7 \u05e9\u05dc\u05d7 \u05d5\u05de\u05de\u05ea\u05d9\u05df \u05dc\u05d0\u05d9\u05e9\u05d5\u05e8 \u05e1\u05dc\u05d9",
+      "enum": [
+        "link_created",
+        "submitted",
+        "approved",
+        "cancelled"
+      ],
+      "enumColors": [
+        "gray",
+        "yellow",
+        "green",
+        "red"
+      ],
+      "type": "string"
+    },
+    "submitted_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "time_slot": {
+      "enum": [
+        "MORNING",
+        "LUNCH",
+        "AFTERNOON"
+      ],
+      "type": "string"
+    },
+    "token": {
+      "description": "\u05e7\u05d5\u05d3 \u05d4\u05e7\u05d9\u05e9\u05d5\u05e8 \u05dc\u05dc\u05e7\u05d5\u05d7",
+      "type": "string"
+    },
+    "total": {
+      "description": "\u05e1\u05db\u05d5\u05dd \u05d4\u05d4\u05d6\u05de\u05e0\u05d4 \u05dc\u05dc\u05e7\u05d5\u05d7",
+      "type": "number"
+    }
+  },
+  "required": [
+    "token",
+    "status"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "sales_manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "operations_manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "collections_manager"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "sales_manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "operations_manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "collections_manager"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "sales_manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "operations_manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "collections_manager"
+          }
+        }
+      ]
+    }
+  },
+  "type": "object"
+}

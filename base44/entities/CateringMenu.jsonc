@@ -1,0 +1,174 @@
+{
+  "name": "CateringMenu",
+  "properties": {
+    "aio_id": {
+      "description": "\u05de\u05d6\u05d4\u05d4 \u05d4\u05ea\u05e4\u05e8\u05d9\u05d8 (\u05d2\u05e8\u05e1\u05ea \u05e7\u05d8\u05dc\u05d5\u05d2) \u05d1-AIO",
+      "type": "string"
+    },
+    "description": {
+      "maxLength": 1000,
+      "type": "string"
+    },
+    "diner_menu": {
+      "additionalProperties": true,
+      "description": "\u05de\u05d1\u05e0\u05d4 \u05d4\u05d1\u05d7\u05d9\u05e8\u05d5\u05ea \u05d1\u05de\u05e0\u05d5\u05ea \u05d0\u05d9\u05e9\u05d9\u05d5\u05ea, \u05db\u05de\u05d5 \u05d1-AIO",
+      "type": "object"
+    },
+    "is_active": {
+      "default": true,
+      "description": "\u05de\u05d5\u05e6\u05d2 \u05dc\u05dc\u05e7\u05d5\u05d7\u05d5\u05ea",
+      "type": "boolean"
+    },
+    "is_kosher": {
+      "default": true,
+      "type": "boolean"
+    },
+    "min_diners": {
+      "description": "\u05de\u05d9\u05e0\u05d9\u05de\u05d5\u05dd \u05e1\u05d5\u05e2\u05d3\u05d9\u05dd",
+      "type": "number"
+    },
+    "name": {
+      "description": "\u05e9\u05dd \u05d4\u05ea\u05e4\u05e8\u05d9\u05d8",
+      "maxLength": 200,
+      "type": "string"
+    },
+    "offering_type": {
+      "default": "STANDARD",
+      "description": "PERSONAL_DISHES = \u05de\u05e0\u05d5\u05ea \u05d0\u05d9\u05e9\u05d9\u05d5\u05ea \u05e2\u05dd \u05d1\u05d7\u05d9\u05e8\u05d4 \u05dc\u05db\u05dc \u05e1\u05d5\u05e2\u05d3",
+      "enum": [
+        "STANDARD",
+        "PERSONAL_DISHES"
+      ],
+      "type": "string"
+    },
+    "price_per_diner": {
+      "description": "\u05de\u05d7\u05d9\u05e8 \u05dc\u05dc\u05e7\u05d5\u05d7 \u05dc\u05e1\u05d5\u05e2\u05d3 (per_person)",
+      "type": "number"
+    },
+    "pricing_model": {
+      "description": "per_person = \u05de\u05d7\u05d9\u05e8 \u05dc\u05e1\u05d5\u05e2\u05d3, itemized = \u05de\u05d7\u05d9\u05e8 \u05dc\u05db\u05dc \u05e4\u05e8\u05d9\u05d8",
+      "enum": [
+        "per_person",
+        "itemized"
+      ],
+      "enumColors": [
+        "blue",
+        "purple"
+      ],
+      "type": "string"
+    },
+    "sort_order": {
+      "default": 0,
+      "type": "number"
+    },
+    "source": {
+      "default": "aio",
+      "enum": [
+        "aio",
+        "manual"
+      ],
+      "type": "string"
+    },
+    "supplier_aio_id": {
+      "type": "string"
+    },
+    "supplier_id": {
+      "description": "\u05de\u05d6\u05d4\u05d4 CateringSupplier",
+      "type": "string"
+    },
+    "synced_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "time_slots": {
+      "description": "MORNING / LUNCH / AFTERNOON",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "version": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "name",
+    "supplier_id",
+    "pricing_model"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "sales_manager"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "sales_manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "operations_manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "collections_manager"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "sales_manager"
+          }
+        }
+      ]
+    }
+  },
+  "type": "object"
+}
