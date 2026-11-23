@@ -1,5 +1,6 @@
 import { EV_IMAGES, CLASS_AMENITIES, MEETING_AMENITIES } from "@/lib/eventorContent";
 import AmenityChips from "@/components/landing/eventor/AmenityChips";
+import EventorSoftCta from "@/components/landing/eventor/EventorSoftCta";
 
 export default function EventorSpaces({ settings }) {
   return <section className="ev-spaces" aria-labelledby="ev-spaces-title">
@@ -10,7 +11,7 @@ export default function EventorSpaces({ settings }) {
       </div>
       <div className="ev-spaces-grid">
         <article className="ev-card">
-          <img src={EV_IMAGES.classroom} alt="כיתת לימוד עם שולחנות עגולים, מקרן ומסך" loading="lazy" />
+          <img className="ev-img-class" src={EV_IMAGES.classroom} alt="כיתת לימוד עם שולחנות עגולים, מקרן ומסך" loading="lazy" />
           <div className="ev-card-body">
             <strong>2 כיתות לימוד מאובזרות</strong>
             <p>לקורסים, להכשרות, להשתלמויות ולסדנאות. מוכנות לעבודה מהרגע שנכנסים.</p>
@@ -22,7 +23,7 @@ export default function EventorSpaces({ settings }) {
           </div>
         </article>
         <article className="ev-card">
-          <img src={EV_IMAGES.meeting} alt="חדר ישיבות עם שולחן ארוך ומסך גדול" loading="lazy" style={{ objectPosition: "center 60%" }} />
+          <img src={EV_IMAGES.meeting} alt="חדר ישיבות עם שולחן ארוך ומסך גדול" loading="lazy" className="ev-img-meeting" />
           <div className="ev-card-body">
             <strong>חדרי ישיבות בגדלים שונים</strong>
             <p>מפגישה אישית ועד ישיבת הנהלה מלאה. סביבה מקצועית שמשדרת רצינות.</p>
@@ -31,6 +32,7 @@ export default function EventorSpaces({ settings }) {
           </div>
         </article>
       </div>
+      <EventorSoftCta>קבלו הצעת מחיר לכיתה או לחדר ישיבות</EventorSoftCta>
     </div>
   </section>;
 }

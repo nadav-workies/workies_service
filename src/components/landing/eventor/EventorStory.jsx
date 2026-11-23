@@ -1,7 +1,9 @@
 import { EV_IMAGES, FAQ } from "@/lib/eventorContent";
+import { trackEventor } from "@/lib/eventorTracking";
+import EventorSoftCta from "@/components/landing/eventor/EventorSoftCta";
 
 // Catering, sign banner, team and FAQ sections.
-export default function EventorStory() {
+export default function EventorStory({ whatsappUrl }) {
   return <>
     <section className="ev-catering" aria-labelledby="ev-catering-title">
       <div className="ev-wrap"><div className="ev-catering-inner ev-stack">
@@ -11,6 +13,7 @@ export default function EventorStory() {
         <div className="ev-meals">
           {["בוקר", "צהריים", "ערב"].map(m => <div key={m} className="ev-meal"><span>ארוחת</span><strong>{m}</strong></div>)}
         </div>
+        <EventorSoftCta>ספרו לנו על האירוע, ונבנה תפריט</EventorSoftCta>
       </div></div>
     </section>
     <section className="ev-sign" aria-label="השלט של Eventor">
@@ -22,6 +25,7 @@ export default function EventorStory() {
         <span className="ev-label-soft">הסוד של Workies</span>
         <h2 id="ev-team-title" className="ev-h2">אתם מביאים את הרעיון<span className="ev-y">.</span><br />אנחנו דואגים לכל השאר<span className="ev-y">.</span></h2>
         <p className="ev-text">צוות Workies עומד לרשותכם בכל שלב, לכל רעיון, בקשה ואפילו גחמה. מהתכנון ועד שהאורח האחרון יוצא, אתם לא לבד.</p>
+        <EventorSoftCta href={whatsappUrl} onClick={() => trackEventor("whatsapp_click", "team_cta")}>דברו עם מנהל תיק האירועים</EventorSoftCta>
       </div></div>
     </section>
     <section aria-labelledby="ev-faq-title" className="ev-light ev-faq">

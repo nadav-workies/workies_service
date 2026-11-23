@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import "@/components/landing/eventor/EventorPage.css";
 import useCampaignValidity from "@/hooks/useCampaignValidity";
 import useEventorSettings from "@/hooks/useEventorSettings";
-import { EV_IMAGES, SEO } from "@/lib/eventorContent";
+import { SEO } from "@/lib/eventorContent";
 import { captureUtm, trackEventor } from "@/lib/eventorTracking";
 import EventorHero from "@/components/landing/eventor/EventorHero";
 import EventorHall from "@/components/landing/eventor/EventorHall";
@@ -13,13 +13,8 @@ import EventorSpaces from "@/components/landing/eventor/EventorSpaces";
 import EventorStory from "@/components/landing/eventor/EventorStory";
 import EventorClosing from "@/components/landing/eventor/EventorClosing";
 
-function setMeta(attr, key, content) {
-  const el = document.createElement("meta");
-  el.setAttribute(attr, key);
-  el.setAttribute("content", content);
-  document.head.appendChild(el);
-  return el;
-}
+import EventorLogos from "@/components/landing/eventor/EventorLogos";
+import { eventorHeadTags } from "@/lib/eventorSeo";
 
 export default function WorkiesEvents() {
   const { active, isPending } = useCampaignValidity("eventor");
@@ -30,15 +25,11 @@ export default function WorkiesEvents() {
   useEffect(() => {
     document.title = SEO.title;
     captureUtm();
-    const tags = [
-      setMeta("name", "description", SEO.description),
-      setMeta("property", "og:title", SEO.title),
-      setMeta("property", "og:description", SEO.description),
-      setMeta("property", "og:image", EV_IMAGES.hall),
-      setMeta("property", "og:type", "website"),
-    ];
-    return () => tags.forEach(t => t.remove());
   }, []);
+
+  useEffect(() => {
+    if (settings.data) return eventorHeadTags(settings.data);
+  }, [settings.data]);
 
   // One view per page load, only while the page is published.
   useEffect(() => {
@@ -56,10 +47,11 @@ export default function WorkiesEvents() {
     {!active && <p className="ev-admin-bar">טיוטה: העמוד מוסתר מהציבור. רק אדמין רואה אותו, וצפיות וקליקים לא נספרים.</p>}
     <EventorHero settings={s} />
     <main>
+      <EventorLogos />
       <EventorHall capacity={s.capacity_eventor} />
       <EventorGallery />
       <EventorSpaces settings={s} />
-      <EventorStory />
+      <EventorStory whatsappUrl={s.whatsapp_url} />
       <EventorClosing settings={s} />
     </main>
   </div>;

@@ -3,7 +3,7 @@ const campaigns = {
   podcast: { title: "התנסות באולפן הפודקאסט", path: "/podcast", thankYou: "/thank-you/podcast", entity: "PodcastLead", description: "עמוד ציבורי להתנסות באולפן הפודקאסט עם שם וטלפון.", confirmation: "ניצור קשר לתיאום ההתנסות באולפן הפודקאסט." },
   workies_ai: { title: "Workies AI | עמוד נחיתה עם Claude", path: "/workies-ai", thankYou: "/thank-you/workies-ai", entity: "WorkiesAILead", description: "הרשמה למפגש בניית עמוד נחיתה עם Claude, יום שלישי 10.11 ב-13:30. שם, טלפון ושם העסק.", confirmation: "נחזור אליכם להשלמת ההרשמה." },
   hr_meetup: { title: "HR מחוץ לשגרה | מיטאפ", path: "/hr-meetup", thankYou: "/thank-you/hr-meetup", entity: "HRMeetupLead", description: "מיטאפ למנהלות משאבי אנוש, יום שלישי 24.11.2026, 09:00–12:00. שם, טלפון, אימייל, ארגון ותפקיד.", confirmation: "אישור הרשמה יישלח לכתובת האימייל שהוזנה." },
-  eventor: { title: "מתחם האירועים | Eventor", path: "/workies-events", showcase: true, description: "עמוד תדמית למתחם האירועים: האיוונטור, כיתות הלימוד וחדרי הישיבות. בלי טופס, הפניות בוואטסאפ ובטלפון." },
+  eventor: { title: "מתחם האירועים | Eventor", path: "/workies-events", showcase: true, entity: "EventorLead", description: "עמוד תדמית למתחם האירועים: האיוונטור, כיתות הלימוד וחדרי הישיבות. טופס השארת פרטים, וואטסאפ וטלפון." },
   referral: { title: "חבר מביא חבר", path: "/referral-share", thankYou: "/thank-you/referral", entity: "Referral", description: "עמוד ההפניות של Workies. ההמלצות נשמרות בנפרד ונפתחת קריאת שירות." },
 };
 export default campaigns;

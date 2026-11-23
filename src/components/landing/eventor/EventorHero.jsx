@@ -1,4 +1,5 @@
 import { EV_IMAGES } from "@/lib/eventorContent";
+import { scrollToLeadForm } from "@/lib/eventorLeadScroll";
 
 export default function EventorHero({ settings }) {
   const stats = [
@@ -19,6 +20,7 @@ export default function EventorHero({ settings }) {
         <span className="ev-tag">מתחם האירועים · באר שבע</span>
         <h1 className="ev-h1">יש לכם רעיון.<br />לנו יש את המקום<br />שבו הוא <span className="ev-y">קורה.</span></h1>
         <p className="ev-lead">אולם אירועים, כיתות לימוד וחדרי ישיבות. טכנולוגיה שעובדת בלי תקלות, אוכל טוב וצוות שדואג לכל פרט.</p>
+        <a href="#lead-form" onClick={scrollToLeadForm} className="ev-btn ev-btn-primary ev-btn-hero">לבדיקת תאריך פנוי</a>
       </div>
     </header>
     <ul aria-label="המתחם במספרים" className="ev-wrap ev-stats">

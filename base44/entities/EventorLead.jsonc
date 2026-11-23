@@ -1,0 +1,130 @@
+{
+  "name": "EventorLead",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "maxLength": 100
+    },
+    "phone": {
+      "type": "string",
+      "maxLength": 30
+    },
+    "email": {
+      "type": "string",
+      "maxLength": 150
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "contacted",
+        "scheduled",
+        "completed",
+        "not_relevant"
+      ],
+      "enumColors": [
+        "blue",
+        "yellow",
+        "purple",
+        "green",
+        "gray"
+      ],
+      "default": "new"
+    },
+    "landing_page_id": {
+      "type": "string",
+      "default": "eventor",
+      "description": "\u05e2\u05de\u05d5\u05d3 \u05d4\u05e0\u05d7\u05d9\u05ea\u05d4"
+    },
+    "source": {
+      "type": "string",
+      "default": "workies-events",
+      "description": "\u05de\u05e7\u05d5\u05e8 \u05d4\u05e4\u05e0\u05d9\u05d9\u05d4"
+    },
+    "utm_source": {
+      "type": "string",
+      "maxLength": 150
+    },
+    "utm_medium": {
+      "type": "string",
+      "maxLength": 150
+    },
+    "utm_campaign": {
+      "type": "string",
+      "maxLength": 150
+    }
+  },
+  "required": [
+    "name",
+    "phone"
+  ],
+  "rls": {
+    "create": {
+      "data.status": "new"
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "sales_manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "operations_manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "collections_manager"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "sales_manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "operations_manager"
+          }
+        },
+        {
+          "user_condition": {
+            "data.internal_role": "collections_manager"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

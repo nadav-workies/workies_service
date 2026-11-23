@@ -42,6 +42,7 @@ const DailyOffice = lazy(() => import('@/pages/DailyOffice'));
 const LandingPages = lazy(() => import('@/pages/LandingPages'));
 const HRMeetup = lazy(() => import('@/pages/HRMeetup'));
 const LandingPageManage = lazy(() => import('@/pages/LandingPageManage'));
+const ClientLogos = lazy(() => import('@/pages/ClientLogos'));
 const Messages = lazy(() => import('@/pages/Messages'));
 const MailingLists = lazy(() => import('@/pages/MailingLists'));
 const MailingHub = lazy(() => import('@/pages/MailingHub'));
@@ -119,6 +120,7 @@ const AuthenticatedApp = () => {
           <Route path="/mailing-lists" element={<MailingLists />} />
           <Route path="/mailing" element={<Navigate to="/mailing/dashboard" replace />} />
           <Route path="/mailing/:section" element={<MailingHub />} />
+          <Route path="/landing-pages/client-logos" element={<ClientLogos />} />
           <Route path="/landing-pages/:campaign" element={<LandingPageManage />} />
           <Route path="/leads" element={<Navigate to="/landing-pages/office" replace />} />
           <Route path="/catering" element={<CateringManagement />} />

@@ -1,4 +1,5 @@
 import { GALLERY } from "@/lib/eventorContent";
+import EventorSoftCta from "@/components/landing/eventor/EventorSoftCta";
 
 export default function EventorGallery() {
   return <section aria-label="גלריה" className="ev-gallery">
@@ -12,5 +13,6 @@ export default function EventorGallery() {
         <figcaption>{g.caption}</figcaption>
       </figure>)}
     </div>
+    <div className="ev-wrap"><EventorSoftCta>רוצים לראות בעיניים? תאמו סיור</EventorSoftCta></div>
   </section>;
 }

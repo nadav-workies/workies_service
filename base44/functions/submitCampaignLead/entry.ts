@@ -16,7 +16,7 @@ export default async function(req) {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
     const { campaign, name: rawName, phone: rawPhone } = body;
-    const entity = { office: 'DailyOfficeLead', podcast: 'PodcastLead', workies_ai: 'WorkiesAILead', hr_meetup: 'HRMeetupLead' }[campaign];
+    const entity = { office: 'DailyOfficeLead', podcast: 'PodcastLead', workies_ai: 'WorkiesAILead', hr_meetup: 'HRMeetupLead', eventor: 'EventorLead' }[campaign];
     if (!entity) return Response.json({ error: 'קמפיין לא תקין' }, { status: 400 });
     if (!await campaignIsActive(base44, campaign)) return Response.json({ error: 'ההרשמה הסתיימה' }, { status: 400 });
     if (campaign === 'hr_meetup' && body.step === 'details') {
@@ -35,6 +35,14 @@ export default async function(req) {
     if (!name || !/^\+?[\d\s()-]+$/.test(phone) || phone.replace(/\D/g, '').length < 9) return Response.json({ error: 'יש למלא שם וטלפון תקינים' }, { status: 400 });
     const email = String(body.email || '').trim();
     if (!validLeadEmail(email)) return Response.json({ error: 'יש למלא אימייל תקין.' }, { status: 400 });
+    if (campaign === 'eventor') {
+      if (!/^05\d{8}$/.test(phone.replace(/[\s-]/g, ''))) return Response.json({ error: 'מספר הטלפון לא תקין.' }, { status: 400 });
+      const utm = Object.fromEntries(['utm_source', 'utm_medium', 'utm_campaign'].map((k) => [k, String(body[k] || '').slice(0, 150)]).filter(([, v]) => v));
+      const lead = await base44.asServiceRole.entities.EventorLead.create({ name, phone, email, status: 'new', landing_page_id: 'eventor', source: 'workies-events', ...utm });
+      await notifyNewLead(base44, 'מתחם האירועים (Eventor)', { 'שם': name, 'טלפון': phone, 'מייל': email, 'מקור': [utm.utm_source, utm.utm_medium, utm.utm_campaign].filter(Boolean).join(' / ') });
+      await sendLeadWebhook(base44, campaign, { lead_id: lead.id, name, phone, email, lead_source: 'workies-events', ...utm }, body.sid);
+      return Response.json({ success: true });
+    }
     if (campaign === 'hr_meetup') {
       const details_token = crypto.randomUUID();
       const lead = await base44.asServiceRole.entities.HRMeetupLead.create({ name, phone, email, details_token, status: 'new' });

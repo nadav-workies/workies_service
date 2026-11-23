@@ -1,12 +1,13 @@
-import { Video, SlidersHorizontal, Volume2, UtensilsCrossed } from "lucide-react";
+import { Video, Lightbulb, Volume2, Coffee } from "lucide-react";
+import EventorSoftCta from "@/components/landing/eventor/EventorSoftCta";
 import { EV_IMAGES, HALL_AMENITIES, SUITS } from "@/lib/eventorContent";
 import AmenityChips from "@/components/landing/eventor/AmenityChips";
 
 const BENEFITS = [
   [Video, "מולטימדיה והקלטת וידאו", "הקלטה מלאה מכמה זוויות. כל הרצאה הופכת לתוכן איכותי שאפשר להפיץ."],
-  [SlidersHorizontal, "שולחן אור דיגיטלי", "האווירה המדויקת לכל רגע: קבלת פנים, הרצאה או הרמת כוסית."],
+  [Lightbulb, "שולחן אור דיגיטלי", "האווירה המדויקת לכל רגע: קבלת פנים, הרצאה או הרמת כוסית."],
   [Volume2, "מערכת סאונד משוכללת", "כל מילה נשמעת בבירור בכל פינה באולם."],
-  [UtensilsCrossed, "מטבחון מאובזר ומפנק", "מכונת קפה, מקרר, בר מים ושולחן ארוך לאירוח ברמה גבוהה."],
+  [Coffee, "מטבחון מאובזר ומפנק", "מכונת קפה, מקרר, בר מים ושולחן ארוך לאירוח ברמה גבוהה."],
 ];
 
 export default function EventorHall({ capacity }) {
@@ -20,7 +21,7 @@ export default function EventorHall({ capacity }) {
       <img className="ev-hall-img" src={EV_IMAGES.art} alt="האיוונטור: שולחנות עגולים, ספות ויצירת אמנות צהובה" loading="lazy" />
       <ul className="ev-benefits">
         {BENEFITS.map(([Icon, title, text]) => <li key={title} className="ev-benefit">
-          <span className="ev-benefit-icon" aria-hidden="true"><Icon className="w-5 h-5" strokeWidth={2} /></span>
+          <span className="ev-benefit-icon" aria-hidden="true"><Icon size={24} strokeWidth={2.2} /></span>
           <span><strong>{title}</strong><span>{text}</span></span>
         </li>)}
       </ul>
@@ -29,6 +30,7 @@ export default function EventorHall({ capacity }) {
         <div className="ev-stack-sm"><span className="ev-sub-title">מתאים ל:</span>
           <div className="ev-suits">{SUITS.map(s => <span key={s} className="ev-suit">{s}</span>)}</div>
         </div>
+        <EventorSoftCta light>לבדיקת תאריך פנוי באיוונטור</EventorSoftCta>
       </div>
     </div>
   </section>;
