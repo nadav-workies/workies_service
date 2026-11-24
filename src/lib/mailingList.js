@@ -1,4 +1,5 @@
 import { base44 } from "@/api/base44Client";
+import { csvCell } from "@/lib/csvCell";
 import campaigns from "@/components/landing/campaigns";
 import { pageTypeOf } from "@/lib/pageTypes";
 
@@ -34,7 +35,7 @@ export async function loadMailingList(type) {
 }
 
 export function downloadMailingList(rows, label) {
-  const esc = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const esc = csvCell;
   const lines = [["אימייל", "שם", "טלפון", "עמודים", "הרשמה אחרונה"].map(esc).join(",")]
     .concat(rows.map(r => [r.email, r.name, r.phone, r.pages.join(" | "), new Date(r.last).toLocaleDateString("he-IL")].map(esc).join(",")));
   const url = URL.createObjectURL(new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8" }));

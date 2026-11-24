@@ -56,7 +56,7 @@ export default function TicketDetail() {
   });
 
   const isMgr = isManagerOrAdmin(user);
-  const isOwner = user && ticket && (ticket.created_by_id === user.id || ticket.created_by === user.email);
+  const isOwner = user && ticket && ticket.created_by_id === user.id;
   const canView = isMgr || isOwner;
 
   // Fetch current tenant data for the ticket's room
@@ -196,7 +196,7 @@ export default function TicketDetail() {
   };
 
   const handleSendGoogleReview = async () => {
-    if (!ticket.created_by) return;
+    if (!ticket.created_by_id) return;
     setGoogleSending(true);
     await base44.functions.invoke('ticketNotifications', { action: 'google_review_request', ticket });
     await base44.entities.ServiceTicket.update(ticket.id, {
@@ -211,8 +211,8 @@ export default function TicketDetail() {
 
   const handleSendFeedbackSurvey = async () => {
     setFeedbackSending(true);
-    // Use the current tenant's email if available (from RoomTenant), otherwise fall back to ticket creator
-    const recipientEmail = currentTenant?.email || ticket.created_by || "";
+    // Use the current tenant's email if available (from RoomTenant); otherwise the server falls back to the ticket creator
+    const recipientEmail = currentTenant?.email || "";
     await base44.functions.invoke('ticketNotifications', {
       action: 'feedback_request',
       ticket: { ...ticket, customer_email: recipientEmail, customer_name: currentTenant?.customer_name || ticket.customer_name },
@@ -565,7 +565,7 @@ export default function TicketDetail() {
                 )}
 
                 {/* Google review — manager only */}
-                {isMgr && ticket.created_by && (
+                {isMgr && ticket.created_by_id && (
                   <div className="pt-1 border-t">
                     {ticket.google_review_request_sent ? (
                       <p className="text-xs text-muted-foreground flex items-center gap-1">

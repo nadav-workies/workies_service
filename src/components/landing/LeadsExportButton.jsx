@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { csvCell } from "@/lib/csvCell";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
@@ -10,7 +11,7 @@ const COLUMNS = [
   ["מפגש", l => l.session], ["סטטוס", l => STATUSES[l.status] || l.status],
   ["תאריך פנייה", l => new Date(l.created_date).toLocaleString("he-IL", { timeZone: "Asia/Jerusalem" })],
 ];
-const cell = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+const cell = csvCell;
 
 // Exports every lead of the campaign (all statuses) to a CSV file that opens in Excel.
 export default function LeadsExportButton({ entity, title }) {

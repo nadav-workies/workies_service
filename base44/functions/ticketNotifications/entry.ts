@@ -27,6 +27,13 @@ function buildHtml(body) {
 }
 
 // ─── Notification log ─────────────────────────────────────────────
+// The ticket creator's email, looked up server-side by id (never returned to the client).
+async function creatorEmail(base44, t) {
+  if (!t?.created_by_id) return '';
+  const users = await base44.asServiceRole.entities.User.filter({ id: t.created_by_id }).catch(() => []);
+  return users[0]?.email || '';
+}
+
 async function createLog(base44, payload) {
   return base44.asServiceRole.entities.NotificationLog.create({
     source: 'tickets',
@@ -198,7 +205,7 @@ function buildPrintingManagerCreatedEmail(ticket) {
 <h3>פרטי לקוח</h3>
 <ul>
   <li><strong>שם לקוח:</strong> ${e(ticket.customer_name)}</li>
-  <li><strong>מייל:</strong> ${e(ticket.email || ticket.created_by)}</li>
+  <li><strong>מייל:</strong> ${e(ticket.email || ticket.creator_email)}</li>
   <li><strong>טלפון:</strong> ${e(ticket.phone)}</li>
   <li><strong>חדר:</strong> ${roomDisplay}</li>
 </ul>
@@ -269,7 +276,7 @@ function buildPrintingCollectionsEmail(ticket) {
 <h3>פרטי לקוח</h3>
 <ul>
   <li><strong>שם לקוח:</strong> ${e(ticket.customer_name)}</li>
-  <li><strong>מייל:</strong> ${e(ticket.email || ticket.created_by)}</li>
+  <li><strong>מייל:</strong> ${e(ticket.email || ticket.creator_email)}</li>
   <li><strong>טלפון:</strong> ${e(ticket.phone)}</li>
   <li><strong>חדר:</strong> ${roomDisplay}</li>
 </ul>
@@ -345,10 +352,10 @@ Deno.serve(async (req) => {
     if (!serverTicket) {
       return Response.json({ error: 'ticket not found' }, { status: 404 });
     }
-    if (!isManager && serverTicket.created_by !== user.email) {
+    if (!isManager && serverTicket.created_by_id !== user.id) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
-    ticket = { ...ticket, ...serverTicket };
+    ticket = { ...ticket, ...serverTicket, creator_email: await creatorEmail(base44, serverTicket) };
   }
 
   // Ensure defaults on every call
@@ -386,7 +393,7 @@ Deno.serve(async (req) => {
       results.printing_manager_created = mgrSent;
 
       // Customer confirmation email
-      const customerEmail = ticket.email || ticket.created_by || '';
+      const customerEmail = ticket.email || ticket.creator_email || '';
       if (customerEmail) {
         const { subject: custSubject, body: custBody } = buildPrintingCustomerCreatedEmail(ticket);
         const custSent = await sendAndLog(base44, {
@@ -414,10 +421,10 @@ Deno.serve(async (req) => {
 
     // 1. User email
     const userSetting = await getSetting(base44, 'user_ticket_created');
-    if (userSetting?.enabled && ticket.created_by) {
+    if (userSetting?.enabled && ticket.creator_email) {
       const subject = renderTemplate(userSetting.subject_template, ticket, false);
       const body = renderTemplate(userSetting.body_template, ticket);
-      const sent = await sendAndLog(base44, { key: 'user_ticket_created', toEmail: ticket.created_by, subject, bodyHtml: buildHtml(body), ticket, recipientType: 'user' });
+      const sent = await sendAndLog(base44, { key: 'user_ticket_created', toEmail: ticket.creator_email, subject, bodyHtml: buildHtml(body), ticket, recipientType: 'user' });
       if (sent) await base44.asServiceRole.entities.ServiceTicket.update(ticket.id, { user_created_email_sent: true });
       results.user_created = sent;
     } else {
@@ -474,7 +481,7 @@ Deno.serve(async (req) => {
       const followupDueAt = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
 
       // 1. Customer completion email
-      const customerEmail = ticket.email || ticket.created_by || '';
+      const customerEmail = ticket.email || ticket.creator_email || '';
       if (customerEmail) {
         const { subject, body } = buildPrintingCustomerCompletedEmail(ticket);
         await sendAndLog(base44, {
@@ -523,7 +530,7 @@ Deno.serve(async (req) => {
       return Response.json({ ok: true, action, results });
     }
 
-    if (!ticket.created_by) {
+    if (!ticket.creator_email) {
       return Response.json({ ok: true, action, results });
     }
 
@@ -541,7 +548,7 @@ Deno.serve(async (req) => {
       if (setting?.enabled) {
         const subject = renderTemplate(setting.subject_template, ticket, false);
         const body = renderTemplate(setting.body_template, ticket);
-        const sent = await sendAndLog(base44, { key, toEmail: ticket.created_by, subject, bodyHtml: buildHtml(body), ticket, recipientType: 'user' });
+        const sent = await sendAndLog(base44, { key, toEmail: ticket.creator_email, subject, bodyHtml: buildHtml(body), ticket, recipientType: 'user' });
         if (sent) await base44.asServiceRole.entities.ServiceTicket.update(ticket.id, { user_status_email_sent_at: new Date().toISOString() });
         results.user_status_email = sent;
       } else {
@@ -569,7 +576,7 @@ Deno.serve(async (req) => {
 
     // 1. Customer completion email (if not already sent)
     if (!ticket.printing_customer_completed_email_sent) {
-      const customerEmail = ticket.email || ticket.created_by || '';
+      const customerEmail = ticket.email || ticket.creator_email || '';
       if (customerEmail) {
         const { subject, body } = buildPrintingCustomerCompletedEmail(ticket);
         await sendAndLog(base44, {
@@ -617,7 +624,7 @@ Deno.serve(async (req) => {
   if (action === 'feedback_request') {
     const setting = await getSetting(base44, 'user_service_feedback_request');
     // Prefer customer_email (from synced tenant data), fall back to created_by
-    const recipientEmail = ticket.customer_email || ticket.email || ticket.created_by || '';
+    const recipientEmail = ticket.customer_email || ticket.email || ticket.creator_email || '';
     if (!setting?.enabled) {
       await logSkipped(base44, { key: 'user_service_feedback_request', ticket, reason: setting ? 'disabled' : 'NotificationSetting missing', recipientType: 'user' });
       results.feedback_request = false;
@@ -664,10 +671,10 @@ Deno.serve(async (req) => {
   // ── google_review_request ─────────────────────────────────────
   if (action === 'google_review_request') {
     const setting = await getSetting(base44, 'user_google_review_request');
-    if (setting?.enabled && ticket.created_by) {
+    if (setting?.enabled && ticket.creator_email) {
       const subject = renderTemplate(setting.subject_template, ticket, false);
       const body = renderTemplate(setting.body_template, ticket);
-      const sent = await sendAndLog(base44, { key: 'user_google_review_request', toEmail: ticket.created_by, subject, bodyHtml: buildHtml(body), ticket, recipientType: 'user' });
+      const sent = await sendAndLog(base44, { key: 'user_google_review_request', toEmail: ticket.creator_email, subject, bodyHtml: buildHtml(body), ticket, recipientType: 'user' });
       if (sent) await base44.asServiceRole.entities.ServiceTicket.update(ticket.id, { google_review_request_sent: true, google_review_request_sent_at: new Date().toISOString() });
       results.google_review = sent;
     } else {
@@ -678,7 +685,7 @@ Deno.serve(async (req) => {
 
   // ── deadline_updated ──────────────────────────────────────────
   if (action === 'deadline_updated') {
-    const customerEmail = ticket.email || ticket.created_by || '';
+    const customerEmail = ticket.email || ticket.creator_email || '';
     const deadlineStr = ticket.treatment_deadline
       ? new Date(ticket.treatment_deadline).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' })
       : '';
@@ -710,7 +717,7 @@ Deno.serve(async (req) => {
     const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
     let googleSent = 0;
     for (const t of allClosedTickets) {
-      if (!t.closed_at || t.google_review_request_sent || !t.created_by) continue;
+      if (!t.closed_at || t.google_review_request_sent || !t.created_by_id) continue;
       if (t.requires_manager_followup || t.google_review_blocked_reason) continue;
       const closedMs = new Date(t.closed_at).getTime();
       if (nowMs - closedMs < THREE_DAYS) continue;
@@ -718,7 +725,9 @@ Deno.serve(async (req) => {
       if (!setting?.enabled) continue;
       const subject = renderTemplate(setting.subject_template, t, false);
       const body = renderTemplate(setting.body_template, t);
-      const sent = await sendAndLog(base44, { key: 'user_google_review_request', toEmail: t.created_by, subject, bodyHtml: buildHtml(body), ticket: t, recipientType: 'user' });
+      const toEmail = await creatorEmail(base44, t);
+      if (!toEmail) continue;
+      const sent = await sendAndLog(base44, { key: 'user_google_review_request', toEmail, subject, bodyHtml: buildHtml(body), ticket: t, recipientType: 'user' });
       if (sent) {
         await base44.asServiceRole.entities.ServiceTicket.update(t.id, { google_review_request_sent: true, google_review_request_sent_at: new Date().toISOString() });
         googleSent++;

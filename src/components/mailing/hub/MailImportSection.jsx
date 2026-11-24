@@ -6,11 +6,6 @@ import { PageHeader, Panel } from "@/components/mailing-mockup/shared";
 import ImportPreview from "./ImportPreview";
 import ImportHistory from "./ImportHistory";
 
-const SCHEMA = {
-  type: "object",
-  properties: { rows: { type: "array", items: { type: "object", properties: { email: { type: "string" }, name: { type: "string" }, phone: { type: "string" }, company: { type: "string" } } } } },
-};
-
 export default function MailImportSection() {
   const qc = useQueryClient();
   const [file, setFile] = useState(null);
@@ -23,10 +18,8 @@ export default function MailImportSection() {
     setFile(f); setRows(null); setError(""); setBusy(true);
     try {
       const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file: f });
-      const { signed_url } = await base44.integrations.Core.CreateFileSignedUrl({ file_uri, expires_in: 600 });
-      const res = await base44.integrations.Core.ExtractDataFromUploadedFile({ file_url: signed_url, json_schema: SCHEMA });
-      if (res.status !== "success") throw new Error(res.details);
-      const out = Array.isArray(res.output) ? res.output : res.output?.rows || [];
+      const { data } = await base44.functions.invoke("mailContacts", { action: "read_file", file_uri });
+      const out = data.rows || [];
       if (!out.length) throw new Error("empty");
       setRows(out);
     } catch { setError("לא הצלחנו לקרוא את הקובץ. ודאו שיש בו עמודת מייל ונסו שוב."); }

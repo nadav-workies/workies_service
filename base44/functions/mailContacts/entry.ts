@@ -29,6 +29,11 @@ function toRows(source, records) {
     .map((r) => ({ email: r.email, name: r.name, phone: r.phone, company: r.organization || r.business_name }));
 }
 
+const IMPORT_SCHEMA = {
+  type: 'object',
+  properties: { rows: { type: 'array', items: { type: 'object', properties: { email: { type: 'string' }, name: { type: 'string' }, phone: { type: 'string' }, company: { type: 'string' } } } } },
+};
+
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -44,6 +49,15 @@ export default async function (req) {
         result[source] = await upsertContacts(db.MailContact, toRows(source, await readAll(db[name])), { source });
       }
       return Response.json({ result });
+    }
+
+    if (body.action === 'read_file') {
+      if (user.role !== 'admin') return Response.json({ error: 'רק אדמין יכול לייבא' }, { status: 403 });
+      if (typeof body.file_uri !== 'string' || !body.file_uri) return Response.json({ error: 'קובץ חסר' }, { status: 400 });
+      const res = await base44.asServiceRole.integrations.Core.ExtractDataFromUploadedFile({ file_url: body.file_uri, json_schema: IMPORT_SCHEMA });
+      if (res.status !== 'success') return Response.json({ error: 'לא ניתן לקרוא את הקובץ' }, { status: 422 });
+      const rows = (Array.isArray(res.output) ? res.output : res.output?.rows || []).slice(0, 2000);
+      return Response.json({ rows });
     }
 
     if (body.action === 'import') {

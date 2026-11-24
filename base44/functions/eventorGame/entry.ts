@@ -6,6 +6,21 @@ const LEAD_ROLES = ['sales_manager', 'operations_manager', 'collections_manager'
 const canManage = (u) => ['admin', 'manager'].includes(u?.role) || LEAD_ROLES.includes(u?.internal_role);
 const validId = (t) => typeof t === 'string' && /^[0-9a-f-]{36}$/i.test(t);
 const OFF = 'המשחק אינו פעיל כעת';
+const MAX_PLAYERS = 300;
+const NAME_RE = /^[\p{L}\p{N} .'\-]+$/u;
+
+// Best-effort per-IP throttle for new joins (5 per minute per round on this instance).
+const joinHits = new Map();
+function tooManyJoins(req, round) {
+  const ip = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'unknown';
+  const key = `${round}:${ip}`;
+  const now = Date.now();
+  const hits = (joinHits.get(key) || []).filter((t) => now - t < 60_000);
+  hits.push(now);
+  joinHits.set(key, hits);
+  if (joinHits.size > 5000) joinHits.clear();
+  return hits.length > 5;
+}
 
 async function getGame(sr) {
   const { items } = await sr.entities.EventorGame.filter({ key: KEY }, { limit: 1 });
@@ -40,11 +55,17 @@ export default async function (req) {
       if (!game.enabled) return Response.json({ error: OFF }, { status: 409 });
 
       if (body.action === 'join') {
-        const name = String(body.name || '').trim();
+        const name = String(body.name || '').trim().replace(/\s+/g, ' ');
         if (name.length < 2 || name.length > 30) return Response.json({ error: 'יש להזין שם בין 2 ל-30 תווים' }, { status: 400 });
+        if (!NAME_RE.test(name)) return Response.json({ error: 'השם יכול לכלול רק אותיות, מספרים ורווחים' }, { status: 400 });
         const { items } = await sr.entities.EventorGamePlayer.filter({ round: game.round, voter_id: body.voter_id }, { limit: 1 });
         const icon = ICONS.includes(body.icon) ? body.icon : 'star';
-        if (!items[0]) await sr.entities.EventorGamePlayer.create({ round: game.round, voter_id: body.voter_id, name, icon });
+        if (!items[0]) {
+          if (tooManyJoins(req, game.round)) return Response.json({ error: 'יותר מדי כניסות מהמכשיר הזה, נסו שוב בעוד דקה' }, { status: 429 });
+          const { items: joined } = await sr.entities.EventorGamePlayer.filter({ round: game.round }, { limit: MAX_PLAYERS });
+          if (joined.length >= MAX_PLAYERS) return Response.json({ error: 'המשחק מלא' }, { status: 409 });
+          await sr.entities.EventorGamePlayer.create({ round: game.round, voter_id: body.voter_id, name, icon });
+        }
         return Response.json({ ok: true, round: game.round });
       }
 

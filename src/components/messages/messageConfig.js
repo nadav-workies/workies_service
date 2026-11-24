@@ -1,3 +1,5 @@
+import { csvCell } from "@/lib/csvCell";
+
 export const PER_PAGE = 8;
 
 export const SOURCE_LABELS = {
@@ -24,7 +26,7 @@ export function formatDate(iso) {
 }
 
 export function downloadCsv(list) {
-  const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const esc = csvCell;
   const lines = [["תאריך", "נמען", "נושא", "אזור", "סוג", "סטטוס", "נפתח", "שגיאה"].map(esc).join(",")]
     .concat(list.map((l) => [formatDate(sentAt(l)), l.recipient_email, l.subject, SOURCE_LABELS[sourceOf(l)], l.notification_key, STATUS_META[l.status]?.label || l.status, l.opened_at ? formatDate(l.opened_at) : "", l.error_message].map(esc).join(",")));
   const url = URL.createObjectURL(new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8" }));

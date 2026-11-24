@@ -1,4 +1,5 @@
 import { base44 } from "@/api/base44Client";
+import { csvCell } from "@/lib/csvCell";
 import { getCampaignValidity, dateIsActive } from "@/lib/campaignValidity";
 import { generateTicketNumber, calculateSlaWarningAtMs, PRIORITY_SLA_MINUTES } from "@/lib/slaUtils";
 import { calculateSlaDeadlineWithinServiceHours } from "@/lib/slaAgent";
@@ -98,7 +99,7 @@ export async function updateReferralStatus(referral, { status, note, crm_registe
 
 export function exportReferralsCsv(referrals) {
   const headers = ["תאריך", "ממליץ/ה", "חדר", "מייל ממליץ", "שם חבר/ה", "טלפון חבר/ה", "פרטים", "סטטוס", "הערת סטטוס", "CRM", "משרדים", "שובר ₪", "מספר קריאה"];
-  const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const esc = csvCell;
   const rows = referrals.map(r => [
     new Date(r.created_date).toLocaleDateString("he-IL"), r.referrer_name, r.referrer_room, r.referrer_email,
     r.friend_name, r.friend_phone, r.details, REFERRAL_STATUSES[r.status]?.label, r.status_note,

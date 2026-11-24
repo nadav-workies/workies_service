@@ -1,3 +1,5 @@
+import { csvCell } from "@/lib/csvCell";
+
 export const RSVP = { attending: "מגיע/ה", not_attending: "לא מגיע/ה" };
 export const RSVP_SOURCE = { representative: "נציג/ה", link: "הנרשם/ת דרך הקישור" };
 
@@ -16,7 +18,7 @@ const COLUMNS = [
   ["אישור הגעה", l => RSVP[l.rsvp_status] || "טרם ענה/תה"], ["עודכן ע״י", l => l.rsvp_source ? `${RSVP_SOURCE[l.rsvp_source]}${l.rsvp_by ? ` (${l.rsvp_by})` : ""}` : ""],
   ["מועד אישור", l => formatDateTime(l.rsvp_at)],
 ];
-const cell = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+const cell = csvCell;
 
 export function downloadRsvpCsv(leads, title) {
   const csv = [COLUMNS.map(([h]) => cell(h)).join(","), ...leads.map(l => COLUMNS.map(([, get]) => cell(get(l))).join(","))].join("\n");

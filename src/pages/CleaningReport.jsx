@@ -263,7 +263,7 @@ export default function CleaningReport() {
                           <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-bold ${rColor}`}>{r}/10</span>
                         </td>
                         <td className="px-3 py-2.5 text-xs max-w-[180px] truncate text-muted-foreground">{i.notes || "—"}</td>
-                        <td className="px-3 py-2.5 text-xs">{i.created_by_name || i.created_by || "—"}</td>
+                        <td className="px-3 py-2.5 text-xs">{i.created_by_name || "—"}</td>
                         <td className="px-3 py-2.5 text-center">
                           {i.requires_followup ? <AlertTriangle className="w-4 h-4 text-orange-500 mx-auto" /> : <span className="text-muted-foreground text-xs">—</span>}
                         </td>

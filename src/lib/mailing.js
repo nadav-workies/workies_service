@@ -1,4 +1,5 @@
 import { base44 } from "@/api/base44Client";
+import { csvCell } from "@/lib/csvCell";
 
 export const CONSENT = {
   subscribed: { label: "מאושר לדיוור", tone: "green" },
@@ -58,7 +59,7 @@ export async function exportContacts(query, label) {
     rows.push(...page.items);
     cursor = page.has_more ? page.next_cursor : null;
   } while (cursor);
-  const esc = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const esc = csvCell;
   const lines = [["אימייל", "שם", "טלפון", "חברה", "הסכמה", "מקורות", "תגיות"].map(esc).join(",")]
     .concat(rows.map(r => [r.email, r.name, r.phone, r.company, CONSENT[r.consent]?.label, (r.sources || []).map(s => SOURCES[s] || s).join(" | "), (r.tags || []).join(" | ")].map(esc).join(",")));
   const url = URL.createObjectURL(new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8" }));

@@ -18,7 +18,7 @@ export default function FeedbackModal({ ticket, user, open, onClose, onSubmitted
     await base44.entities.ServiceFeedback.create({
       ticket_id: ticket.id,
       ticket_number: ticket.ticket_number,
-      customer_email: user?.email || ticket.created_by || '',
+      customer_email: user?.email || '',
       customer_name: ticket.customer_name || user?.full_name || '',
       rating,
       comment,

@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
       ticket_number: ticket.ticket_number || "",
       feedback_token: token,
       customer_name: ticket.customer_name || "",
-      customer_email: ticket.created_by || "",
+      customer_email: ticket.customer_email || ticket.email || "",
       room_number: ticket.room_number || null,
       room_label: ticket.room_label || null,
       ticket_type: ticket.ticket_type || "",
