@@ -13,11 +13,13 @@ async function getGame(sr) {
   return await sr.entities.EventorGame.create({ key: KEY, enabled: false, phase: 'waiting', question_index: 0, round: 1 });
 }
 
-async function allVotes(sr, round) {
+const ICONS = ['trophy', 'star', 'heart', 'rocket', 'flame', 'crown', 'sun', 'zap', 'coffee', 'smile', 'gem', 'flower'];
+
+async function allRows(entity, round) {
   const votes = [];
   let cursor;
   do {
-    const page = await sr.entities.EventorGameVote.filter({ round }, { limit: 500, cursor });
+    const page = await entity.filter({ round }, { limit: 500, cursor, sort: 'created_date' });
     votes.push(...page.items);
     cursor = page.has_more ? page.next_cursor : null;
   } while (cursor);
@@ -41,7 +43,8 @@ export default async function (req) {
         const name = String(body.name || '').trim();
         if (name.length < 2 || name.length > 30) return Response.json({ error: 'יש להזין שם בין 2 ל-30 תווים' }, { status: 400 });
         const { items } = await sr.entities.EventorGamePlayer.filter({ round: game.round, voter_id: body.voter_id }, { limit: 1 });
-        if (!items[0]) await sr.entities.EventorGamePlayer.create({ round: game.round, voter_id: body.voter_id, name });
+        const icon = ICONS.includes(body.icon) ? body.icon : 'star';
+        if (!items[0]) await sr.entities.EventorGamePlayer.create({ round: game.round, voter_id: body.voter_id, name, icon });
         return Response.json({ ok: true, round: game.round });
       }
 
@@ -87,13 +90,15 @@ export default async function (req) {
     }
 
     if (body.action !== 'host_state') return Response.json({ error: 'Unknown action' }, { status: 400 });
-    const [votes, players] = await Promise.all([
-      allVotes(sr, game.round),
-      sr.entities.EventorGamePlayer.count({ round: game.round }),
+    const [votes, playerRows] = await Promise.all([
+      allRows(sr.entities.EventorGameVote, game.round),
+      allRows(sr.entities.EventorGamePlayer, game.round),
     ]);
+    const roster = playerRows.map((p) => ({ id: p.id, name: p.name, icon: p.icon || 'star' }));
+    const players = roster.length;
     const counts = Array.from({ length: QN }, () => [0, 0, 0, 0]);
     for (const v of votes) if (counts[v.question_index] && v.option >= 0 && v.option < 4) counts[v.question_index][v.option]++;
-    return Response.json({ game, counts, players });
+    return Response.json({ game, counts, players, roster });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

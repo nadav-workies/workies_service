@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { LETTERS, QUESTIONS, gameError, savePlayer } from "@/lib/eventorGame";
+import { QUESTIONS, gameError, savePlayer } from "@/lib/eventorGame";
+import { ANSWER_STYLES } from "@/components/eventor-game/gameVisuals";
 
 export default function GameQuestion({ qi, player, onPlayer }) {
   const [busy, setBusy] = useState(false);
@@ -21,9 +22,15 @@ export default function GameQuestion({ qi, player, onPlayer }) {
   return <section className="eg-wrap" aria-labelledby="eg-q">
     <span className="eg-qnum">שאלה {qi + 1} מתוך {QUESTIONS.length}</span>
     <div className="eg-progress" aria-hidden="true">{QUESTIONS.map((_, i) => <span key={i} data-on={i <= qi} />)}</div>
-    <h2 id="eg-q" className="eg-q">{q.t}</h2>
-    <div className="eg-options">
-      {q.o.map((txt, i) => <button key={i} type="button" className="eg-option" disabled={busy} onClick={() => vote(i)}>{LETTERS[i]}. {txt}</button>)}
+    <h2 id="eg-q" className="eg-qcard">{q.t}</h2>
+    <div className="eg-tiles">
+      {q.o.map((txt, i) => {
+        const S = ANSWER_STYLES[i];
+        return <button key={i} type="button" className={`eg-tile ${S.cls}`} disabled={busy} onClick={() => vote(i)}>
+          <S.icon className="eg-tile-icon" fill="currentColor" aria-hidden="true" />
+          <span>{txt}</span>
+        </button>;
+      })}
     </div>
     {error && <span className="eg-err-dark" role="alert">{error}</span>}
   </section>;

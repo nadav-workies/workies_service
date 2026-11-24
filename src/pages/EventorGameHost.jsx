@@ -40,7 +40,7 @@ export default function EventorGameHost() {
       {data && <span className="eh-phase">{PHASES[data.game.phase]}</span>}
     </div>
     {data ? <>
-      <HostBoard game={data.game} counts={data.counts} players={data.players} />
+      <HostBoard game={data.game} counts={data.counts} roster={data.roster || []} />
       <HostControls game={data.game} busy={busy} onControl={control} />
       {error && <p className="eh-status" role="alert">{error}</p>}
     </> : <p role="status">טוענים…</p>}

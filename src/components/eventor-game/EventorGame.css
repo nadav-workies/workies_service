@@ -66,4 +66,58 @@
 .eh-btn:disabled { opacity: .4; cursor: default; }
 .eh-status { font-size: 15px; color: var(--eg-soft); }
 @media (max-width: 760px) { .eh-summary { grid-template-columns: minmax(0, 1fr); } .eh-phase { margin-inline-start: 0; width: 100%; } }
-@media (prefers-reduced-motion: reduce) { .eg-card, .eg-option { animation: none; } .eh-bar span { transition: none; } }
+/* Kahoot colours */
+.eg-c0 { --c: #E21B3C; } .eg-c1 { --c: #1368CE; } .eg-c2 { --c: #D89E00; } .eg-c3 { --c: #26890C; }
+.eh-rows { list-style: none; padding: 0; margin: 0; }
+.eh-bar span.eg-c0, .eh-bar span.eg-c1, .eh-bar span.eg-c2, .eh-bar span.eg-c3 { background: var(--c); }
+
+/* Participant: question card + answer tiles */
+.eg-qcard { background: #FFFFFF; color: var(--eg-dark); border-radius: 18px; padding: 18px; font-size: 20px; font-weight: 800; line-height: 1.4; text-align: center; box-shadow: 0 8px 0 rgba(0,0,0,0.25); animation: eg-rise .4s cubic-bezier(.2,.7,.2,1) both; }
+.eg-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.eg-tile { min-height: 130px; min-width: 0; border: 0; border-radius: 16px; background: var(--c); color: #FFFFFF; padding: 14px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; font-family: inherit; font-size: 16px; font-weight: 700; line-height: 1.35; text-align: center; cursor: pointer; box-shadow: 0 6px 0 rgba(0,0,0,0.28); transition: transform .12s ease, box-shadow .12s ease; animation: eg-rise .4s cubic-bezier(.2,.7,.2,1) both; }
+.eg-tile:nth-child(2) { animation-delay: .05s; } .eg-tile:nth-child(3) { animation-delay: .1s; } .eg-tile:nth-child(4) { animation-delay: .15s; }
+.eg-tile:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.28); }
+.eg-tile:disabled { opacity: .6; cursor: default; }
+.eg-tile-icon { width: 30px; height: 30px; flex: none; }
+
+/* Participant: icon picker */
+.eg-icons { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.eg-icon { aspect-ratio: 1; min-height: 44px; border-radius: 12px; border: 2px solid var(--eg-line); background: #FFFFFF; color: #7960C5; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform .15s ease, background .15s ease; }
+.eg-icon svg { width: 22px; height: 22px; }
+.eg-icon[aria-checked="true"] { background: var(--eg-dark); border-color: var(--eg-dark); color: var(--eg-yellow); transform: scale(1.08); }
+.eg-icon[aria-checked="true"] svg { fill: currentColor; }
+
+/* Host: question, tiles, votes */
+.eh-qcard { background: #FFFFFF; color: var(--eg-dark); border-radius: 20px; padding: clamp(18px, 2.4vw, 32px); font-size: clamp(26px, 3.4vw, 50px); font-weight: 800; line-height: 1.25; text-align: center; box-shadow: 0 10px 0 rgba(0,0,0,0.3); }
+.eh-votes { align-self: center; display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.08); border-radius: 999px; padding: 10px 24px; font-size: clamp(18px, 1.8vw, 26px); color: var(--eg-soft); }
+.eh-votes strong { font-size: clamp(32px, 3.6vw, 56px); color: var(--eg-yellow); font-variant-numeric: tabular-nums; }
+.eh-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.eh-tile { min-width: 0; min-height: clamp(80px, 9vw, 130px); background: var(--c); color: #FFFFFF; border-radius: 16px; padding: 14px 20px; display: flex; align-items: center; gap: 16px; font-size: clamp(18px, 2vw, 30px); font-weight: 700; line-height: 1.3; box-shadow: 0 6px 0 rgba(0,0,0,0.3); animation: eg-rise .45s cubic-bezier(.2,.7,.2,1) both; }
+.eh-tile:nth-child(2) { animation-delay: .06s; } .eh-tile:nth-child(3) { animation-delay: .12s; } .eh-tile:nth-child(4) { animation-delay: .18s; }
+.eh-tile-icon { flex: none; width: clamp(28px, 3vw, 46px); height: clamp(28px, 3vw, 46px); }
+
+/* Host: histogram */
+.eh-hist { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(12px, 2vw, 32px); align-items: end; min-height: 280px; padding: 0 clamp(0px, 4vw, 80px); }
+.eh-hist-col { display: flex; flex-direction: column; align-items: center; gap: 10px; min-width: 0; }
+.eh-hist-num { font-size: clamp(24px, 2.6vw, 40px); font-weight: 800; font-variant-numeric: tabular-nums; }
+.eh-hist-num small { font-size: .5em; color: var(--eg-soft); font-weight: 700; }
+.eh-hist-track { width: 100%; height: clamp(160px, 26vh, 300px); display: flex; align-items: flex-end; }
+.eh-hist-bar { display: block; width: 100%; background: var(--c); border-radius: 12px 12px 4px 4px; animation: eh-grow .8s cubic-bezier(.2,.7,.2,1) both; transform-origin: bottom; }
+.eh-hist-icon { width: 100%; display: flex; justify-content: center; padding: 10px 0; border-radius: 10px; background: var(--c); color: #FFFFFF; }
+.eh-hist-icon svg { width: clamp(24px, 2.4vw, 36px); height: clamp(24px, 2.4vw, 36px); }
+@keyframes eh-grow { from { transform: scaleY(0); } }
+
+/* Host: rows mini icon */
+.eh-row-label { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
+.eh-mini { flex: none; width: 30px; height: 30px; border-radius: 8px; background: var(--c); color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; }
+.eh-mini svg { width: 16px; height: 16px; }
+
+/* Host: waiting roster */
+.eh-waiting-head { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; font-size: clamp(18px, 1.8vw, 26px); color: var(--eg-soft); }
+.eh-waiting-head strong { font-size: clamp(48px, 5vw, 80px); line-height: 1; color: var(--eg-yellow); font-variant-numeric: tabular-nums; }
+.eh-roster { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.eh-chip { display: inline-flex; align-items: center; gap: 8px; background: #FFFFFF; color: var(--eg-dark); border-radius: 999px; padding: 8px 16px; font-size: clamp(16px, 1.5vw, 22px); font-weight: 700; animation: eh-pop .4s cubic-bezier(.2,.9,.3,1.4) both; }
+.eh-chip svg { width: 20px; height: 20px; color: #7960C5; flex: none; }
+@keyframes eh-pop { from { opacity: 0; transform: scale(.6); } }
+
+@media (prefers-reduced-motion: reduce) { .eg-card, .eg-option, .eg-tile, .eg-qcard, .eh-tile, .eh-hist-bar, .eh-chip { animation: none; } .eh-bar span { transition: none; } }
