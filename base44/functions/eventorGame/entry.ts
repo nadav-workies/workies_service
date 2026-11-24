@@ -98,7 +98,8 @@ export default async function (req) {
     const players = roster.length;
     const counts = Array.from({ length: QN }, () => [0, 0, 0, 0]);
     for (const v of votes) if (counts[v.question_index] && v.option >= 0 && v.option < 4) counts[v.question_index][v.option]++;
-    return Response.json({ game, counts, players, roster });
+    const voters = new Set(votes.map((v) => v.voter_id)).size;
+    return Response.json({ game, counts, players, roster, voters });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

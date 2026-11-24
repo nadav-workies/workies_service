@@ -1,7 +1,6 @@
 // "Where did the time go?" lecture game: questions and shared helpers.
 export const GAME_KEY = "time";
 export const LETTERS = ["א", "ב", "ג", "ד"];
-export const SUMMARY_QUESTIONS = [0, 2, 3, 5];
 
 export const QUESTIONS = [
   { t: "נניח שה-AI חסך לך עכשיו 45 דקות. מה הכי היית רוצה לעשות בזמן שהתפנה?", o: ["לקדם פרויקט ארגוני שתמיד נדחה", "להקדיש יותר זמן לעובדים", "לעצור, לחשוב ולתכנן קדימה", "לנשום קצת בין המשימות"] },
@@ -22,12 +21,6 @@ export function percentages(counts) {
   return { total, pct };
 }
 
-export function finalMessage(lastCounts) {
-  const r = percentages(lastCounts);
-  if (r.total < 3) return "התשובות לא מאפשרות תמונה ברורה, אבל השאלה הניהולית נשארת: למי אנחנו נותנות את הזמן שהתפנה?";
-  if (r.pct[2] > 50) return "כאן אנחנו רואות שאפשר לשמור על הזמן שנחסך. מה מאפשר לכן לעשות זאת?";
-  return "גם כשאנחנו עובדות מהר יותר, לא תמיד הזמן שנחסך מגיע למה שהכי חשוב לנו. איך מנהלים אחרת את סדרי העדיפויות?";
-}
 
 const STORE = "eventor-game-player";
 export const loadPlayer = () => { try { return JSON.parse(localStorage.getItem(STORE)) || null; } catch { return null; } };

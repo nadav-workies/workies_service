@@ -1,23 +1,14 @@
-import { QUESTIONS, SUMMARY_QUESTIONS, finalMessage, percentages } from "@/lib/eventorGame";
-import HostRows from "@/components/eventor-game/HostRows";
+import { QUESTIONS, percentages } from "@/lib/eventorGame";
+import HostSummary from "@/components/eventor-game/HostSummary";
 import HostRoster from "@/components/eventor-game/HostRoster";
 import HostTiles from "@/components/eventor-game/HostTiles";
 import HostHistogram from "@/components/eventor-game/HostHistogram";
 import HostTimer from "@/components/eventor-game/HostTimer";
 
-export default function HostBoard({ game, counts, roster }) {
+export default function HostBoard({ game, counts, roster, voters = 0 }) {
   if (game.phase === "waiting") return <HostRoster roster={roster} />;
 
-  if (game.phase === "ended") return <section className="eh-board">
-    <h2 className="eh-q">סיכום המשחק</h2>
-    <div className="eh-summary">
-      {SUMMARY_QUESTIONS.map((qi) => <div key={qi}>
-        <h2>{qi + 1}. {QUESTIONS[qi].t}</h2>
-        <HostRows qi={qi} counts={counts[qi]} />
-      </div>)}
-    </div>
-    <p className="eh-final">{finalMessage(counts[5])}</p>
-  </section>;
+  if (game.phase === "ended") return <HostSummary counts={counts} voters={voters} />;
 
   const qi = game.question_index;
   const voted = percentages(counts[qi]).total;
