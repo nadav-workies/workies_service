@@ -136,4 +136,31 @@
 .eh-chip svg { width: 20px; height: 20px; color: #7960C5; flex: none; }
 @keyframes eh-pop { from { opacity: 0; transform: scale(.6); } }
 
+/* Host on phones: compact board, controls pinned to the bottom */
+@media (max-width: 760px) {
+  .eh-page { padding: 14px 12px 0; gap: 12px; overflow-x: clip; max-width: 100vw; }
+  .eh-page * { min-width: 0; }
+  .eh-top { gap: 8px; }
+  .eh-pill, .eh-note { font-size: 12px; padding: 4px 10px; }
+  .eh-phase { font-size: 15px; }
+  .eh-board { padding: 12px; gap: 12px; border-radius: 16px; }
+  .eh-meta { font-size: 14px; }
+  .eh-qcard { font-size: 18px; padding: 14px; border-radius: 14px; box-shadow: 0 5px 0 rgba(0,0,0,0.3); }
+  .eh-live { gap: 12px; flex-wrap: nowrap; }
+  .eh-timer { width: 64px; height: 64px; }
+  .eh-timer strong { font-size: 22px; }
+  .eh-timer[data-done="true"] strong { font-size: 11px; }
+  .eh-votes { padding: 6px 14px; font-size: 14px; gap: 8px; }
+  .eh-votes strong { font-size: 24px; }
+  .eh-tiles { gap: 8px; }
+  .eh-tile { min-height: 64px; padding: 10px; gap: 8px; font-size: 14px; border-radius: 12px; box-shadow: 0 4px 0 rgba(0,0,0,0.3); }
+  .eh-tile-icon { width: 20px; height: 20px; }
+  .eh-hist { min-height: 0; gap: 8px; padding: 0; }
+  .eh-hist-track { height: 80px; }
+  .eh-hist-num { font-size: 15px; }
+  .eh-controls { position: sticky; bottom: 0; z-index: 5; margin: 0 -12px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: rgba(28,21,54,0.95); border-top: 1px solid rgba(201,189,240,0.2); gap: 8px; }
+  .eh-btn { flex: 1 1 45%; min-height: 46px; padding: 0 12px; font-size: 15px; border-radius: 12px; }
+  .eh-status { width: 100%; font-size: 13px; }
+}
+
 @media (prefers-reduced-motion: reduce) { .eg-card, .eg-option, .eg-tile, .eg-qcard, .eh-tile, .eh-hist-bar, .eh-chip { animation: none; } .eh-bar span { transition: none; } }
