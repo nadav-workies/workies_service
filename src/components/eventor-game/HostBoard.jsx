@@ -3,6 +3,7 @@ import HostRows from "@/components/eventor-game/HostRows";
 import HostRoster from "@/components/eventor-game/HostRoster";
 import HostTiles from "@/components/eventor-game/HostTiles";
 import HostHistogram from "@/components/eventor-game/HostHistogram";
+import HostTimer from "@/components/eventor-game/HostTimer";
 
 export default function HostBoard({ game, counts, roster }) {
   if (game.phase === "waiting") return <HostRoster roster={roster} />;
@@ -25,7 +26,10 @@ export default function HostBoard({ game, counts, roster }) {
     <h1 className="eh-qcard">{QUESTIONS[qi].t}</h1>
     {game.phase === "revealed"
       ? <HostHistogram counts={counts[qi]} />
-      : <div className="eh-votes"><strong>{voted}</strong><span>תשובות התקבלו</span></div>}
+      : <div className="eh-live">
+        <HostTimer key={`${game.round}-${qi}`} />
+        <div className="eh-votes"><strong>{voted}</strong><span>תשובות התקבלו</span></div>
+      </div>}
     <HostTiles qi={qi} />
   </section>;
 }

@@ -21,15 +21,22 @@ export default function EventorGameHost() {
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  // Game returned by the last control action; wins over polled data until the poll catches up.
+  const [ctrlGame, setCtrlGame] = useState(null);
+  const polled = data?.game;
+  const game = ctrlGame && (!polled || polled.id !== ctrlGame.id || polled.updated_date < ctrlGame.updated_date) ? ctrlGame : polled;
 
   if (isPending) return <main className="eh-page" dir="rtl"><p role="status">טוענים…</p></main>;
   if (!allowed) return <Navigate to="/" replace />;
 
   const control = async (op) => {
     setBusy(true); setError("");
-    try { await base44.functions.invoke("eventorGame", { action: "control", op }); await refetch(); }
-    catch (e) { setError(gameError(e)); }
-    setBusy(false);
+    try {
+      const r = await base44.functions.invoke("eventorGame", { action: "control", op });
+      if (r.data?.game) setCtrlGame(r.data.game);
+      setBusy(false);
+      refetch();
+    } catch (e) { setError(gameError(e)); setBusy(false); }
   };
 
   return <main className="eh-page" dir="rtl">
@@ -37,11 +44,11 @@ export default function EventorGameHost() {
       <img src={EV_IMAGES.logo} alt="Workies" style={{ height: 30 }} />
       <span className="eh-pill">לאן נעלם הזמן? | לוח המרצה</span>
       {data && <span className="eh-note">{data.players} משתתפות מחוברות</span>}
-      {data && <span className="eh-phase">{PHASES[data.game.phase]}</span>}
+      {data && <span className="eh-phase">{PHASES[game.phase]}</span>}
     </div>
     {data ? <>
-      <HostBoard game={data.game} counts={data.counts} roster={data.roster || []} />
-      <HostControls game={data.game} busy={busy} onControl={control} />
+      <HostBoard game={game} counts={data.counts} roster={data.roster || []} />
+      <HostControls game={game} busy={busy} onControl={control} />
       {error && <p className="eh-status" role="alert">{error}</p>}
     </> : <p role="status">טוענים…</p>}
   </main>;
