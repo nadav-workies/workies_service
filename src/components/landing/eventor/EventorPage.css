@@ -209,7 +209,9 @@
 @keyframes ev-orb-in { from { opacity: 0; transform: scale(.3); } }
 @keyframes ev-orb-pulse { 0% { box-shadow: 0 0 0 0 rgba(243,200,41,0.6), 0 12px 28px rgba(0,0,0,0.4); } 100% { box-shadow: 0 0 0 22px rgba(243,200,41,0), 0 12px 28px rgba(0,0,0,0.4); } }
 @keyframes ev-orb-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -8px; } }
-@media (min-width: 1024px) { .ev-game-orb { bottom: 100px; left: 28px; width: 112px; height: 112px; font-size: 14px; } }
+.ev-game-orb { left: 50%; margin-left: -66px; width: 132px; height: 132px; font-size: 16px; }
+.ev-game-orb svg { width: 40px; height: 40px; }
+@media (min-width: 1024px) { .ev-game-orb { bottom: 40px; margin-left: -80px; width: 160px; height: 160px; font-size: 18px; } }
 @media (prefers-reduced-motion: reduce) { .ev-game-orb { animation: none; } }
 .ev-game-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; max-width: 420px; min-height: 58px; padding: 0 18px; border-radius: 14px; background: #1c1536; color: #F3C829; border: 2px solid #F3C829; font-family: 'Rubik', system-ui, sans-serif; font-weight: 800; font-size: 17px; line-height: 1.25; text-align: center; text-decoration: none; box-shadow: 0 10px 26px rgba(0,0,0,0.35); transition: background .2s ease; }
 .ev-game-btn:hover { background: #2D204E; }

@@ -113,6 +113,13 @@
 .eh-hist-track { width: 100%; height: clamp(160px, 26vh, 300px); display: flex; align-items: flex-end; }
 .eh-hist-bar { display: block; width: 100%; background: var(--c); border-radius: 12px 12px 4px 4px; animation: eh-grow .8s cubic-bezier(.2,.7,.2,1) both; transform-origin: bottom; }
 .eh-hist-icon { width: 100%; display: flex; justify-content: center; padding: 10px 0; border-radius: 10px; background: var(--c); color: #FFFFFF; }
+.eh-hist { min-height: 200px; }
+.eh-hist-track { height: clamp(100px, 16vh, 180px); }
+.eh-hist-bar { opacity: .85; border-radius: 8px 8px 3px 3px; max-width: 70%; margin: 0 auto; }
+.eh-hist-icon { padding: 6px 0; max-width: 70%; margin: 0 auto; }
+.eh-hist-num { font-size: clamp(18px, 2vw, 30px); }
+.eh-tiles-revealed .eh-tile { opacity: .4; transition: opacity .3s ease; }
+.eh-tiles-revealed .eh-tile-top { opacity: 1; outline: 5px solid #FFFFFF; outline-offset: 3px; transform: scale(1.02); }
 .eh-hist-icon svg { width: clamp(24px, 2.4vw, 36px); height: clamp(24px, 2.4vw, 36px); }
 @keyframes eh-grow { from { transform: scaleY(0); } }
 

@@ -30,6 +30,6 @@ export default function HostBoard({ game, counts, roster }) {
         <HostTimer key={`${game.round}-${qi}`} />
         <div className="eh-votes"><strong>{voted}</strong><span>תשובות התקבלו</span></div>
       </div>}
-    <HostTiles qi={qi} />
+    <HostTiles qi={qi} counts={game.phase === "revealed" ? counts[qi] : null} />
   </section>;
 }
